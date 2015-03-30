@@ -100,7 +100,7 @@ set_time(uint16_t y, uint8_t mo, uint8_t d, uint8_t h, uint8_t mi, uint8_t s)
 
     t.tm_year = y - 1900;
     t.tm_mon = mo - 1;
-    t.tm_mday = d;
+    t.tm_mday = d - 1;
     t.tm_hour = h;
     t.tm_min = mi;
     t.tm_sec = s;
