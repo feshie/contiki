@@ -171,13 +171,20 @@ PROCESS_THREAD(sample_process, ev, data)
                     printf("\n");
 #endif
 //process data
-                    avr_recieved = 1;
+                    if (avr_id < 0x10){
+                        //it's a temp accel chain and so needs to be read twice to get valid data
+                        //otherwise just once is ok
+                        // It will break out of this loop when avr_recieved == 2
+                        avr_recieved++;
+                    }else{
+                        avr_recieved = 2;
+                    }
                 }else{
                     AVRDPRINT("AVR timedout\n");
                     avr_retry_count++;
                 }
                 AVRDPRINT("avr_recieved = %d\n", avr_recieved);
-            }while(avr_recieved ==0 && avr_retry_count < PROTOBUF_RETRIES);
+            }while(avr_recieved < 2 && avr_retry_count < PROTOBUF_RETRIES);
         }
 #ifndef SENSE_ON
         ms1_sense_off();
