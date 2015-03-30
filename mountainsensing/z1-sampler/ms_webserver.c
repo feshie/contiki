@@ -48,6 +48,7 @@ PT_THREAD(web_handle_connection(struct psock *p))
       WPRINT("[WEBD] Serving /clock\n");
       submitted = 0;
       if(get_url_param(param, url, "submit") == 1) {
+        WPRINT("[WEBD] Clock submitted\n");
         submitted = 1;
         get_url_param(param, url, "y");
         y = atol(param == NULL ? ZERO : param);
@@ -62,17 +63,21 @@ PT_THREAD(web_handle_connection(struct psock *p))
         get_url_param(param, url, "s");
         se = atoi(param == NULL? ZERO : param);
         clock_ret = set_time(y, mo, d, h, mi, se);
+        WPRINT("Clock = %lu\n", get_time());
       }
       PSOCK_SEND_STR(p, HTTP_RES);
       PSOCK_SEND_STR(p, TOP);
       if(submitted) {
         if(clock_ret == 0){
-          PSOCK_SEND_STR(p, "<h1>Success! Time set</h1>");
+          sprintf(tmpstr, "<h1>Success! Time set to %lu</h1>", get_time());
+          PSOCK_SEND_STR(p, tmpstr);
         }else{
           PSOCK_SEND_STR(p, "<h1>Warning, set time returned non-zero status</h1>");
         }
+      }else{
+        PSOCK_SEND_STR(p, CLOCK_FORM);
       }
-      PSOCK_SEND_STR(p, CLOCK_FORM);
+      
       PSOCK_SEND_STR(p, BOTTOM);
     }else if(strncmp(url, "/sample", 7) == 0){
       PSOCK_SEND_STR(p, HTTP_RES);
