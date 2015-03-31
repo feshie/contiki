@@ -60,7 +60,7 @@ get_sensor_batt(void)
     SENSORS_ACTIVATE(batv_sensor);
     t0 = RTIMER_NOW();
     while(RTIMER_CLOCK_LT(RTIMER_NOW(), (t0 + (uint32_t) ADC_ACTIVATE_DELAY)));
-    bat_ret =  (float)(batv_sensor.value(0));
+    bat_ret =  (float)(batv_sensor.value(0)) / 273.067;
     SENSORS_DEACTIVATE(batv_sensor);
     return bat_ret;
 }
