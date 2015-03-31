@@ -27,7 +27,7 @@ read adc1
 echo "Does this node have a sensor for ADC2? [y/N]"
 read adc2
 
-if wget -O- 'http://['$node']/sensub?sample='$interval'&AVR='$avrids'&rain='$rain'&adc1='$adc1'&adc2='$adc2'&submit=Submit'
+if wget -q -O- 'http://['$node']/sensub?sample='$interval'&AVR='$avrids'&rain='$rain'&adc1='$adc1'&adc2='$adc2'&submit=Submit'
 then
 	echo "Successfully configured sample"
 fi

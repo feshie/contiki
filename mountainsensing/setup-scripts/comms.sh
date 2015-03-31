@@ -11,11 +11,11 @@ else
 fi
 echo setting coms on $node
 
-echo "Enter POST Interval In Seconds"
+echo "Enter POST Interval (Sample count)"
 read interval
 
 #echo "Enter POST Proxy Address (No ::)"
-echo "setting Deployment POST proxy = 2a01:348:24b:2:0:0:0:1"
+#echo "setting Deployment POST proxy = 2a01:348:24b:2:0:0:0:1"
 #echo "Weird private one =  aaaa:0:0:0:0:0:0:1" 
 #read proxy
 proxy=2a01:348:24b:2:0:0:0:1
@@ -33,7 +33,7 @@ echo "setting POST Proxy Port 8081"
 port=8081
 #read port
 
-if wget -O- 'http://['$node']/comsub?interval='$interval'&port='$port'&a='$a'&b='$b'&c='$c'&d='$d'&e='$e'&f='$f'&g='$g'&h='$h'&submit=Submit'
+if wget -q  -O- 'http://['$node']/comsub?interval='$interval'&port='$port'&a='$a'&b='$b'&c='$c'&d='$d'&e='$e'&f='$f'&g='$g'&h='$h'&submit=Submit'
 then
 	echo "Successfully configured comms"
 fi

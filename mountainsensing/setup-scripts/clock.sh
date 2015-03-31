@@ -18,7 +18,7 @@ hour=`date +"%H"`
 min=`date +"%M"`
 sec=`date +"%S"`
 
-if wget -O- 'http://['$node']/clock?y='$year'&mo='$month'&d='$day'&h='$hour'&mi='$min'&s='$sec'&submit=Submit'
+if wget -q -O- 'http://['$node']/clock?y='$year'&mo='$month'&d='$day'&h='$hour'&mi='$min'&s='$sec'&submit=Submit'
 then
 	echo "Successfully configured clock"
 fi
