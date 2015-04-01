@@ -305,6 +305,7 @@ PROCESS_THREAD(sample_process, ev, data)
                         data_length = 0;
                         post_retries = 0;
                         sample_count = 0;
+                        http_status = 0;
 #ifndef SAMPLE_SEND
                         cfs_remove(filename);
                         PPRINT("[POST] Removing file\n");
