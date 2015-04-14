@@ -277,7 +277,7 @@ PROCESS_THREAD(sample_process, ev, data)
                     }else if(uip_flags == UIP_TIMEDOUT){
                         PPRINT("UIP Timeout\n");
                     }else if(uip_flags == UIP_CLOSE){
-                        PPRINT("UIP Closed\n")
+                        PPRINT("UIP Closed\n");
                     }
                     post_retries++;
                 } else if(uip_connected() || uip_poll()) {
