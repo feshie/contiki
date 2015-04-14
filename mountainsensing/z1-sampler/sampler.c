@@ -267,9 +267,8 @@ PROCESS_THREAD(sample_process, ev, data)
                 }
               //  PPRINT("Post length check = %d\n", data_length);
                 tcp_connect(&addr, UIP_HTONS(POST_config.port), NULL);
-                PPRINT("Connecting...\n");
+                PPRINT("Connecting...");
                 PROCESS_WAIT_EVENT_UNTIL(ev == tcpip_event);
-                PPRINT("event\n");
                 if(uip_aborted() || uip_timedout() || uip_closed() ) {
                     PPRINT("Could not establish connection\n");
                     printf("UIP flags = %d\n", uip_flags);
@@ -281,12 +280,13 @@ PROCESS_THREAD(sample_process, ev, data)
                         PPRINT("UIP Closed\n")
                     }
                     post_retries++;
-                } else if(uip_connected()|| uip_poll()) {
+                } else if(uip_connected() || uip_poll()) {
                     PPRINT("Connected\n");
                     PSOCK_INIT(&ps, psock_buffer, sizeof(psock_buffer));
                     etimer_set(&timeout_timer, CLOCK_SECOND*LIVE_CONNECTION_TIMEOUT);
                     do {
-                        PPRINT("Timer expired = %d\n", etimer_expired(&timeout_timer));
+                        PPRINT(".");
+                        //PPRINT("Timer expired = %d\n", etimer_expired(&timeout_timer));
                         if(etimer_expired(&timeout_timer)){
                             PPRINT("Connection took too long. TIMEOUT\n");
                             PSOCK_CLOSE(&ps);
