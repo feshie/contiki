@@ -321,9 +321,12 @@ PROCESS_THREAD(sample_process, ev, data)
                         break;
 #endif
                     } else { // POST failed
+                        PPRINT("[POST] Failed, not removing file\n");
                         data_length = 0;
                         post_retries++;
-                        PPRINT("[POST] Failed, not removing file\n"); 
+                        sample_count = 0;
+                        http_status = 0;
+                         
                     }
                 }else{
                     printf("Other status\n");
