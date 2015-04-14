@@ -273,6 +273,13 @@ PROCESS_THREAD(sample_process, ev, data)
                 if(uip_aborted() || uip_timedout() || uip_closed() ) {
                     PPRINT("Could not establish connection\n");
                     printf("UIP flags = %d\n", uip_flags);
+                    if(uip_flags == UIP_ABORT){
+                        PPRINT("Connection Aborted\n");
+                    }else if(uip_flags == UIP_TIMEDOUT){
+                        PPRINT("UIP Timeout\n");
+                    }else if(uip_flags == UIP_CLOSE){
+                        PPRINT("UIP Closed\n")
+                    }
                     post_retries++;
                 } else if(uip_connected()|| uip_poll()) {
                     PPRINT("Connected\n");
