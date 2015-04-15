@@ -295,6 +295,7 @@ PROCESS_THREAD(sample_process, ev, data)
                         }else if (data_length ==0){
                             //something odd has happened
                             PPRINT("Length = 0\n");
+                            PSOCK_CLOSE(&ps);
                             break;
                         }else if(http_status == 0){
                             PPRINT("[POST] Handle Connection\n");
