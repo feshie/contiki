@@ -4,8 +4,8 @@
 int
 handle_connection(char *data_buffer, uint8_t data_length, uint8_t *http_status, struct psock *p, uint8_t *psock_buffer)
 {
-    char content_length[8], tmpstr_handle[50];
-    PPRINT("Data length = %d\n", data_length);
+    static char content_length[8], tmpstr_handle[50];
+    //PPRINT("Data length = %d\n", data_length);
     if(data_length > 0){
         PSOCK_BEGIN(p);
         PPRINT("begun\n");
