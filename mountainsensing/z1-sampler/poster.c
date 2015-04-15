@@ -7,17 +7,20 @@ handle_connection(char *data_buffer, uint8_t data_length, uint8_t *http_status, 
     char content_length[8], tmpstr_handle[50];
     PPRINT("Data length = %d\n", data_length);
     if(data_length > 0){
+        PSOCK_BEGIN(p);
+        PPRINT("begun\n");
         itoa(data_length, content_length, 10);
         strcpy(tmpstr_handle, "POST / HTTP/1.0\r\nContent-Length: ");
         strcat(tmpstr_handle, content_length);
         strcat(tmpstr_handle, "\r\n\r\n");
         PPRINT("Prepared string\n");
     
-        PSOCK_BEGIN(p);
-        PPRINT("begun\n");
+        
         PSOCK_SEND_STR(p, tmpstr_handle);
         PPRINT("String sent\n");
+        printf("*******************************************************************\n");
         PSOCK_SEND(p, data_buffer, data_length);
+        printf("*******************************************************************\n");
         PPRINT("Data sent wating for status\n");
         while(1) {
             PPRINT("W");
