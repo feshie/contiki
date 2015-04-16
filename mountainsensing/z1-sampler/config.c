@@ -21,35 +21,35 @@ void
 print_sensor_config(SensorConfig *conf)
 {
   uint8_t i;
-  CPRINT("\tInterval = %d\n", (unsigned int)conf->interval);
-  CPRINT("\tADC1: ");
+  printf("\tInterval = %d\n", (unsigned int)conf->interval);
+  printf("\tADC1: ");
   if (conf->hasADC1 == 1){
-    CPRINT("yes\n");
+    printf("yes\n");
   }else{
-    CPRINT("no\n");
+    printf("no\n");
   }
-  CPRINT("\tADC2: ");
+  printf("\tADC2: ");
   if (conf-> hasADC2){
-    CPRINT("yes\n");
+    printf("yes\n");
   }else{
-    CPRINT("no\n");
+    printf("no\n");
   }
-  CPRINT("\tRain: ");
+  printf("\tRain: ");
   if (conf-> hasRain){
-    CPRINT("yes\n");
+    printf("yes\n");
   }else{
-    CPRINT("no\n");
+    printf("no\n");
   }
-  CPRINT("\tAVRs: ");
+  printf("\tAVRs: ");
   if(conf->avrIDs_count ==0 ){
-    CPRINT("NONE\n");
+    printf("NONE\n");
   }else{
     for(i=0; i < conf->avrIDs_count; i++){
-      CPRINT("%02x", (int)conf->avrIDs[i] & 0xFF);
+      printf("%02x", (int)conf->avrIDs[i] & 0xFF);
       if(i < conf->avrIDs_count -1){
-        CPRINT(", ");
+        printf(", ");
       }else{
-        CPRINT("\n");
+        printf("\n");
       }
     }
   }
@@ -57,9 +57,9 @@ print_sensor_config(SensorConfig *conf)
 
 void
 print_comms_config(POSTConfig *conf){
-    CPRINT("\tInterval: %d\n", (unsigned int)conf->interval);
-    CPRINT("\tPort: %d\n", (unsigned int)conf->port);
-    CPRINT("\tPosting to %x:%x:%x:%x:%x:%x:%x:%x\n", 
+    printf("\tInterval: %d\n", (unsigned int)conf->interval);
+    printf("\tPort: %d\n", (unsigned int)conf->port);
+    printf("\tPosting to %x:%x:%x:%x:%x:%x:%x:%x\n", 
         (unsigned int)conf->ip[0], (unsigned int)conf->ip[1], (unsigned int)conf->ip[2],
         (unsigned int)conf->ip[3], (unsigned int)conf->ip[4], (unsigned int)conf->ip[5],
         (unsigned int)conf->ip[6], (unsigned int)conf->ip[7]);
