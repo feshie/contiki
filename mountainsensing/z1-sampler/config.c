@@ -8,7 +8,7 @@
     #define CONFIG_BUF_SIZE (POSTConfig_size + 4)
 #endif
 
-#define CONFIG_DEBUG
+//#define CONFIG_DEBUG
 
 #ifdef CONFIG_DEBUG 
     #define CPRINT(...) printf(__VA_ARGS__)
