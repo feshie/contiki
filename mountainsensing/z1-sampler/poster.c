@@ -20,7 +20,7 @@ handle_connection(char *data_buffer, uint8_t data_length, uint8_t *http_status, 
         PPRINT("String sent\n");
         printf("*******************************************************************\n");
         PSOCK_SEND(p, data_buffer, data_length);
-        printf("*******************************************************************\n");
+        printf("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&\n");
         PPRINT("Data sent wating for status\n");
         while(1) {
             PPRINT("W");
