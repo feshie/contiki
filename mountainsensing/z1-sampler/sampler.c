@@ -262,11 +262,15 @@ PROCESS_THREAD(sample_process, ev, data)
                 PPRINT("[POST][INIT] About to attempt POST with %s - RETRY [%d]\n", filename, post_retries);
 #endif
                 PPRINT("Data length = %d\n", data_length);
-                if(data_length == 0 && strcmp("r_1", filename) == 0){                    
-                    printf("Enpty file r_1 breaking out of send loop\n");
+                if(data_length == 0 && strcmp("r1", filename) == 0){                    
+                    printf("Enpty file r1 breaking out of send loop\n");
                     break;
+                }else if (data_length ==0){
+                    //something odd has happened
+                    PPRINT("Length = 0\n");
+                    filenames_refresh();
+                    continue;
                 }
-              //  PPRINT("Post length check = %d\n", data_length);
                 tcp_connect(&addr, UIP_HTONS(POST_config.port), NULL);
                 PPRINT("Connecting...");
                 PROCESS_WAIT_EVENT_UNTIL(ev == tcpip_event);
@@ -286,18 +290,10 @@ PROCESS_THREAD(sample_process, ev, data)
                     PSOCK_INIT(&ps, psock_buffer, sizeof(psock_buffer));
                     etimer_set(&timeout_timer, CLOCK_SECOND*LIVE_CONNECTION_TIMEOUT);
                     do {
-                        PPRINT(".");
-                        //PPRINT("Timer expired = %d\n", etimer_expired(&timeout_timer));
                         if(etimer_expired(&timeout_timer)){
                             PPRINT("Connection took too long. TIMEOUT\n");
                             PSOCK_CLOSE(&ps);
                             post_retries++;
-                            break;
-                        }else if (data_length ==0){
-                            //something odd has happened
-                            PPRINT("Length = 0\n");
-                            PSOCK_CLOSE(&ps);
-                            filenames_refresh();
                             break;
                         }else if(http_status == 0){
                             PPRINT("[POST] Handle Connection\n");
