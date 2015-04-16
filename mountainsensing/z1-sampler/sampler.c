@@ -264,7 +264,7 @@ PROCESS_THREAD(sample_process, ev, data)
 #endif
                 PPRINT("Data length = %d\n", data_length);
                 if(data_length == 0 && strcmp("r0", filename) == 0){                    
-                    printf("Enpty file r1 breaking out of send loop\n");
+                    printf("Enpty file r0 breaking out of send loop\n");
                     break;
                 }else if (data_length ==0){
                     //something odd has happened
