@@ -4,7 +4,7 @@
 
 PROCESS(sample_process, "Sample Process");
 
-#define SENSEDEFBUG
+//#define SENSEDEFBUG
 #ifdef SENSEDEFBUG
     #define SPRINT(...) printf(__VA_ARGS__)
 #else
@@ -31,7 +31,7 @@ void
 refreshSensorConfig(void){
     if(get_config(&sensor_config, SAMPLE_CONFIG) == 1){ 
         // Config file does not exist! Use default and set file
-      	SPRINT("No Sensor config found\n");
+      	printf("No Sensor config found\n");
         sensor_config.interval = SENSOR_INTERVAL;
         sensor_config.avrIDs_count = SENSOR_AVRIDS_COUNT;
         sensor_config.hasADC1 = SENSOR_HASADC1;
@@ -39,7 +39,7 @@ refreshSensorConfig(void){
         sensor_config.hasRain = SENSOR_HASRAIN;
         set_config(&sensor_config, SAMPLE_CONFIG);
     }else{
-      	SPRINT("Sensor config loaded\n");
+      	printf("Sensor config loaded\n");
     }
 }
 
@@ -309,8 +309,17 @@ PROCESS_THREAD(sample_process, ev, data)
                             break;
                         }
                     } while(!(uip_closed() || uip_aborted() || uip_timedout()));
+                    if(uip_flags == UIP_ABORT){
+                        PPRINT("Connection Aborted\n");
+                    }else if(uip_flags == UIP_TIMEDOUT){
+                        PPRINT("UIP Timeout\n");
+                    }else if(uip_flags == UIP_CLOSE){
+                        PPRINT("UIP Closed\n");
+                    }else if(http_status ==0){
+                        PPRINT("!!!!!!Other flags not sure why I exited loop: %d\n", uip_flags);
+                    }
                    // PPRINT("Connection closed.\n");
-                    PPRINT("Status = %d\n", http_status);
+                    PPRINT("HTTP Status = %d\n", http_status);
                     if(http_status/100 == 2) { // Status OK
                         data_length = 0;
                         post_retries = 0;
