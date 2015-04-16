@@ -9,7 +9,7 @@
 	// Sensors
 	#include "sampling-sensors.h"
 	#include "ms1-io.h"
-	#include "filenames-old.h"
+	#include "filenames.h"
 
 	// Config
 	#include "settings.pb.h"

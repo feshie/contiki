@@ -80,6 +80,7 @@ PROCESS_THREAD(sample_process, ev, data)
     PROCESS_BEGIN();
     refreshSensorConfig();
     refreshPosterConfig();
+    filenames_init();
     sample_count = 0;
     avr_recieved = 0;
     avr_retry_count = 0;
@@ -194,7 +195,7 @@ PROCESS_THREAD(sample_process, ev, data)
         pb_encode_delimited(&ostream, Sample_fields, &sample);
 
 #ifndef SAMPLE_SEND
-        get_next_write_filename(filename);
+        filenames_next_write(filename);
         if(filename == 0) {
           continue;
         }
@@ -237,7 +238,7 @@ PROCESS_THREAD(sample_process, ev, data)
                 continue;
             }
 #ifndef SAMPLE_SEND
-            while((get_next_read_filename(filename)) !=0 && post_retries < CONNECTION_RETRIES){
+            while((filenames_next_read(filename)) !=0 && post_retries < CONNECTION_RETRIES){
                 data_length = load_file(data_buffer, filename);
 #else
             data_length = ostream.bytes_written;
@@ -296,6 +297,7 @@ PROCESS_THREAD(sample_process, ev, data)
                             //something odd has happened
                             PPRINT("Length = 0\n");
                             PSOCK_CLOSE(&ps);
+                            filenames_refresh();
                             break;
                         }else if(http_status == 0){
                             PPRINT("[POST] Handle Connection\n");
@@ -315,7 +317,7 @@ PROCESS_THREAD(sample_process, ev, data)
                         sample_count = 0;
                         http_status = 0;
 #ifndef SAMPLE_SEND
-                        cfs_remove(filename);
+                        filenames_delete(filename);
                         PPRINT("[POST] Removing file\n");
 #else
                         //If sample and send break out of the loop

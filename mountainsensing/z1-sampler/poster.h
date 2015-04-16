@@ -1,6 +1,6 @@
 #ifndef POSTER_H
 #define POSTER_H
-	#include "filenames-old.h"
+	#include "filenames.h"
 	#include "config.h"
 	#include "contiki.h"
 	#include "contiki-conf.h"
