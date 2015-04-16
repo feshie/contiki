@@ -89,7 +89,8 @@ PROCESS_THREAD(sample_process, ev, data)
 
     protobuf_event = process_alloc_event();
     protobuf_register_process_callback(&sample_process, protobuf_event) ;
-    printf("Sample interval set to: %d\n", (int)sensor_config.interval); 
+    printf("Refreshed Sensor config to:\n"); 
+    print_sensor_config(&sensor_config);
 
 #ifdef SENSE_ON
     ms1_sense_on();
