@@ -39,7 +39,7 @@
 #define __PLATFORM_CONF_H__
 
 #define SPI_LOCKING
-#define LOCKING_DEBUG
+//#define LOCKING_DEBUG
 #ifdef LOCKING_DEBUG
  #include <stdio.h>
  #define LPRINT(...) printf(__VA_ARGS__)
