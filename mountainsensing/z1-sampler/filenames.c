@@ -14,7 +14,7 @@
     #include "dev/cc1120-arch.h"
 #endif
 
-#define FILENAME_DEBUG
+//#define FILENAME_DEBUG
 #ifdef FILENAME_DEBUG
     #define FPRINT(...) printf(__VA_ARGS__)
 #else
@@ -50,10 +50,10 @@ filenames_refresh(void){
             }
         }
         if(max_num == 0) {
-            FPRINT("\tNo previous files found\n");
+            printf("\tNo previous files found\n");
             number = 0;
         }else{
-            FPRINT("\tPrevious files found.  Highest number = %d\n", max_num);
+            printf("\tPrevious files found.  Highest number = %d\n", max_num);
             number = max_num;
         }
     }
