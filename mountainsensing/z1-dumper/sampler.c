@@ -176,9 +176,6 @@ PROCESS_THREAD(sample_process, ev, data)
             printf("UIP flags = %d\n", uip_flags);
         }
        PSOCK_CLOSE(&ps);
-       printf("Waiting before next attempt\n");
-    etimer_set(&delay_timer, 60UL);
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&delay_timer));
     }
     PROCESS_END();
 }
