@@ -4,7 +4,7 @@
 
 PROCESS(sample_process, "Sample Process");
 
-//#define SENSEDEFBUG
+#define SENSEDEFBUG
 #ifdef SENSEDEFBUG
     #define SPRINT(...) printf(__VA_ARGS__)
 #else
@@ -314,6 +314,12 @@ PROCESS_THREAD(sample_process, ev, data)
                         PPRINT("UIP Closed\n");
                     }else if(http_status ==0){
                         PPRINT("!!!!!!Other flags not sure why I exited loop: %d\n", uip_flags);
+                    }
+                    PPRINT("Buffer = %s\n",psock_buffer);
+                    if(http_status == 0 && strncmp(psock_buffer, "HTTP/", 5) == 0){   
+                        // Status line
+                        http_status = atoi((const char *)psock_buffer + 9);
+                        PPRINT("Setting status outside loop\n");
                     }
                    // PPRINT("Connection closed.\n");
                     PPRINT("HTTP Status = %d\n", http_status);
