@@ -23,7 +23,8 @@
         "<a href=\"/comms\">Comms Config</a>"       \
         "<a href=\"/settings\">Setting dump</a>"    \
         "<a href=\"/ls\">Print files on console</a>" \
-        "<a href=\"/du\">Disk usage</a>"
+        "<a href=\"/du\">Disk usage</a>" \
+        "<a href =\"/json\">JSON dump of current sensor reading</a>"
 
 
     #define SENSOR_FORM_1 "<form action=\"/sensub\" method=\"get\">" \
