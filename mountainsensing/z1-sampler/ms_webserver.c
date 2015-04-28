@@ -17,7 +17,7 @@ PT_THREAD(web_handle_connection(struct psock *p))
 {
 
     static uint8_t i;
-    static char num[16], tmpstr[80];
+    static char num[16], tmpstr[120];
     static uint16_t y;
     static uint8_t mo, d, h, mi, se;
     static bool submitted;
@@ -303,18 +303,26 @@ PT_THREAD(web_handle_connection(struct psock *p))
             strcat(tmpstr, num);
             PSOCK_SEND_STR(p, tmpstr);
             PSOCK_SEND_STR(p, BOTTOM);
-        }else if(strncmp(url, "/json", 9) == 0){
+        }else if(strncmp(url, "/json", 5) == 0){
             WPRINT("Serving JSON file\n");
             PSOCK_SEND_STR(p, JSON_RES);
-            sprintf(tmpstr, "{\"reading\":{\"timestamp\":%lu,\"temperature\":%d.%03u,\"battery\":%u,\"x\":%u,\"y\":%u,\"z\":%u}}", 
+            sprintf(tmpstr, "{\"reading\":{\"timestamp\":%lu,\"temperature\":%d.%03u,\"battery\":%u.%03u,\"x\":%d,\"y\":%d,\"z\":%d", 
                 get_time(),
                 (int)get_sensor_temp(),
                 (unsigned)((get_sensor_temp() - (int)get_sensor_temp())*1000),
-                (unsigned)get_sensor_batt(),
+                (int)get_sensor_batt(),
+                (unsigned)((get_sensor_batt() - (int)get_sensor_batt())*1000),
                 get_sensor_acc_x(),
                 get_sensor_acc_y(),
                 get_sensor_acc_z());
-
+            
+            if(get_url_param(param, url, "adc1") == 1 && strcmp(param, "y") == 0) {
+                sprintf(tmpstr + strlen(tmpstr), ",\"adc1\":%d", get_sensor_ADC1());
+            } 
+            if(get_url_param(param, url, "adc2") == 1 && strcmp(param, "y") == 0) {
+                sprintf(tmpstr + strlen(tmpstr), ",\"adc2\":%d", get_sensor_ADC2());
+            }
+            strcat(tmpstr, "}}");
             PSOCK_SEND_STR(p, tmpstr);
         }else{
             WPRINT("Serving / \"INDEX\"\n");
