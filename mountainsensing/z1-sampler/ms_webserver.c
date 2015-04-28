@@ -306,9 +306,10 @@ PT_THREAD(web_handle_connection(struct psock *p))
         }else if(strncmp(url, "/json", 9) == 0){
             WPRINT("Serving JSON file\n");
             PSOCK_SEND_STR(p, JSON_RES);
-            strcpy(tmpstr, "{\"reading\":{");
+            sprintf(tmpstr, "{\"reading\":{\"timestamp\":%lu,\"temperature\":%ld,}}", 
+                get_time(),
+                (long)get_sensor_temp());
 
-            strcat(tmpstr, "}}");
             PSOCK_SEND_STR(p, tmpstr);
         }else{
             WPRINT("Serving / \"INDEX\"\n");
