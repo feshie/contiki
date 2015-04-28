@@ -306,10 +306,11 @@ PT_THREAD(web_handle_connection(struct psock *p))
         }else if(strncmp(url, "/json", 9) == 0){
             WPRINT("Serving JSON file\n");
             PSOCK_SEND_STR(p, JSON_RES);
-            sprintf(tmpstr, "{\"reading\":{\"timestamp\":%lu,\"temperature\":%ld,\"battery\":%d,\"x\":%d,\"y\":%d,\"z\":%d}}", 
+            sprintf(tmpstr, "{\"reading\":{\"timestamp\":%lu,\"temperature\":%d.%03u,\"battery\":%u,\"x\":%u,\"y\":%u,\"z\":%u}}", 
                 get_time(),
-                (long)get_sensor_temp(),
-                (long)get_sensor_batt(),
+                (int)get_sensor_temp(),
+                (unsigned)((get_sensor_temp() - (int)get_sensor_temp())*1000),
+                (unsigned)get_sensor_batt(),
                 get_sensor_acc_x(),
                 get_sensor_acc_y(),
                 get_sensor_acc_z());
