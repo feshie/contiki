@@ -303,6 +303,13 @@ PT_THREAD(web_handle_connection(struct psock *p))
             strcat(tmpstr, num);
             PSOCK_SEND_STR(p, tmpstr);
             PSOCK_SEND_STR(p, BOTTOM);
+        }else if(strncmp(url, "/json", 9) == 0){
+            WPRINT("Serving JSON file\n");
+            PSOCK_SEND_STR(p, JSON_RES);
+            strcpy(tmpstr, "{\"reading\":{");
+
+            strcat(tmpstr, "}}");
+            PSOCK_SEND_STR(p, tmpstr);
         }else{
             WPRINT("Serving / \"INDEX\"\n");
             PSOCK_SEND_STR(p, HTTP_RES);

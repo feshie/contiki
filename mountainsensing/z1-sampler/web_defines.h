@@ -2,6 +2,7 @@
 #define WEB_DEFINES_H
     #define HTTP_RES "HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n"
     #define TEXT_RES "HTTP/1.0 200 OK\r\nContent-Type: text/plain\r\n\r\n"
+    #define JSON_RES "HTTP/1.0 200 OK\r\nContent-Type: application/json\r\n\r\n"
 
     #define TOP "<html><body>"
     #define BOTTOM "</body></html>"
