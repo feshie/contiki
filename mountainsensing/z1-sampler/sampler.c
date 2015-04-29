@@ -348,7 +348,8 @@ PROCESS_THREAD(sample_process, ev, data)
                     printf("UIP flags = %d\n", uip_flags);
                 }
             }
-            PSOCK_CLOSE(&ps);
+            memcpy(psock_buffer, '0', strlen(psock_buffer));
+	    PSOCK_CLOSE(&ps);
             
         }
     }
