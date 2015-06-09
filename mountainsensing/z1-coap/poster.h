@@ -6,7 +6,7 @@
 	#include "contiki-conf.h"
 	#include <stdio.h>
 	#include <stdint.h>
-	#include "z1-sampler-config-defaults.h"
+	#include "z1-coap-config-defaults.h"
 	#include "settings.pb.h"
 	#include "cfs/cfs.h"
 	// Networking

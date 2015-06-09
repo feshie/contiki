@@ -46,7 +46,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "z1-sampler.h"
+#include "z1-coap.h"
 
 #ifndef CC11xx_CC1120
   #include "dev/cc2420.h"

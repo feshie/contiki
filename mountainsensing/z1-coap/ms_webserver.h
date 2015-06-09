@@ -8,7 +8,7 @@
 	#include "sampler.h"
 	#include "poster.h"
 	#include "web_defines.h"
-	#include "z1-sampler-config-defaults.h"
+	#include "z1-coap-config-defaults.h"
 	#include <stdio.h>
 	#include <string.h>
 	#include <stdlib.h>

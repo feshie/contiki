@@ -19,7 +19,7 @@
 	#include "dev/pb_encode.h"
 
 
-	#include "z1-sampler-config-defaults.h"
+	#include "z1-coap-config-defaults.h"
 
 
 	#include "dev/temperature-sensor.h"
