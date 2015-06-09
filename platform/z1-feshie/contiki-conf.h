@@ -61,6 +61,7 @@
 #define NETSTACK_CONF_NETWORK sicslowpan_driver
 #define NETSTACK_CONF_MAC     csma_driver
 #define NETSTACK_CONF_RDC     contikimac_driver
+// WORKS! #define NETSTACK_CONF_RDC     nullrdc_driver
 #define NETSTACK_CONF_RADIO   cc1120_driver
 #define NETSTACK_CONF_FRAMER  framer_802154
 
@@ -167,7 +168,7 @@
 #define UIP_CONF_ND6_MAX_PREFIXES       3
 #define UIP_CONF_ND6_MAX_DEFROUTERS     2
 #define UIP_CONF_IP_FORWARD             0
-#define UIP_CONF_BUFFER_SIZE		140
+#define UIP_CONF_BUFFER_SIZE		240
 
 #define SICSLOWPAN_CONF_COMPRESSION_IPV6        0
 #define SICSLOWPAN_CONF_COMPRESSION_HC1         1
