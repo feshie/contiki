@@ -41,7 +41,7 @@ RESOURCE(helloworld, METHOD_GET, "helloworld");
 void
 helloworld_handler(REQUEST* request, RESPONSE* response)
 {
-  sprintf(temp,"Hello World!\n");
+  sprintf(temp,"Hello old World!\n");
 
   rest_set_header_content_type(response, TEXT_PLAIN);
   rest_set_response_payload(response, (uint8_t*)temp, strlen(temp));
