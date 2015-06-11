@@ -15,8 +15,8 @@
 	#include "settings.pb.h"
 	#include "readings.pb.h"
 	// Protobuf
-	#include "dev/pb_decode.h"
-	#include "dev/pb_encode.h"
+	#include "pb_decode.h"
+	#include "pb_encode.h"
 
 
 	#include "z1-coap-config-defaults.h"

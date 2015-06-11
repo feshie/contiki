@@ -10,8 +10,8 @@
 	#include "readings.pb.h"
 
 	// Protobuf
-	#include "dev/pb_decode.h"
-	#include "dev/pb_encode.h"
+	#include "pb_decode.h"
+	#include "pb_encode.h"
 
 	#include "cfs/cfs.h"
 	#include "contiki.h"

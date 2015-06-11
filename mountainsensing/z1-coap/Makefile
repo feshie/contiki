@@ -1,8 +1,9 @@
-
-all: z1-coap filename-test
-TARGET = z1-coap
+all: z1-coap
+TARGET = z1-feshie
 
 CONTIKI=../../
+PROTOBUF:=../protocol-buffers/
+NANOPB:=$(PROTOBUF)tools/nanopb/
 
 WITH_UIP6=1
 UIP_CONF_IPV6=1
@@ -11,8 +12,10 @@ SMALL=1
 
 APPS += webserver webbrowser
 
+PROJECTDIRS += $(NANOPB) $(PROTOBUF)c/
+
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
-CONTIKI_SOURCEFILES +=  pb_decode.c pb_encode.c settings.pb.c readings.pb.c sampling-sensors.c  filenames.c config.c sampler.c filenames.c poster.c ms_webserver.c
+CONTIKI_SOURCEFILES += pb_decode.c pb_encode.c pb_common.c all.c sampling-sensors.c filenames.c config.c sampler.c poster.c ms_webserver.c
 PROJECTDIRS += ../../examples/ipv6/rpl-border-router
 PROJECT_SOURCEFILES += httpd-simple.c
 
@@ -29,5 +32,5 @@ connect-router-cooja:	$(CONTIKI)/tools/tunslip6
 
 install: z1-coap.upload
 
-CUSTOM_RULE_LINK=1 
+CUSTOM_RULE_LINK=1
 %.$(TARGET): %.co $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) contiki-$(TARGET).a $(LD) $(LDFLAGS) $(TARGET_STARTFILES) ${filter-out %.a,$^} ${filter %.a,$^} $(TARGET_LIBFILES) -o $@ -lm
