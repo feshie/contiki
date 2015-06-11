@@ -1,0 +1,3 @@
+[submodule "mountainsensing/protocol-buffers"]
+	path = mountainsensing/protocol-buffers
+	url = git@github.com:feshie/protocol-buffers.git
