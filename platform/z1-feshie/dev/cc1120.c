@@ -21,10 +21,10 @@
 #include "cc1120-arch.h"
 #include "cc1120-config.h"
 
-#include "net/rime.h"
-#include "net/rime/rimeaddr.h"
+#include "net/rime/rime.h"
+#include "net/linkaddr.h"
 #include "net/netstack.h"
-#include "net/mac/contikimac.h"
+#include "net/mac/contikimac/contikimac.h"
 
 
 /* LEDs. */
@@ -257,7 +257,7 @@ cc1120_driver_prepare(const void *payload, unsigned short len)
 	tx_len = len;
 	RIMESTATS_ADD(lltx);
 	
-	if(rimeaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_RECEIVER), &rimeaddr_null)) {
+	if(linkaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_RECEIVER), &linkaddr_null)) {
 		broadcast = 1;
 		PRINTFTX("\tBroadcast\n");
 	} else {
@@ -621,7 +621,7 @@ cc1120_driver_read_packet(void *buf, unsigned short buf_len)
 	PRINTF("**** Radio Driver: Read ****\n");
 
 	uint8_t length, i, rxbytes;
-	rimeaddr_t dest;
+	linkaddr_t dest;
 	rtimer_clock_t t0;   
 		
 	if(radio_pending & RX_FIFO_UNDER) {
@@ -702,7 +702,7 @@ cc1120_driver_read_packet(void *buf, unsigned short buf_len)
 			}
 			
 			/* Work out if we need to send an ACK. */
-			if(rimeaddr_cmp(&dest, &rimeaddr_node_addr)) {
+			if(linkaddr_cmp(&dest, &linkaddr_node_addr)) {
 				PRINTFRX("\tSending ACK\n");
 				
 				cc1120_arch_spi_disable();                                                

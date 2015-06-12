@@ -29,11 +29,50 @@
  * This file is part of the Contiki operating system.
  *
  */
-#ifndef __EVENT_SENSOR_H__
-#define __EVENT_SENSOR_H__
+/**
+ * \file
+ * Generic serial I/O process header filer waits for timeout
+ * \author
+ * Philip Basford
+ * Adam Dunkels
+ *
+ */
+#ifndef __SERIAL_TIMEOUT_H__
+#define __SERIAL_TIMEOUT_H__
 
-#include "lib/sensors.h"
+#include "contiki.h"
 
-extern const struct sensors_sensor event_sensor;
+//#ifndef SERIAL_TIMEOUT_VALUE
+	#define SERIAL_TIMEOUT_VALUE   (RTIMER_SECOND/200)
+//#endif
 
-#endif /* __EVENT_SENSOR_H__ */
+/**
+ * Event posted when a timeout has expired after the end of data recieving.
+ *
+ */
+process_event_t serial_timeout_event_message;
+
+/**
+ * Get one byte of input from the serial driver.
+ *
+ * This function is to be called from the actual RS232 driver to get
+ * one byte of serial data input.
+ *
+ * For systems using low-power CPU modes, the return value of the
+ * function can be used to determine if the CPU should be woken up or
+ * not. If the function returns non-zero, the CPU should be powered
+ * up. If the function returns zero, the CPU can continue to be
+ * powered down.
+ *
+ * \param c The data that is received.
+ *
+ * \return Non-zero if the CPU should be powered up, zero otherwise.
+ */
+
+int serial_timeout_input_byte(unsigned char c);
+
+void serial_timeout_init(void);
+
+PROCESS_NAME(serial_timeout_process);
+
+#endif /* __SERIAL_TIMEOUT_H__ */

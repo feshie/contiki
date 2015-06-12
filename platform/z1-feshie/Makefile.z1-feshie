@@ -6,3 +6,7 @@ CONTIKI_TARGET_SOURCEFILES += contiki-z1-platform.c
 CLEAN += *.z1-feshie
 
 include $(CONTIKI)/platform/z1-feshie/Makefile.common
+
+MODULES += core/net \
+           core/net/mac core/net/mac/contikimac \
+           core/net/llsec

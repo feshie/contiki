@@ -55,13 +55,13 @@
 //#define RPL_CONF_DIO_INTERVAL_MIN 16
 //#define RPL_CONF_DIO_INTERVAL_DOUBLINGS 4
 
-#if WITH_UIP6
+#if NETSTACK_CONF_WITH_IPV6
 
 /* Network setup for IPv6 */
 #define NETSTACK_CONF_NETWORK sicslowpan_driver
 #define NETSTACK_CONF_MAC     csma_driver
-#define NETSTACK_CONF_RDC     contikimac_driver
-// WORKS! #define NETSTACK_CONF_RDC     nullrdc_driver
+//#define NETSTACK_CONF_RDC     contikimac_driver
+#define NETSTACK_CONF_RDC     nullrdc_driver
 #define NETSTACK_CONF_RADIO   cc1120_driver
 #define NETSTACK_CONF_FRAMER  framer_802154
 
@@ -73,7 +73,7 @@
 #define CONTIKIMAC_CONF_WITH_CONTIKIMAC_HEADER 0
 
 #define CC1120_CONF_AUTOACK              1
-#define NETSTACK_CONF_RDC_CHANNEL_CHECK_RATE 8
+#define NETSTACK_RDC_CHANNEL_CHECK_RATE  8
 #define RIME_CONF_NO_POLITE_ANNOUCEMENTS 0
 #define CXMAC_CONF_ANNOUNCEMENTS         0
 #define XMAC_CONF_ANNOUNCEMENTS          0
@@ -81,7 +81,7 @@
 #define QUEUEBUF_CONF_NUM                4 
 
 
-#else /* WITH_UIP6 */
+#else /* NETSTACK_CONF_WITH_IPV6 */
 
 /* Network setup for non-IPv6 (rime). */
 
@@ -89,7 +89,7 @@
 #define NETSTACK_CONF_MAC     csma_driver
 #define NETSTACK_CONF_RDC     contikimac_driver
 #define NETSTACK_CONF_RDC_CHANNEL_CHECK_RATE 8
-#define NETSTACK_CONF_FRAMER  framer_802154
+#define NETSTACK_CONF_FRAMER  contikimac_framer
 
 
 #define COLLECT_CONF_ANNOUNCEMENTS       1
@@ -106,7 +106,7 @@
 
 #define QUEUEBUF_CONF_NUM          8
 
-#endif /* WITH_UIP6 */
+#endif /* NETSTACK_CONF_WITH_IPV6 */
 
 #define PACKETBUF_CONF_ATTRS_INLINE 1
 
@@ -141,15 +141,15 @@
 
 #define UART0_CONF_TX_WITH_INTERRUPT 0 // So far, printfs without interrupt.
 
-#ifdef WITH_UIP6
+#ifdef NETSTACK_CONF_WITH_IPV6
 
-#define RIMEADDR_CONF_SIZE              8
+#define LINKADDR_CONF_SIZE              8
 
 #define UIP_CONF_LL_802154              1
 #define UIP_CONF_LLH_LEN                0
 
 #define UIP_CONF_ROUTER                 1
-#define UIP_CONF_IPV6_RPL               1
+#define NETSTACK_CONF_WITH_IPV6_RPL               1
 
 /* Handle 10 neighbors */
 #define NBR_TABLE_CONF_MAX_NEIGHBORS     15
@@ -160,7 +160,7 @@
 #define UIP_CONF_ND6_REACHABLE_TIME     600000
 #define UIP_CONF_ND6_RETRANS_TIMER      10000
 
-#define UIP_CONF_IPV6                   1
+#define NETSTACK_CONF_WITH_IPV6                   1
 #define UIP_CONF_IPV6_QUEUE_PKT         0
 #define UIP_CONF_IPV6_CHECKS            1
 #define UIP_CONF_IPV6_REASSEMBLY        0
@@ -180,10 +180,10 @@
 #endif /* SICSLOWPAN_CONF_FRAG */
 #define SICSLOWPAN_CONF_CONVENTIONAL_MAC	1
 #define SICSLOWPAN_CONF_MAX_ADDR_CONTEXTS       2
-#else /* WITH_UIP6 */
+#else /* NETSTACK_CONF_WITH_IPV6 */
 #define UIP_CONF_IP_FORWARD      1
 #define UIP_CONF_BUFFER_SIZE     108
-#endif /* WITH_UIP6 */
+#endif /* NETSTACK_CONF_WITH_IPV6 */
 
 #define UIP_CONF_ICMP_DEST_UNREACH 1
 

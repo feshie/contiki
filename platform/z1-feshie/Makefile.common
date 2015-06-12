@@ -14,8 +14,8 @@ ARCH=msp430.c leds.c watchdog.c xmem.c \
      spi.c cc1120.c cc1120-arch-z1.c cc1120-config.c \
      node-id.c sensors.c button-sensor.c cfs-coffee.c \
      uart0.c uart0-putchar.c uip-ipchksum.c \
-     checkpoint-arch.c slip.c slip_uart0.c \
-     sht11.c sht11-sensor.c light-sensor.c \
+     slip.c slip_uart0.c \
+     light-sensor.c \
      battery-sensor.c sky-sensors.c tmp102.c temperature-sensor.c  \
       tlc59116.c \
      ds3231-sensor.c batv-sensor.c adc1-sensor.c adc2-sensor.c \
@@ -62,8 +62,16 @@ ifeq ($(HOST_OS),Darwin)
       BSL = $(CONTIKI)/tools/z1/z1-bsl-nopic --z1
       BSL_FILETYPE = -I
       MOTES = $(shell $(MOTELIST) -c 2>&- | \
-         cut -f 2 -d ,)
-      CMOTES=$(MOTES) 
+              cut -f 2 -d ,)
+      CMOTES=$(MOTES)
+      REFNUM = $(shell $(MOTELIST) -c 2>&- | \
+               cut -f 1 -d , | tail -c5 | sed 's/^0*//')
+      ifneq (,$(REFNUM))
+        # No device fo-und
+        ifeq (,$(findstring und, $(REFNUM)))
+          CFLAGS += -DSERIALNUM=$(REFNUM:0%=%)
+        endif
+      endif
   endif
 else
   # If we are not running under Mac, we assume Linux
@@ -74,9 +82,17 @@ else
       BSL = $(CONTIKI)/tools/z1/z1-bsl-nopic --z1
       BSL_FILETYPE = -I
       MOTES = $(shell $(MOTELIST) -c 2>&- | \
-         cut -f 2 -d , | \
-         perl -ne 'print $$1 . " " if(m-(/dev/\w+)-);')
+              cut -f 2 -d , | \
+              perl -ne 'print $$1 . " " if(m-(/dev/\w+)-);')
       CMOTES=$(MOTES)
+      REFNUM = $(shell $(MOTELIST) -c 2>&- | \
+               cut -f 1 -d , | tail -c5 | sed 's/^0*//')
+      ifneq (,$(REFNUM))
+        # No device fo-und
+        ifeq (,$(findstring und, $(REFNUM)))
+          CFLAGS += -DSERIALNUM=$(REFNUM)
+        endif
+      endif
     endif
 endif
 
