@@ -1,0 +1,8 @@
+# Common makefile between Z1 and Z1 Starter Platform
+
+CFLAGS += -DCC11xx_CC1120=1
+
+CONTIKI_TARGET_SOURCEFILES += contiki-z1-platform.c 
+CLEAN += *.z1-feshie
+
+include $(CONTIKI)/platform/z1-feshie/Makefile.common

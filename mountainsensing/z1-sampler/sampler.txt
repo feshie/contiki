@@ -1,0 +1,24 @@
+
+/
+returns a home page with the status info
+
+/clock
+interactive page to configure the RTC
+
+/sample
+gives the sensor config page to choose/setup
+
+/sensub
+is designed for a GET of the above?
+
+/comms
+interactive communications config page
+
+
+/comsub
+GET version of above?
+
+/du
+coffee filesystem disk usage
+
+

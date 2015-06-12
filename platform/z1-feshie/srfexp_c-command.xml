@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<registerexporttemplate>
+  <name><![CDATA[C-Command]]></name>
+  <commentStart><![CDATA[/*]]></commentStart>
+  <commentEnd><![CDATA[*/]]></commentEnd>
+  <paramSummary><![CDATA[1]]></paramSummary>
+  <paTable><![CDATA[0]]></paTable>
+  <header><![CDATA[
+/* CC1120 settings exported from SmartRF as a function 
+ * that is called by the CC1120 Contiki driver. 
+ * 
+ * Alternatives to this file can be created in SmartRF by 
+ * importing srfexp_c-command.xml or re-creating the template.  
+ *
+ * The Template is filled out as follows:
+ *  "File" contains cc1120-config.c
+ *  "Comment" contains C-Comment initiator and terminator
+ *  "Parameter Summary" box is ticked
+ *  "Header" contains all text from "/* CC1120 setttings..." to opening {
+ *  "Registers" contains the formatting string "   cc1120_spi_single_write(CC1120_ADDR_@RN@, 0x@VH@); @<<@ // @Rd@."
+ *  "Footer" contains a closing brace }
+ *
+ * Please note: Some exported settings are over-written by 
+ * other parts of the code (such as FREQ, which is set as 
+ * part of the set channel function, and GPIO configuration,  
+ * which is controlled by settings in the platform-conf.h.
+ */
+
+#include "cc1120-config.h"
+#include "cc1120.h"
+ 
+void
+cc1120_register_config(void)
+{
+]]></header>
+  <registers><![CDATA[   cc1120_spi_single_write(CC1120_ADDR_@RN@, 0x@VH@); @<<@ /* @Rd@. */]]></registers>
+  <footer><![CDATA[}]]></footer>
+  <filename><![CDATA[cc1120-config.c]]></filename>
+  <devices><![CDATA[]]></devices>
+</registerexporttemplate>
