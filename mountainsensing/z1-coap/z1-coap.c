@@ -41,28 +41,22 @@
  *          Kirk Martinez   <km@ecs.soton.ac.uk>
  */
 
- // General
 #include "contiki.h"
 #include <stdio.h>
 #include <stdlib.h>
-
 #include "z1-coap.h"
+#include "platform-conf.h"
 
 #ifndef CC11xx_CC1120
   #include "dev/cc2420.h"
 #endif
 
-//Other parts of the application
 #include "sampler.h"
-#include "poster.h"
-#include "ms_webserver.h"
-
-#include "platform-conf.h"
+#include "er-server.h"
 
 
-#define DEBUG 
-
-#ifdef DEBUG 
+#define DEBUG
+#ifdef DEBUG
     #define DPRINT(...) printf(__VA_ARGS__)
 #else
     #define DPRINT(...)
@@ -72,22 +66,21 @@ PROCESS(feshie_sense_process, "Feshie Sense");
 
 AUTOSTART_PROCESSES(&feshie_sense_process);
 
-PROCESS_THREAD(feshie_sense_process, ev, data)
-{
+PROCESS_THREAD(feshie_sense_process, ev, data) {
     PROCESS_BEGIN();
+
     #ifndef CC11xx_CC1120
         cc2420_set_txpower(31);
     #endif
     #ifdef SPI_LOCKING
-        printf(">>>>>SPI Locking enabled<<<<<\n");
+        //printf(">>>>>SPI Locking enabled<<<<<\n");
     #endif
     #ifdef Z1_SAMPLER_AVR_DISABLE
-        printf("####AVR Disabled####\n");
+        //printf("####AVR Disabled####\n");
     #endif
-    process_start(&web_process, NULL);
     process_start(&sample_process, NULL);
+    process_start(&er_server_process, NULL);
 
-
-  PROCESS_END();
+    PROCESS_END();
 }
-/*---------------------------------------------------------------------------*/
+

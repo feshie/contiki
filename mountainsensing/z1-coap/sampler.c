@@ -1,6 +1,5 @@
 
 #include "sampler.h"
-#include "poster.h"
 
 PROCESS(sample_process, "Sample Process");
 
@@ -23,8 +22,8 @@ PROCESS(sample_process, "Sample Process");
 static SensorConfig sensor_config;
 static POSTConfig POST_config;
 static process_event_t protobuf_event;
-static struct psock ps;
-static uint8_t psock_buffer[PSOCK_BUFFER_LENGTH];
+//static struct psock ps;
+//static uint8_t psock_buffer[PSOCK_BUFFER_LENGTH];
 
 
 void
@@ -67,15 +66,6 @@ PROCESS_THREAD(sample_process, ev, data)
     static uint8_t sample_count;
 
     //poster variables
-    static uint8_t post_retries;
-    static uip_ipaddr_t addr;
-    static char data_buffer[DATA_BUFFER_LENGTH];
-    static uint8_t http_status;
-    static uint8_t data_length;
-    static struct etimer timeout_timer;
-    static uip_ds6_addr_t *n_addr;
-
-
 
     PROCESS_BEGIN();
     refreshSensorConfig();
@@ -84,8 +74,6 @@ PROCESS_THREAD(sample_process, ev, data)
     sample_count = 0;
     avr_recieved = 0;
     avr_retry_count = 0;
-    data_length = 0;
-    http_status = 0;
 
     protobuf_event = process_alloc_event();
     protobuf_register_process_callback(&sample_process, protobuf_event) ;
@@ -226,132 +214,6 @@ PROCESS_THREAD(sample_process, ev, data)
     #endif
 #endif
 
-        post_retries = 0;
-        PPRINT("Sample count = %d\n", sample_count);
-        if(IMMEDIATE_SEND || sample_count >= POST_config.interval){
-            //We've looped enough times for it to be a post time
-            //or we are in sample_send mode
-            data_length = 0;
-            http_status = 0;
-            n_addr = uip_ds6_get_global(-1);
-            if(n_addr == NULL){
-                printf("Not associated so can't send\n");
-                continue;
-            }
-#ifndef SAMPLE_SEND
-            while((filenames_next_read(filename)) !=0 && post_retries < CONNECTION_RETRIES){
-                data_length = load_file(data_buffer, filename);
-#else
-            data_length = ostream.bytes_written;
-            memcpy((void *)data_buffer, (void *)pb_buf, data_length);
-            while(post_retries < CONNECTION_RETRIES){
-#endif
-                uip_ip6addr_u8(&addr,
-                    n_addr->ipaddr.u8[0], n_addr->ipaddr.u8[1],
-                    n_addr->ipaddr.u8[2], n_addr->ipaddr.u8[3],
-                    n_addr->ipaddr.u8[4], n_addr->ipaddr.u8[5],
-                    n_addr->ipaddr.u8[6], n_addr->ipaddr.u8[7],
-                    0, 0, 0, 0, 0, 0, 0, 1);
-#ifdef POSTDEFBUG
-                printf("About to post to: ");
-                uip_debug_ipaddr_print(&addr);
-                printf("\n");
-#endif
-#ifdef SAMPLE_SEND
-                PPRINT("[POST][INIT] About to attempt POST with current data - RETRY [%d]\n",  post_retries);
-#else
-                PPRINT("[POST][INIT] About to attempt POST with %s - RETRY [%d]\n", filename, post_retries);
-#endif
-                PPRINT("Data length = %d\n", data_length);
-                if(data_length == 0 && strcmp("r0", filename) == 0){                    
-                    printf("Enpty file r0 breaking out of send loop\n");
-                    break;
-                }else if (data_length ==0){
-                    //something odd has happened
-                    PPRINT("Length = 0\n");
-                    filenames_refresh();
-                    continue;
-                }
-                tcp_connect(&addr, UIP_HTONS(POST_config.port), NULL);
-                PPRINT("Connecting...");
-                PROCESS_WAIT_EVENT_UNTIL(ev == tcpip_event);
-                if(uip_aborted() || uip_timedout() || uip_closed() ) {
-                    PPRINT("Could not establish connection\n");
-                    printf("UIP flags = %d\n", uip_flags);
-                    if(uip_flags == UIP_ABORT){
-                        PPRINT("Connection Aborted\n");
-                    }else if(uip_flags == UIP_TIMEDOUT){
-                        PPRINT("UIP Timeout\n");
-                    }else if(uip_flags == UIP_CLOSE){
-                        PPRINT("UIP Closed\n");
-                    }
-                    post_retries++;
-                } else if(uip_connected() || uip_poll()) {
-                    PPRINT("Connected\n");
-                    PSOCK_INIT(&ps, psock_buffer, sizeof(psock_buffer));
-                    etimer_set(&timeout_timer, CLOCK_SECOND*LIVE_CONNECTION_TIMEOUT);
-                    do {
-                        if(etimer_expired(&timeout_timer)){
-                            PPRINT("Connection took too long. TIMEOUT\n");
-                            PSOCK_CLOSE(&ps);
-                            post_retries++;
-                            break;
-                        }else if(http_status == 0){
-                            PPRINT("[POST] Handle Connection\n");
-                            handle_connection(data_buffer, data_length, &http_status, &ps, &psock_buffer);
-                            //not returned yet
-                            PROCESS_WAIT_EVENT_UNTIL(ev == tcpip_event);
-                        }else{
-                            PPRINT("HTTP status = %d\n", http_status);
-                            break;
-                        }
-                    } while(!(uip_closed() || uip_aborted() || uip_timedout()));
-                    if(uip_flags == UIP_ABORT){
-                        PPRINT("Connection Aborted\n");
-                    }else if(uip_flags == UIP_TIMEDOUT){
-                        PPRINT("UIP Timeout\n");
-                    }else if(uip_flags == UIP_CLOSE){
-                        PPRINT("UIP Closed\n");
-                    }else if(http_status ==0){
-                        PPRINT("!!!!!!Other flags not sure why I exited loop: %d\n", uip_flags);
-                    }
-                    PPRINT("Buffer = %s\n",psock_buffer);
-                    if(http_status == 0 && strncmp(psock_buffer, "HTTP/", 5) == 0){   
-                        // Status line
-                        http_status = atoi((const char *)psock_buffer + 9);
-                        PPRINT("Setting status outside loop\n");
-                    }
-                   // PPRINT("Connection closed.\n");
-                    PPRINT("HTTP Status = %d\n", http_status);
-                    if(http_status/100 == 2) { // Status OK
-                        data_length = 0;
-                        post_retries = 0;
-                        sample_count = 0;
-                        http_status = 0;
-#ifndef SAMPLE_SEND
-                        filenames_delete(filename);
-                        PPRINT("[POST] Removing file\n");
-#else
-                        //If sample and send break out of the loop
-                        break;
-#endif
-                    } else { // POST failed
-                        PPRINT("[POST] Failed, not removing file\n");
-                        data_length = 0;
-                        post_retries++;
-                        sample_count = 0;
-                        http_status = 0;
-                         
-                    }
-                }else{
-                    printf("Other status\n");
-                    printf("UIP flags = %d\n", uip_flags);
-                }
-            }
-            memcpy(psock_buffer, '0', strlen(psock_buffer));
-	    PSOCK_CLOSE(&ps);
-            
-        }
     }
     PROCESS_END();
 }
@@ -380,11 +242,11 @@ refreshPosterConfig()
         POST_config.ip[7] = POST_IP7;
         POST_config.port = POST_PORT;
         set_config(&POST_config, COMMS_CONFIG);
-        PPRINT("POST config set to default and written\n");
+        //PPRINT("POST config set to default and written\n");
     }else{
-        PPRINT("POST Config file loaded\n");
+        //PPRINT("POST Config file loaded\n");
     }
-    PPRINT("Refeshed post config to:\n");
+    //PPRINT("Refeshed post config to:\n");
     print_comms_config(&POST_config);
 
 }

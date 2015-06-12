@@ -1,17 +1,76 @@
-#include "ms_webserver.h"
+#include "er-server.h"
+#include "rest-engine.h"
 
-PROCESS(web_process, "Web Server");
+#define DEBUG
 
-static struct psock web_ps;
-static char web_buf[WEB_BUFF_LENGTH];
-
-#define WEBDEBUG
-#ifdef WEBDEBUG
-    #define WPRINT(...) printf(__VA_ARGS__)
+#ifdef DEBUG
+#define PRINTF(...) printf(__VA_ARGS__)
 #else
-    #define WPRINT(...)
+#define PRINTF(...)
 #endif
 
+/**
+ * Ressources for config (GET and POST)
+ */
+//RESOURCE(config_get, METHOD_GET, "config", "");
+//RESOURCE(config_post, METHOD_POST, "config", "");
+
+//void config_get_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
+
+//}
+
+//void config_post_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
+
+//}
+
+/**
+ * Test HELLO ressource
+ */
+
+/*
+ * A handler function named [resource name]_handler must be implemented for each RESOURCE.
+ * A buffer for the response payload is provided through the buffer pointer. Simple resources can ignore
+ * preferred_size and offset, but must respect the REST_MAX_CHUNK_SIZE limit for the buffer.
+ * If a smaller block size is requested for CoAP, the REST framework automatically splits the data.
+ */
+void res_get_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
+    char const * const message = "Hello World!";
+    int length = 12;
+
+    memcpy(buffer, message, length);
+
+    REST.set_header_content_type(response, REST.type.TEXT_PLAIN); 
+    REST.set_header_etag(response, (uint8_t *) &length, 1);
+    REST.set_response_payload(response, buffer, length);
+}
+
+RESOURCE(res_hello, "title=\"Hello world: ?len=0..\";rt=\"Text\"", res_get_handler, NULL, NULL, NULL);
+
+PROCESS(er_server_process, "CoAP Server");
+PROCESS_THREAD(er_server_process, ev, data) {
+    PROCESS_BEGIN();
+
+    PROCESS_PAUSE();
+
+    /* Initialize the REST engine. */
+    rest_init_engine();
+
+    rest_activate_resource(&res_hello, "hello");
+
+    //rest_activate_resource(&res_wais, "");
+    //wais_activate_sensors();
+
+    while (1) {
+        PROCESS_WAIT_EVENT();
+    }                             /* while (1) */
+
+    PROCESS_END();
+}
+
+
+
+
+/*
 static
 PT_THREAD(web_handle_connection(struct psock *p))
 {
@@ -42,8 +101,8 @@ PT_THREAD(web_handle_connection(struct psock *p))
         url = web_buf + 4;
         strtok(url, " ");
         WPRINT("[WEBD] Got request for %s\n", url);
-        
-        if(strncmp(url, "/clock", 6) == 0){ 
+
+        if(strncmp(url, "/clock", 6) == 0){
             // Serve clock form
             WPRINT("[WEBD] Serving /clock\n");
             submitted = 0;
@@ -77,7 +136,7 @@ PT_THREAD(web_handle_connection(struct psock *p))
             }else{
                 PSOCK_SEND_STR(p, CLOCK_FORM);
             }
-            
+
             PSOCK_SEND_STR(p, BOTTOM);
         }else if(strncmp(url, "/sample", 7) == 0){
             PSOCK_SEND_STR(p, HTTP_RES);
@@ -150,7 +209,7 @@ PT_THREAD(web_handle_connection(struct psock *p))
                 sensor_config.hasADC1 = 0;
             }
 
-            
+
             if(get_url_param(param, url, "adc2") == 1 && strcmp(param, "y") == 0) {
                 sensor_config.hasADC2 = 1;
             } else {
@@ -257,16 +316,16 @@ PT_THREAD(web_handle_connection(struct psock *p))
                 PSOCK_SEND_STR(p, tmpstr);
             }
         }else if(strncmp(url, "/du", 3) == 0){
-            /******** debug call to see flash disk usage */
+            // debug call to see flash disk usage
             if( flash_du(&filecount, &bytesused) == -1){
                 PSOCK_SEND_STR(p, "failed\n");
                 goto close_connection;
             }
 
-            sprintf(tmpstr, "%s\n%d files %ld bytes\n",TEXT_RES,filecount,bytesused); 
+            sprintf(tmpstr, "%s\n%d files %ld bytes\n",TEXT_RES,filecount,bytesused);
             PSOCK_SEND_STR(p, tmpstr);
         }else if(strncmp(url, "/ls", 3) == 0){
-            /******** debug call to list all files on flash = SLOW! */
+            // debug call to list all files on flash = SLOW!
 
             PSOCK_SEND_STR(p, TEXT_RES);
             PSOCK_SEND_STR(p, "printing on serial\r\n");
@@ -306,7 +365,7 @@ PT_THREAD(web_handle_connection(struct psock *p))
         }else if(strncmp(url, "/json", 5) == 0){
             WPRINT("Serving JSON file\n");
             PSOCK_SEND_STR(p, JSON_RES);
-            sprintf(tmpstr, "{\"reading\":{\"timestamp\":%lu,\"temperature\":%d.%03u,\"battery\":%u.%03u,\"x\":%d,\"y\":%d,\"z\":%d", 
+            sprintf(tmpstr, "{\"reading\":{\"timestamp\":%lu,\"temperature\":%d.%03u,\"battery\":%u.%03u,\"x\":%d,\"y\":%d,\"z\":%d",
                 get_time(),
                 (int)get_sensor_temp(),
                 (unsigned)((get_sensor_temp() - (int)get_sensor_temp())*1000),
@@ -315,10 +374,10 @@ PT_THREAD(web_handle_connection(struct psock *p))
                 get_sensor_acc_x(),
                 get_sensor_acc_y(),
                 get_sensor_acc_z());
-            
+
             if(get_url_param(param, url, "adc1") == 1 && strcmp(param, "y") == 0) {
                 sprintf(tmpstr + strlen(tmpstr), ",\"adc1\":%d", get_sensor_ADC1());
-            } 
+            }
             if(get_url_param(param, url, "adc2") == 1 && strcmp(param, "y") == 0) {
                 sprintf(tmpstr + strlen(tmpstr), ",\"adc2\":%d", get_sensor_ADC2());
             }
@@ -331,7 +390,7 @@ PT_THREAD(web_handle_connection(struct psock *p))
             PSOCK_SEND_STR(p, INDEX_BODY);
             PSOCK_SEND_STR(p, BOTTOM);
         }
-    } 
+    }
     close_connection:
     PSOCK_CLOSE(p);
     PSOCK_END(p);
@@ -339,7 +398,7 @@ PT_THREAD(web_handle_connection(struct psock *p))
 
 PROCESS_THREAD(web_process, ev, data)
 {
-      
+
     PROCESS_BEGIN();
 
     tcp_listen(UIP_HTONS(80));
@@ -359,7 +418,7 @@ PROCESS_THREAD(web_process, ev, data)
         }
     }
     PROCESS_END();
-}
+}*/
 
 /*
  * Gets the value associated with the key in a URL
@@ -370,7 +429,7 @@ PROCESS_THREAD(web_process, ev, data)
  *
  *   Returns "djap1g11"
  */
-uint8_t
+/*uint8_t
 get_url_param(char *par, char *url, char *key)
 {
     char str[URL_LENGTH];
@@ -394,16 +453,16 @@ get_url_param(char *par, char *url, char *key)
         pch = strtok(NULL, "?&");
     }
   //  WPRINT("Found %s\n", par);
-    
+
     return ret_status;
-}
+}*/
 
 
 
 
 /* returns the number of files and disk used on Flash
 */
-int 
+/*int
 flash_du(int *filec, uint32_t *bytes)
 {
     struct cfs_dir dir;
@@ -428,4 +487,4 @@ flash_du(int *filec, uint32_t *bytes)
     *bytes = used;
     *filec = count;
     return(0);
-}
+}*/

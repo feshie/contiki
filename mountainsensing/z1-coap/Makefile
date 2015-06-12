@@ -5,30 +5,20 @@ CONTIKI=../../
 PROTOBUF:=../protocol-buffers/
 NANOPB:=$(PROTOBUF)tools/nanopb/
 
-WITH_UIP6=1
-UIP_CONF_IPV6=1
+CONTIKI_WITH_IPV6=1
+CFLAGS += -DUIP_CONF_IPV6=1
+CFLAGS += -DREST=coap_rest_implementation
 
 SMALL=1
 
-APPS += webserver webbrowser
+APPS += erbium er-coap rest-engine
 
 PROJECTDIRS += $(NANOPB) $(PROTOBUF)c/
 
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
-CONTIKI_SOURCEFILES += pb_decode.c pb_encode.c pb_common.c all.c sampling-sensors.c filenames.c config.c sampler.c poster.c ms_webserver.c
-PROJECTDIRS += ../../examples/ipv6/rpl-border-router
-PROJECT_SOURCEFILES += httpd-simple.c
+CONTIKI_SOURCEFILES += pb_decode.c pb_encode.c pb_common.c all.c sampling-sensors.c filenames.c config.c sampler.c er-server.c
 
 include $(CONTIKI)/Makefile.include
-
-$(CONTIKI)/tools/tunslip6:	$(CONTIKI)/tools/tunslip6.c
-	(cd $(CONTIKI)/tools && $(MAKE) tunslip6)
-
-connect-router:	$(CONTIKI)/tools/tunslip6
-	sudo $(CONTIKI)/tools/tunslip6 aaaa::1/64
-
-connect-router-cooja:	$(CONTIKI)/tools/tunslip6
-	sudo $(CONTIKI)/tools/tunslip6 -a 127.0.0.1 aaaa::1/64
 
 install: z1-coap.upload
 
