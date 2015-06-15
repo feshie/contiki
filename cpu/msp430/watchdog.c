@@ -30,6 +30,7 @@
  *
  */
 
+#include "stdio.h"
 #include "contiki.h"
 #include "dev/watchdog.h"
 #include "isr_compat.h"
@@ -148,6 +149,7 @@ watchdog_stop(void)
 void
 watchdog_reboot(void)
 {
+  printf("$\n");
   WDTCTL = 0;
 }
 /*---------------------------------------------------------------------------*/
