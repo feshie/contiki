@@ -9,4 +9,4 @@
 	url = https://github.com/g-oikonomou/cc26xxware.git
 [submodule "mountainsensing/protocol-buffers"]
     path = mountainsensing/protocol-buffers
-    url = git@github.com:feshie/protocol-buffers.git
+    url = https://github.com/feshie/protocol-buffers.git
