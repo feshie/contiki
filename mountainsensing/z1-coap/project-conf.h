@@ -31,12 +31,29 @@
 #ifndef __PROJECT_FESHIE_Z1_COAP_H__
 #define __PROJECT_FESHIE_Z1_COAP_H__
 
+/* Disabling TCP on CoAP nodes. */
+#undef UIP_CONF_TCP
+#define UIP_CONF_TCP                   0
+
 /* Increase rpl-border-router IP-buffer when using more than 64. */
 #undef REST_MAX_CHUNK_SIZE
-#define REST_MAX_CHUNK_SIZE    64
+#define REST_MAX_CHUNK_SIZE            48
 
 /* Multiplies with chunk size, be aware of memory constraints. */
 #undef COAP_MAX_OPEN_TRANSACTIONS
-#define COAP_MAX_OPEN_TRANSACTIONS   4
+#define COAP_MAX_OPEN_TRANSACTIONS     1
 
-#endif /* __PROJECT_FESHIE_Z1_COAP_H__ */
+/* Must be <= open transactions, default is COAP_MAX_OPEN_TRANSACTIONS-1. */
+#undef COAP_MAX_OBSERVERS
+#define COAP_MAX_OBSERVERS             0
+
+/* Filtering .well-known/core per query can be disabled to save space. */
+#undef COAP_LINK_FORMAT_FILTERING
+#define COAP_LINK_FORMAT_FILTERING     0
+#undef COAP_PROXY_OPTION_PROCESSING
+#define COAP_PROXY_OPTION_PROCESSING   0
+
+/* Enable client-side support for COAP observe */
+#define COAP_OBSERVE_CLIENT            0
+
+#endif
