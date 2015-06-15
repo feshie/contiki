@@ -9,8 +9,7 @@
 #endif
 
 //#define CONFIG_DEBUG
-
-#ifdef CONFIG_DEBUG 
+#ifdef CONFIG_DEBUG
     #define CPRINT(...) printf(__VA_ARGS__)
 #else
     #define CPRINT(...)
@@ -21,35 +20,35 @@ void
 print_sensor_config(SensorConfig *conf)
 {
   uint8_t i;
-  printf("\tInterval = %d\n", (unsigned int)conf->interval);
-  printf("\tADC1: ");
+  CPRINT("\tInterval = %d\n", (unsigned int)conf->interval);
+  CPRINT("\tADC1: ");
   if (conf->hasADC1 == 1){
-    printf("yes\n");
+    CPRINT("yes\n");
   }else{
-    printf("no\n");
+    CPRINT("no\n");
   }
-  printf("\tADC2: ");
+  CPRINT("\tADC2: ");
   if (conf-> hasADC2){
-    printf("yes\n");
+    CPRINT("yes\n");
   }else{
-    printf("no\n");
+    CPRINT("no\n");
   }
-  printf("\tRain: ");
+  CPRINT("\tRain: ");
   if (conf-> hasRain){
-    printf("yes\n");
+    CPRINT("yes\n");
   }else{
-    printf("no\n");
+    CPRINT("no\n");
   }
-  printf("\tAVRs: ");
+  CPRINT("\tAVRs: ");
   if(conf->avrIDs_count ==0 ){
-    printf("NONE\n");
+    CPRINT("NONE\n");
   }else{
     for(i=0; i < conf->avrIDs_count; i++){
-      printf("%02x", (int)conf->avrIDs[i] & 0xFF);
+      CPRINT("%02x", (int)conf->avrIDs[i] & 0xFF);
       if(i < conf->avrIDs_count -1){
-        printf(", ");
+        CPRINT(", ");
       }else{
-        printf("\n");
+        CPRINT("\n");
       }
     }
   }
@@ -57,9 +56,9 @@ print_sensor_config(SensorConfig *conf)
 
 void
 print_comms_config(POSTConfig *conf){
-    printf("\tInterval: %d\n", (unsigned int)conf->interval);
-    printf("\tPort: %d\n", (unsigned int)conf->port);
-    printf("\tPosting to %x:%x:%x:%x:%x:%x:%x:%x\n", 
+    CPRINT("\tInterval: %d\n", (unsigned int)conf->interval);
+    CPRINT("\tPort: %d\n", (unsigned int)conf->port);
+    CPRINT("\tPosting to %x:%x:%x:%x:%x:%x:%x:%x\n", 
         (unsigned int)conf->ip[0], (unsigned int)conf->ip[1], (unsigned int)conf->ip[2],
         (unsigned int)conf->ip[3], (unsigned int)conf->ip[4], (unsigned int)conf->ip[5],
         (unsigned int)conf->ip[6], (unsigned int)conf->ip[7]);
@@ -96,7 +95,7 @@ set_config(void* pb, uint8_t config)
         CPRINT("Saving the following details to config file\n");
         print_comms_config((POSTConfig *)pb);
     }else{
-        printf("UNKNOWN CONFIG TYPE. UNABLE TO WRITE FILE!\n");
+        CPRINT("UNKNOWN CONFIG TYPE. UNABLE TO WRITE FILE!\n");
         encode_status = 0;
         ret_code = 2;
     }
@@ -111,7 +110,7 @@ set_config(void* pb, uint8_t config)
            ret_code = 1;
         }
     }else{
-      printf("Failed to encode file. Leaving config as is\n");
+      CPRINT("Failed to encode file. Leaving config as is\n");
       ret_code = 2;
     }
 #ifdef SPI_LOCKING

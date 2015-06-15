@@ -3,7 +3,7 @@
 
 PROCESS(sample_process, "Sample Process");
 
-#define SENSEDEFBUG
+//#define SENSEDEFBUG
 #ifdef SENSEDEFBUG
     #define SPRINT(...) printf(__VA_ARGS__)
 #else
@@ -12,7 +12,7 @@ PROCESS(sample_process, "Sample Process");
 
 //#define AVRDEFBUG
 #ifdef AVRDEFBUG
-    #define AVRDPRINT(...) printf(__VA_ARGS__)
+    #define AVRDPRINT(...) SPRINT(__VA_ARGS__)
 #else
     #define AVRDPRINT(...)
 #endif
@@ -30,7 +30,7 @@ void
 refreshSensorConfig(void){
     if(get_config(&sensor_config, SAMPLE_CONFIG) == 1){ 
         // Config file does not exist! Use default and set file
-      	printf("No Sensor config found\n");
+      	SPRINT("No Sensor config found\n");
         sensor_config.interval = SENSOR_INTERVAL;
         sensor_config.avrIDs_count = SENSOR_AVRIDS_COUNT;
         sensor_config.hasADC1 = SENSOR_HASADC1;
@@ -38,7 +38,7 @@ refreshSensorConfig(void){
         sensor_config.hasRain = SENSOR_HASRAIN;
         set_config(&sensor_config, SAMPLE_CONFIG);
     }else{
-      	printf("Sensor config loaded\n");
+      	SPRINT("Sensor config loaded\n");
     }
 }
 
@@ -63,7 +63,6 @@ PROCESS_THREAD(sample_process, ev, data)
     static uint8_t avr_recieved;
     static uint8_t avr_retry_count;
     static pb_ostream_t ostream;
-    static uint8_t sample_count;
 
     //poster variables
 
@@ -71,22 +70,21 @@ PROCESS_THREAD(sample_process, ev, data)
     refreshSensorConfig();
     refreshPosterConfig();
     filenames_init();
-    sample_count = 0;
     avr_recieved = 0;
     avr_retry_count = 0;
 
     protobuf_event = process_alloc_event();
     protobuf_register_process_callback(&sample_process, protobuf_event) ;
-    printf("Refreshed Sensor config to:\n"); 
+    SPRINT("Refreshed Sensor config to:\n"); 
     print_sensor_config(&sensor_config);
 
 #ifdef SENSE_ON
     ms1_sense_on();
-    printf("Sensor power permanently on\n");
+    SPRINT("Sensor power permanently on\n");
 #endif
 
 #ifdef SAMPLE_SEND
-    printf("<<<<< SAMPLE AND SEND ENABLED >>>>>\n");
+    SPRINT("<<<<< SAMPLE AND SEND ENABLED >>>>>\n");
 #endif
 
     SENSORS_ACTIVATE(event_sensor);
@@ -94,7 +92,6 @@ PROCESS_THREAD(sample_process, ev, data)
     while(1){
         etimer_set(&sample_timer, CLOCK_SECOND * (sensor_config.interval - (get_time() % sensor_config.interval)));
         PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&sample_timer));
-        sample_count = sample_count +1;
         ms1_sense_on();
         sample.time = get_time();
 
@@ -153,12 +150,12 @@ PROCESS_THREAD(sample_process, ev, data)
                         sample.AVR.bytes[k] = pbd->data[k];
                     }
 #ifdef AVRDEFBUG
-                    printf("\tRecieved %d bytes\t", pbd->length);
+                    SPRINT("\tRecieved %d bytes\t", pbd->length);
                     static uint8_t j;
                     for(j=0; j<pbd->length;j++){
-                        printf("%d:", pbd->data[j]);
+                        SPRINT("%d:", pbd->data[j]);
                     }
-                    printf("\n");
+                    SPRINT("\n");
 #endif
 //process data
                     if (avr_id < 0x10){
