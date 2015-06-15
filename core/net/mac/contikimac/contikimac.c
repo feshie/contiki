@@ -136,7 +136,9 @@ static int we_are_receiving_burst = 0;
 
 /* CCA_SLEEP_TIME is the time between two successive CCA checks. */
 /* Add 1 when rtimer ticks are coarse */
-#if RTIMER_ARCH_SECOND > 8000
+#ifdef CONTIKIMAC_CONF_CCA_SLEEP_TIME
+#define CCA_SLEEP_TIME                     (CONTIKIMAC_CONF_CCA_SLEEP_TIME)
+#elif RTIMER_ARCH_SECOND > 8000
 #define CCA_SLEEP_TIME                     RTIMER_ARCH_SECOND / 2000
 #else
 #define CCA_SLEEP_TIME                     (RTIMER_ARCH_SECOND / 2000) + 1
@@ -153,7 +155,11 @@ static int we_are_receiving_burst = 0;
 /* LISTEN_TIME_AFTER_PACKET_DETECTED is the time that we keep checking
    for activity after a potential packet has been detected by a CCA
    check. */
+#ifdef CONTIKIMAC_LISTEN_TIME_AFTER_PACKET_DETECTED 
+#define LISTEN_TIME_AFTER_PACKET_DETECTED  CONTIKIMAC_LISTEN_TIME_AFTER_PACKET_DETECTED
+#else
 #define LISTEN_TIME_AFTER_PACKET_DETECTED  RTIMER_ARCH_SECOND / 80
+#endif
 
 /* MAX_SILENCE_PERIODS is the maximum amount of periods (a period is
    CCA_CHECK_TIME + CCA_SLEEP_TIME) that we allow to be silent before
@@ -394,7 +400,7 @@ powercycle(struct rtimer *t, void *ptr)
              received (as indicated by the
              NETSTACK_RADIO.pending_packet() function), we stop
              snooping. */
-#if !RDC_CONF_HARDWARE_CSMA
+//#if !RDC_CONF_HARDWARE_CSMA
        /* A cca cycle will disrupt rx on some radios, e.g. mc1322x, rf230 */
        /*TODO: Modify those drivers to just return the internal RSSI when already in rx mode */
         if(NETSTACK_RADIO.channel_clear()) {
@@ -402,7 +408,7 @@ powercycle(struct rtimer *t, void *ptr)
         } else {
           silence_periods = 0;
         }
-#endif
+//#endif
 
         ++periods;
 
