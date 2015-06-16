@@ -9,6 +9,9 @@
 #define PRINTF(...)
 #endif
 
+/* declare the resources functions from the separate files *
+extern resource_t res_hello;
+
 /**
  * Ressources for config (GET and POST)
  */
@@ -32,7 +35,6 @@
  * A buffer for the response payload is provided through the buffer pointer. Simple resources can ignore
  * preferred_size and offset, but must respect the REST_MAX_CHUNK_SIZE limit for the buffer.
  * If a smaller block size is requested for CoAP, the REST framework automatically splits the data.
- */
 void res_get_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
     char const * const message = "Hello World!";
     int length = 12;
@@ -45,6 +47,7 @@ void res_get_handler(void* request, void* response, uint8_t *buffer, uint16_t pr
 }
 
 RESOURCE(res_hello, "title=\"Hello world: ?len=0..\";rt=\"Text\"", res_get_handler, NULL, NULL, NULL);
+ */
 
 PROCESS(er_server_process, "CoAP Server");
 PROCESS_THREAD(er_server_process, ev, data) {
