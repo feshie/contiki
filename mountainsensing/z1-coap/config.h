@@ -29,6 +29,5 @@
 	uint8_t set_config(void *pb, uint8_t config);
 	uint8_t get_config(void *pb, uint8_t config);
 	void print_sensor_config(SensorConfig *conf);
-	void print_comms_config(POSTConfig *conf);
 
 #endif

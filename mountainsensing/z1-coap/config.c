@@ -54,17 +54,6 @@ print_sensor_config(SensorConfig *conf)
   }
 }
 
-void
-print_comms_config(POSTConfig *conf){
-    CPRINT("\tInterval: %d\n", (unsigned int)conf->interval);
-    CPRINT("\tPort: %d\n", (unsigned int)conf->port);
-    CPRINT("\tPosting to %x:%x:%x:%x:%x:%x:%x:%x\n", 
-        (unsigned int)conf->ip[0], (unsigned int)conf->ip[1], (unsigned int)conf->ip[2],
-        (unsigned int)conf->ip[3], (unsigned int)conf->ip[4], (unsigned int)conf->ip[5],
-        (unsigned int)conf->ip[6], (unsigned int)conf->ip[7]);
-}
-
-
 uint8_t 
 set_config(void* pb, uint8_t config)
 {
@@ -88,12 +77,6 @@ set_config(void* pb, uint8_t config)
         write = cfs_open("sampleconfig", CFS_WRITE);
         CPRINT("Saving the following details to config file\n");
         print_sensor_config((SensorConfig *)pb);
-    } else if (config == COMMS_CONFIG){
-        encode_status = pb_encode_delimited(&ostream, POSTConfig_fields, (POSTConfig *)pb);
-        cfs_remove("commsconfig");
-        write = cfs_open("commsconfig", CFS_WRITE);
-        CPRINT("Saving the following details to config file\n");
-        print_comms_config((POSTConfig *)pb);
     }else{
         CPRINT("UNKNOWN CONFIG TYPE. UNABLE TO WRITE FILE!\n");
         encode_status = 0;
@@ -160,11 +143,7 @@ get_config(void* pb, uint8_t config)
 
       CPRINT("[RCFG] Bytes left = %d\n", istream.bytes_left);
 
-      if(config == SAMPLE_CONFIG) {
-          pb_decode_delimited(&istream, SensorConfig_fields, (SensorConfig *)pb);
-      } else {
-          pb_decode_delimited(&istream, POSTConfig_fields, (POSTConfig *)pb);
-      }
+      pb_decode_delimited(&istream, SensorConfig_fields, (SensorConfig *)pb);
       ret_code =  0;
     } else {
         CPRINT("[RCFG] ERROR: could not read from disk\n");

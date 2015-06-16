@@ -20,10 +20,7 @@ PROCESS(sample_process, "Sample Process");
 //#define SENSE_ON /*Do not turn sensor power off */
 
 static SensorConfig sensor_config;
-static POSTConfig POST_config;
 static process_event_t protobuf_event;
-//static struct psock ps;
-//static uint8_t psock_buffer[PSOCK_BUFFER_LENGTH];
 
 
 void
@@ -68,7 +65,6 @@ PROCESS_THREAD(sample_process, ev, data)
 
     PROCESS_BEGIN();
     refreshSensorConfig();
-    refreshPosterConfig();
     filenames_init();
     avr_recieved = 0;
     avr_retry_count = 0;
@@ -222,28 +218,3 @@ avr_timer_handler(void *p)
 }
 
 
-void
-refreshPosterConfig()
-{
-    if(get_config(&POST_config, COMMS_CONFIG) == 1){ 
-        // Config file does not exist! Use default and set file
-        POST_config.interval = POST_INTERVAL;
-        POST_config.ip_count = POST_IP_COUNT;
-        POST_config.ip[0] = POST_IP0;
-        POST_config.ip[1] = POST_IP1;
-        POST_config.ip[2] = POST_IP2;
-        POST_config.ip[3] = POST_IP3;
-        POST_config.ip[4] = POST_IP4;
-        POST_config.ip[5] = POST_IP5;
-        POST_config.ip[6] = POST_IP6;
-        POST_config.ip[7] = POST_IP7;
-        POST_config.port = POST_PORT;
-        set_config(&POST_config, COMMS_CONFIG);
-        //PPRINT("POST config set to default and written\n");
-    }else{
-        //PPRINT("POST Config file loaded\n");
-    }
-    //PPRINT("Refeshed post config to:\n");
-    print_comms_config(&POST_config);
-
-}
