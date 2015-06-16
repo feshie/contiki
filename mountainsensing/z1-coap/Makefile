@@ -9,6 +9,9 @@ CONTIKI_WITH_IPV6=1
 CFLAGS += -DUIP_CONF_IPV6=1
 CFLAGS += -DREST=coap_rest_implementation
 
+# Disable human readable process names - they're stored in .data
+CFLAGS += -DPROCESS_CONF_NO_PROCESS_NAMES=1
+
 SMALL=1
 
 APPS += erbium er-coap rest-engine

@@ -177,7 +177,7 @@ print_processes(struct process *const processes[])
   /*  const struct process * const * p = processes;*/
   printf("Starting");
   while(*processes != NULL) {
-    printf(" '%s'", (*processes)->name);
+    //printf(" '%s'", (*processes)->name);
     processes++;
   }
   putchar('\n');
