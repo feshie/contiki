@@ -9,8 +9,8 @@
 #define PRINTF(...)
 #endif
 
-/* declare the resources functions from the separate files *
 extern resource_t res_hello;
+/* declare the resources functions from the separate files *
 
 /**
  * Ressources for config (GET and POST)
