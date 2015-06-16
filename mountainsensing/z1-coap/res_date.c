@@ -6,17 +6,17 @@
  */
 #include "er-server.h"
 #include "rest-engine.h"
+#include "dev/ds3231-sensor.h"  // Clock
 
-/*
- * A handler function named [resource name]_handler must be implemented for each RESOURCE.
- * A buffer for the response payload is provided through the buffer pointer. Simple resources can ignore
- * preferred_size and offset, but must respect the REST_MAX_CHUNK_SIZE limit for the buffer.
- * If a smaller block size is requested for CoAP, the REST framework automatically splits the data.
- */
-void res_get_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
-    char const * const message = "Hello World!";
-    int length = 12;
 
+static void res_get_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
+    char message[13];
+    int length;
+
+	/* read RTC and get Epoch (int_32) */
+    //ltoa(ds3231_get_epoch_seconds() , buffer, length);
+    sprintf(message, "%ld",ds3231_get_epoch_seconds() );
+	length = strlen(message);
     memcpy(buffer, message, length);
 
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
@@ -24,5 +24,5 @@ void res_get_handler(void* request, void* response, uint8_t *buffer, uint16_t pr
     REST.set_response_payload(response, buffer, length);
 }
 
-RESOURCE(res_hello, "title=\"Hello world: ?len=0..\";rt=\"Text\"", res_get_handler, NULL, NULL, NULL);
+RESOURCE(res_date, "title=\"date: ?len=0..\";rt=\"Text\"", res_get_handler, NULL, NULL, NULL);
 
