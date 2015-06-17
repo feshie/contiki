@@ -47,6 +47,9 @@
 #undef COAP_MAX_OBSERVERS
 #define COAP_MAX_OBSERVERS             0
 
+#undef COAP_CONF_MAX_OBSERVEES
+#define COAP_CONF_MAX_OBSERVEES        0
+
 /* Filtering .well-known/core per query can be disabled to save space. */
 #undef COAP_LINK_FORMAT_FILTERING
 #define COAP_LINK_FORMAT_FILTERING     0
