@@ -7,15 +7,4 @@
 #define SENSOR_HASADC2 0
 #define SENSOR_HASRAIN 0
 
-#define POST_INTERVAL 4
-#define POST_IP_COUNT 8
-#define POST_IP0 0x2a01
-#define POST_IP1 0x348
-#define POST_IP2 0x24b
-#define POST_IP3 0x2
-#define POST_IP4 0x0
-#define POST_IP5 0x0
-#define POST_IP6 0x0
-#define POST_IP7 0x1
-#define POST_PORT 8081
 #endif
