@@ -16,10 +16,10 @@ SMALL=1
 
 APPS += erbium er-coap rest-engine
 
-PROJECTDIRS += $(NANOPB) $(PROTOBUF)c/
+PROJECTDIRS += $(NANOPB) $(PROTOBUF)c/ ../common/
 
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
-CONTIKI_SOURCEFILES += pb_decode.c pb_encode.c pb_common.c all.c sampling-sensors.c filenames.c config.c sampler.c er-server.c res_hello.c res_date.c
+CONTIKI_SOURCEFILES += pb_decode.c pb_encode.c pb_common.c all.c sampling-sensors.c store.c sampler.c er-server.c res_hello.c res_date.c
 
 include $(CONTIKI)/Makefile.include
 
