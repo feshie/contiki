@@ -12,12 +12,8 @@
     #include "dev/cc1120-arch.h"
 #endif
 
-#define STORE_DEBUG
-#ifdef STORE_DEBUG
-    #define FPRINT(...) printf(__VA_ARGS__)
-#else
-    #define FPRINT(...)
-#endif
+#define DEBUG_ON
+#include "debug.h"
 
 PROCESS(store_process, "Store Process");
 
@@ -108,6 +104,11 @@ static uint8_t pb_buffer[PB_BUF_SIZE];
 static int fd;
 
 /**
+ * Bytes written / read to / from filesystem
+ */
+static int bytes;
+
+/**
  * Buffer for filename to use
  */
 static char filename[FILENAME_LENGTH];
@@ -137,8 +138,18 @@ static int16_t save_sample(Sample *sample);
 
 //static bool get_sample(int16_t id, Sample *sample);
 //static bool delete_sample(int16_t sample);
-//static bool save_config(SampleConfig *config);
-//static bool get_config(SampleConfig *config);
+
+/**
+ * Actually save the configuration.
+ * Returns true on success, false otherwise.
+ */
+static bool save_config(SensorConfig *config);
+
+/**
+ * Actually get the configuration.
+ * Returns true on success, false otherwise.
+ */
+static bool get_config(SensorConfig *config);
 
 /**
  * Convert a sample id to a filename.
@@ -147,15 +158,13 @@ static char* id_to_file(int16_t id, char* filename);
 
 
 PROCESS_THREAD(store_process, ev, data) {
-    // static vars and what not
-
     PROCESS_BEGIN();
 
-    FPRINT("[STORE] Initializing...\n");
+    DEBUG("Initializing...\n");
 
     store_init();
 
-    FPRINT("[STORE] Started\n");
+    DEBUG("Started\n");
 
     while (true) {
         PROCESS_WAIT_EVENT();
@@ -199,15 +208,22 @@ PROCESS_THREAD(store_process, ev, data) {
                 break;
 
             case STORE_EVENT_SAVE_CONFIG:
-
+                // Only overwrite the config if we failed
+                if (!save_config((SensorConfig *) data)) {
+                    *((bool *) data) = false;
+                }
                 break;
 
             case STORE_EVENT_GET_CONFIG:
-
+                // If succesfull, just return the buffer.
+                // Otherwise set it to false
+                if (!get_config((SensorConfig *) data)) {
+                    *((bool *) data) = false;
+                }
                 break;
 
             default:
-                FPRINT("[STORE] Unknown Event %d!\n", ev);
+                DEBUG("Unknown Event %d!\n", ev);
                 break;
         }
     }
@@ -216,13 +232,11 @@ PROCESS_THREAD(store_process, ev, data) {
 }
 
 int16_t save_sample(Sample *sample) {
-    static uint8_t bytes_written;
-
     last_id++;
 
     sample->id = last_id;
 
-    FPRINT("[STORE] Attempting to save reading with id %d\n", last_id);
+    DEBUG("Attempting to save reading with id %d\n", last_id);
 
     pb_ostream = pb_ostream_from_buffer(pb_buffer, sizeof(pb_buffer));
     pb_encode_delimited(&pb_ostream, Sample_fields, sample);
@@ -232,7 +246,7 @@ int16_t save_sample(Sample *sample) {
     fd = cfs_open(id_to_file(last_id, filename), CFS_WRITE);
 
     if (fd < 0) {
-        FPRINT("[STORE] Failed to create file %d\n", last_id);
+        DEBUG("Failed to create file %d\n", last_id);
 
         last_id--;
 
@@ -241,9 +255,9 @@ int16_t save_sample(Sample *sample) {
         return STORE_PROCESS_FAIL;
     }
 
-    bytes_written = cfs_write(fd, pb_buffer, pb_ostream.bytes_written);
+    bytes = cfs_write(fd, pb_buffer, pb_ostream.bytes_written);
 
-    FPRINT("[STORE] %d bytes written\n", bytes_written);
+    DEBUG("%d bytes written\n", bytes);
 
     cfs_close(fd);
     radio_release();
@@ -251,15 +265,13 @@ int16_t save_sample(Sample *sample) {
     return last_id;
 }
 /*
-int16_t get_sample(int16_t id, Sample *sample) {
+int16_t get_sample(int16_t id, uint8_t *buffer) {
     radio_lock();
 
     fd = cfs_open(id_to_file(id, filename), CFS_READ);
 
     if (fd < 0) {
-        FPRINT("[STORE] Failed to open file %d\n", last_id);
-
-        
+        DEBUG("Failed to open file %d\n", last_id);
 
         return false;
     }
@@ -273,6 +285,62 @@ int16_t get_sample(int16_t id, Sample *sample) {
 
 }*/
 
+bool save_config(SensorConfig *config) {
+    DEBUG("Attempting to save config\n");
+
+    pb_ostream = pb_ostream_from_buffer(pb_buffer, sizeof(pb_buffer));
+    pb_encode_delimited(&pb_ostream, SensorConfig_fields, config);
+
+    radio_lock();
+
+    fd = cfs_open(CONFIG_FILENAME, CFS_WRITE);
+
+    if (fd < 0) {
+        DEBUG("Failed to write config to file %s\n", CONFIG_FILENAME);
+
+        radio_release();
+
+        return false;
+    }
+
+    bytes = cfs_write(fd, pb_buffer, pb_ostream.bytes_written);
+
+    DEBUG("%d bytes written\n", bytes);
+
+    cfs_close(fd);
+    radio_release();
+
+    return true;
+}
+
+bool get_config(SensorConfig *config) {
+    DEBUG("Attempting to get config\n");
+
+    radio_lock();
+
+    fd = cfs_open(CONFIG_FILENAME, CFS_READ);
+
+    if (fd < 0) {
+        DEBUG("Failed to read config file %s\n", CONFIG_FILENAME);
+
+        radio_release();
+
+        return false;
+    }
+
+    bytes = cfs_read(fd, pb_buffer, sizeof(pb_buffer));
+
+    DEBUG("%d bytes read\n", bytes);
+
+    cfs_close(fd);
+    radio_release();
+
+    pb_istream = pb_istream_from_buffer(pb_buffer, bytes);
+    pb_decode_delimited(&pb_istream, SensorConfig_fields, config);
+
+    return true;
+}
+
 void store_init(void) {
     radio_lock();
     last_id = find_latest_sample();
@@ -284,7 +352,7 @@ void radio_lock(void) {
     NETSTACK_MAC.off(0);
     cc1120_arch_interrupt_disable();
     CC1120_LOCK_SPI();
-    FPRINT("[STORE] Radio Locked\n");
+    DEBUG("Radio Locked\n");
 #endif
 }
 
@@ -293,7 +361,7 @@ void radio_release(void) {
     CC1120_RELEASE_SPI();
     cc1120_arch_interrupt_enable();
     NETSTACK_MAC.on();
-    FPRINT("[STORE] Radio Unlocked\n");
+    DEBUG("Radio Unlocked\n");
 #endif
 }
 
@@ -304,16 +372,16 @@ int16_t find_latest_sample(void) {
     static int16_t max_num;
 
     max_num = 0;
-    FPRINT("Refreshing filename cache\n");
+    DEBUG("Refreshing filename cache\n");
 
     if (cfs_opendir(&dir, "/") == 0) {
-        FPRINT("\tOpened folder\n");
+        DEBUG("\tOpened folder\n");
 
         while (cfs_readdir(&dir, &dirent) != -1) {
             if (strncmp(dirent.name, FILENAME_PREFIX, 1) == 0) {
                 file_num = atoi(dirent.name + 1);
-                FPRINT("Filename %d found\n", file_num);
-                FPRINT("\tMax: %d Filenum: %d\n", max_num, file_num);
+                DEBUG("Filename %d found\n", file_num);
+                DEBUG("\tMax: %d Filenum: %d\n", max_num, file_num);
                 if(file_num > max_num) {
                     max_num = file_num;
                 }
@@ -361,10 +429,10 @@ bool store_delete_sample(int16_t id) {
 
 bool store_save_config(SensorConfig *config) {
     process_post_synch(&store_process, STORE_EVENT_SAVE_CONFIG, config);
-    return *((int16_t *) config) != STORE_PROCESS_FAIL;
+    return *((bool *) config);
 }
 
 bool store_get_config(SensorConfig *config) {
     process_post_synch(&store_process, STORE_EVENT_GET_CONFIG, config);
-    return *((int16_t *) config) != STORE_PROCESS_FAIL;
+    return *((bool *) config);
 }
