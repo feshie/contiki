@@ -51,6 +51,7 @@
   #include "dev/cc2420.h"
 #endif
 
+#include "store.h"
 #include "sampler.h"
 #include "er-server.h"
 
@@ -78,6 +79,7 @@ PROCESS_THREAD(feshie_sense_process, ev, data) {
     #ifdef Z1_SAMPLER_AVR_DISABLE
         //printf("####AVR Disabled####\n");
     #endif
+    process_start(&store_process, NULL);
     process_start(&sample_process, NULL);
     process_start(&er_server_process, NULL);
 
