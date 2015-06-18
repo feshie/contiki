@@ -27,6 +27,7 @@ PROCESS_NAME(store_process);
 
 /**
  * Store a sample in the flash.
+ * This will also set sample's id field.
  * @param *sample The sample to save.
  * @return A unique id for the sample on success. -1 on failure.
  * NOTE: On failure, *sample will be overwritten.

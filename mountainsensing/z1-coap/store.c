@@ -27,8 +27,7 @@ PROCESS(store_process, "Store Process");
  * To avoid memory shenanigans, all the memory used to return or accept values from other threads
  * must be allocated by the caller.
  *
- * The Store supports deleting any given by Sample by "shadow" deleting them if they are not the latest sample.
- * This avoids gaps in the flash.
+ * The store allows deleting any given sample, by gracefully dealing with files that do not exist.
  */
 
 
@@ -126,11 +125,6 @@ static int fd;
 static int bytes;
 
 /**
- * Temp return code used inside a function.
- */
-static bool ret;
-
-/**
  * Buffer for filename to use
  */
 static char filename[FILENAME_LENGTH];
@@ -163,12 +157,6 @@ static int16_t find_latest_sample(void);
 static bool write_file(char* filename, uint8_t *buffer, int length);
 
 /**
- * Get the size of a file in bytes.
- * @return -1 on error.
- */
-static int file_size(char* filename);
-
-/**
  * Save a sample.
  * @return STORE_PROCESS_FAIL on failure, the id of the sample on success.
  */
@@ -176,13 +164,13 @@ static int16_t save_sample(Sample *sample);
 
 /**
  * Get a raw sample (ie undecoded protocol buffer) from flash.
- * @return STORE_PROCESS_FAIL on failure (including if the file has been shadow deleted), STORE_PROCESS_SUCCESS on success.
+ * @return STORE_PROCESS_FAIL on failure (including if the file does not exist), STORE_PROCESS_SUCCESS on success.
  */
 static int16_t get_raw_sample(int16_t id, uint8_t *buffer);
 
 /**
- * Delete a given sample. Will completely delete the previous sample if it has
- * been shadow deleted.
+ * Delete a given sample. Will search backwards for the last known stored Sample
+ * if sample is the latest Sample.
  * @return true on success, false otherwise.
  */
 static bool delete_sample(int16_t sample);
@@ -284,11 +272,16 @@ int16_t save_sample(Sample *sample) {
 
     radio_lock();
 
-    ret = write_file(id_to_file(last_id, filename), pb_buffer, pb_ostream.bytes_written);
+    if (!write_file(id_to_file(last_id, filename), pb_buffer, pb_ostream.bytes_written)) {
+        DEBUG("Failed to save reading %d\n", last_id);
+        last_id--;
+        radio_release();
+        return STORE_PROCESS_FAIL;
+    }
 
     radio_release();
 
-    return ret ? last_id : STORE_PROCESS_FAIL;
+    return last_id;
 }
 
 int16_t get_raw_sample(int16_t id, uint8_t *buffer) {
@@ -308,15 +301,6 @@ int16_t get_raw_sample(int16_t id, uint8_t *buffer) {
 
     bytes = cfs_read(fd, pb_buffer, sizeof(pb_buffer));
 
-    // Check if the file has been shadow deleted
-    if (bytes == 0) {
-        DEBUG("Sample %d has been shadow deleted\n", id);
-
-        radio_release();
-
-        return STORE_PROCESS_FAIL;
-    }
-
     DEBUG("%d bytes read\n", bytes);
 
     cfs_close(fd);
@@ -331,38 +315,41 @@ bool delete_sample(int16_t sample) {
         return false;
     }
 
+    DEBUG("Attempting to delete sample %d\n", sample);
+
     id_to_file(sample, filename);
 
     radio_lock();
 
-    // If id == last_id, properly delete the file.
+    if (cfs_remove(filename) == -1) {
+        DEBUG("Error deleting sample %d\n", sample);
+        radio_release();
+        return false;
+    }
+
+    // If this file used to be last_id, find the previous existing file (if any)
     if (sample == last_id) {
-        ret = cfs_remove(filename) != -1;
+        DEBUG("Sample %d is last known sample. Searching for previous sample...\n", sample);
+
         last_id--;
 
         id_to_file(last_id, filename);
 
-        // If any directly previous files are shadow files, delete them too
-        while (last_id != 0 && file_size(filename) == 0) {
-            if (cfs_remove(filename) == -1) {
-                DEBUG("Failed to delete previous shadow file %d\n", last_id);
-                break;
-            }
-
+        // Keep going until we reach a file that exists
+        while (last_id != 0 && (fd = cfs_open(filename, CFS_READ)) < 0) {
+            DEBUG("Sample %d does not exist, continuing..\n", last_id);
             last_id--;
-
             id_to_file(last_id, filename);
         }
 
-    // Otherwise just set a magic value to "mark" the file as deleted
-    } else {
-        DEBUG("Shadow deleting Sample %d\n", sample);
-        ret = write_file(filename, NULL, 0);
+        cfs_close(fd);
     }
+
+    DEBUG("Sample %d deleted. Last_id is now %d\n", sample, last_id);
 
     radio_release();
 
-    return ret;
+    return true;
 }
 
 bool save_config(SensorConfig *config) {
@@ -426,26 +413,6 @@ bool write_file(char* filename, uint8_t *buffer, int length) {
     DEBUG("%d bytes written\n", bytes);
     cfs_close(fd);
     return true;
-}
-
-int file_size(char* filename) {
-    fd = cfs_open(filename, CFS_WRITE);
-
-    if (fd < 0) {
-        DEBUG("Failed to open file %s for sizing\n", filename);
-        return -1;
-    }
-
-    bytes = cfs_seek(fd, 0, CFS_SEEK_END);
-
-    if (bytes < 0) {
-        DEBUG("Failed to seek to end of file %s\n", filename);
-        return -1;
-    }
-
-    DEBUG("File is %d bytes long\n", bytes);
-    cfs_close(fd);
-    return bytes;
 }
 
 void store_init(void) {
