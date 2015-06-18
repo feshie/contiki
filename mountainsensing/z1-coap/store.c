@@ -18,6 +18,21 @@
 PROCESS(store_process, "Store Process");
 
 /**
+ * @file
+ * The store runs in a seperate process, and waits for events.
+ * The store can only handle one event at a time, ensuring there are no race conditions.
+ *
+ * The events are dispatched by the convenience functions decalred in store.h
+ *
+ * To avoid memory shenanigans, all the memory used to return or accept values from other threads
+ * must be allocated by the caller.
+ *
+ * The Store supports deleting any given by Sample by "shadow" deleting them if they are not the latest sample.
+ * This avoids gaps in the flash.
+ */
+
+
+/**
  * Single char prefix to use for filenames
  */
 #define FILENAME_PREFIX "r"
@@ -41,7 +56,8 @@ PROCESS(store_process, "Store Process");
  * Magic canary to indicate that processing the given event has failed.
  * Everything will break if the start of a Config or Sample is every equal to this.
  */
-#define STORE_PROCESS_FAIL INT16_MAX
+#define STORE_PROCESS_FAIL      INT16_MAX
+#define STORE_PROCESS_SUCCESS   0
 
 /**
  * Data should point to sample to save
@@ -53,13 +69,13 @@ PROCESS(store_process, "Store Process");
  * Data should point to a int16_t (but needs to point to a chunk of memory Sample sized)
  * Data will point to the sample with that id on success, STORE_PROCESS_FAIL otherwise.
  */
-#define STORE_EVENT_GET_SAMPLE          2
+#define STORE_EVENT_GET_RAW_SAMPLE          2
 
 /**
  * Data should point to a chunk of memory Sample sized.
  * Data will point to the lastest sample on success, STORE_PROCESS_FAIL otherwise.
  */
-#define STORE_EVENT_GET_LATEST_SAMPLE   3
+#define STORE_EVENT_GET_LATEST_RAW_SAMPLE   3
 
 /**
  * Data should point to a int16_t
@@ -110,6 +126,11 @@ static int fd;
 static int bytes;
 
 /**
+ * Temp return code used inside a function.
+ */
+static bool ret;
+
+/**
  * Buffer for filename to use
  */
 static char filename[FILENAME_LENGTH];
@@ -135,37 +156,66 @@ static void radio_release(void);
  */
 static int16_t find_latest_sample(void);
 
+/**
+ * Write to a given file.
+ * @return true if length bytes have been successfully written to filename, false otherwise.
+ */
+static bool write_file(char* filename, uint8_t *buffer, int length);
+
+/**
+ * Get the size of a file in bytes.
+ * @return -1 on error.
+ */
+static int file_size(char* filename);
+
+/**
+ * Save a sample.
+ * @return STORE_PROCESS_FAIL on failure, the id of the sample on success.
+ */
 static int16_t save_sample(Sample *sample);
 
-//static bool get_sample(int16_t id, Sample *sample);
-//static bool delete_sample(int16_t sample);
+/**
+ * Get a raw sample (ie undecoded protocol buffer) from flash.
+ * @return STORE_PROCESS_FAIL on failure (including if the file has been shadow deleted), STORE_PROCESS_SUCCESS on success.
+ */
+static int16_t get_raw_sample(int16_t id, uint8_t *buffer);
+
+/**
+ * Delete a given sample. Will completely delete the previous sample if it has
+ * been shadow deleted.
+ * @return true on success, false otherwise.
+ */
+static bool delete_sample(int16_t sample);
 
 /**
  * Actually save the configuration.
- * Returns true on success, false otherwise.
+ * @return true on success, false otherwise.
  */
 static bool save_config(SensorConfig *config);
 
 /**
  * Actually get the configuration.
- * Returns true on success, false otherwise.
+ * @return true on success, false otherwise.
  */
 static bool get_config(SensorConfig *config);
 
 /**
  * Convert a sample id to a filename.
+ * @return The pointer to filename(usefull for avoiding temp vars).
  */
 static char* id_to_file(int16_t id, char* filename);
 
 
 PROCESS_THREAD(store_process, ev, data) {
+    static int16_t id;
+
     PROCESS_BEGIN();
 
     DEBUG("Initializing...\n");
 
     store_init();
 
-    DEBUG("Started\n");
+    printf("Store started. %d previous files found.\n", last_id);
 
     while (true) {
         PROCESS_WAIT_EVENT();
@@ -176,36 +226,26 @@ PROCESS_THREAD(store_process, ev, data) {
                 *((int16_t *) data) = save_sample((Sample *) data);
                 break;
 
-            case STORE_EVENT_GET_SAMPLE:
-                //*((int16_t *) data) = get_sample(*((int16_t *) data), (Sample *) data);
+            case STORE_EVENT_GET_RAW_SAMPLE:
+                // Id is passed by value so that it doesn't change when something is written to the passed buffer
+                *((int16_t *) data) = get_raw_sample(*((int16_t *) data), (uint8_t *) data);
                 break;
 
-            case STORE_EVENT_GET_LATEST_SAMPLE:
-                /*
-                static bool ret;
-
-                // Loop around to avoid files "marked" as deleted
-                while (!(ret = store_get_reading(pt, last_id, sample))) {}
-
-                return ret;*/
-
+            case STORE_EVENT_GET_LATEST_RAW_SAMPLE:
+                id = *((int16_t *) data);
+                // Loop around to avoid files "marked" as deleted - decrement id to go through all possible sample ids.
+                while ((*((int16_t *) data) = get_raw_sample(id, (uint8_t *) data)) != STORE_PROCESS_FAIL) {
+                    id--;
+                    if (id == 0) {
+                        break;
+                    }
+                }
                 break;
 
             case STORE_EVENT_DELETE_SAMPLE:
-                /*//store_lock(pt);
-
-                // If id == last_id, properly delete the file.
-                if (id == last_id) {
-                    cfs_remove(id_to_file(id, filename));
-                    last_id--;
-
-                // Otherwise just set a magic value to "mark" the file as deleted
-                } else {
-                    // TODO
+                if (!delete_sample(*((int16_t *) data))) {
+                    *((int16_t *) data) = STORE_PROCESS_FAIL;
                 }
-
-                //store_release(pt);
-                */
                 break;
 
             case STORE_EVENT_SAVE_CONFIG:
@@ -244,29 +284,16 @@ int16_t save_sample(Sample *sample) {
 
     radio_lock();
 
-    fd = cfs_open(id_to_file(last_id, filename), CFS_WRITE);
+    ret = write_file(id_to_file(last_id, filename), pb_buffer, pb_ostream.bytes_written);
 
-    if (fd < 0) {
-        DEBUG("Failed to create file %d\n", last_id);
-
-        last_id--;
-
-        radio_release();
-
-        return STORE_PROCESS_FAIL;
-    }
-
-    bytes = cfs_write(fd, pb_buffer, pb_ostream.bytes_written);
-
-    DEBUG("%d bytes written\n", bytes);
-
-    cfs_close(fd);
     radio_release();
 
-    return last_id;
+    return ret ? last_id : STORE_PROCESS_FAIL;
 }
-/*
-int16_t get_sample(int16_t id, uint8_t *buffer) {
+
+int16_t get_raw_sample(int16_t id, uint8_t *buffer) {
+    DEBUG("Attempting to get sample %d\n", id);
+
     radio_lock();
 
     fd = cfs_open(id_to_file(id, filename), CFS_READ);
@@ -274,17 +301,69 @@ int16_t get_sample(int16_t id, uint8_t *buffer) {
     if (fd < 0) {
         DEBUG("Failed to open file %d\n", last_id);
 
+        radio_release();
+
+        return STORE_PROCESS_FAIL;
+    }
+
+    bytes = cfs_read(fd, pb_buffer, sizeof(pb_buffer));
+
+    // Check if the file has been shadow deleted
+    if (bytes == 0) {
+        DEBUG("Sample %d has been shadow deleted\n", id);
+
+        radio_release();
+
+        return STORE_PROCESS_FAIL;
+    }
+
+    DEBUG("%d bytes read\n", bytes);
+
+    cfs_close(fd);
+    radio_release();
+
+    return STORE_PROCESS_SUCCESS;
+}
+
+bool delete_sample(int16_t sample) {
+    if (sample < 1) {
+        DEBUG("Attempting to delete invalid sample %d\n", sample);
         return false;
     }
 
-    cfs_read(fd, pb_buffer, sizeof(pb_buffer));
+    id_to_file(sample, filename);
 
-    cfs_close(fd);
-    //store_release(pt);
+    radio_lock();
 
-                return true;
+    // If id == last_id, properly delete the file.
+    if (sample == last_id) {
+        ret = cfs_remove(filename) != -1;
+        last_id--;
 
-}*/
+        id_to_file(last_id, filename);
+
+        // If any directly previous files are shadow files, delete them too
+        while (last_id != 0 && file_size(filename) == 0) {
+            if (cfs_remove(filename) == -1) {
+                DEBUG("Failed to delete previous shadow file %d\n", last_id);
+                break;
+            }
+
+            last_id--;
+
+            id_to_file(last_id, filename);
+        }
+
+    // Otherwise just set a magic value to "mark" the file as deleted
+    } else {
+        DEBUG("Shadow deleting Sample %d\n", sample);
+        ret = write_file(filename, NULL, 0);
+    }
+
+    radio_release();
+
+    return ret;
+}
 
 bool save_config(SensorConfig *config) {
     DEBUG("Attempting to save config\n");
@@ -294,21 +373,8 @@ bool save_config(SensorConfig *config) {
 
     radio_lock();
 
-    fd = cfs_open(CONFIG_FILENAME, CFS_WRITE);
+    write_file(CONFIG_FILENAME, pb_buffer, pb_ostream.bytes_written);
 
-    if (fd < 0) {
-        DEBUG("Failed to write config to file %s\n", CONFIG_FILENAME);
-
-        radio_release();
-
-        return false;
-    }
-
-    bytes = cfs_write(fd, pb_buffer, pb_ostream.bytes_written);
-
-    DEBUG("%d bytes written\n", bytes);
-
-    cfs_close(fd);
     radio_release();
 
     return true;
@@ -340,6 +406,46 @@ bool get_config(SensorConfig *config) {
     pb_decode_delimited(&pb_istream, SensorConfig_fields, config);
 
     return true;
+}
+
+bool write_file(char* filename, uint8_t *buffer, int length) {
+    fd = cfs_open(filename, CFS_WRITE);
+
+    if (fd < 0) {
+        DEBUG("Failed to open file %s for writing\n", filename);
+        return false;
+    }
+
+    bytes = cfs_write(fd, buffer, length);
+
+    if (bytes != length) {
+        DEBUG("Failed to write file to %s, wrote %d bytes\n", filename, bytes);
+        return false;
+    }
+
+    DEBUG("%d bytes written\n", bytes);
+    cfs_close(fd);
+    return true;
+}
+
+int file_size(char* filename) {
+    fd = cfs_open(filename, CFS_WRITE);
+
+    if (fd < 0) {
+        DEBUG("Failed to open file %s for sizing\n", filename);
+        return -1;
+    }
+
+    bytes = cfs_seek(fd, 0, CFS_SEEK_END);
+
+    if (bytes < 0) {
+        DEBUG("Failed to seek to end of file %s\n", filename);
+        return -1;
+    }
+
+    DEBUG("File is %d bytes long\n", bytes);
+    cfs_close(fd);
+    return bytes;
 }
 
 void store_init(void) {
@@ -388,16 +494,8 @@ int16_t find_latest_sample(void) {
                 }
             }
         }
-
-        if (max_num == 0) {
-            printf("\tNo previous files found\n");
-            return 0;
-        } else {
-            printf("\tPrevious files found.  Highest number = %d\n", max_num);
-            return max_num;
-        }
+        return max_num;
     }
-
     return 0;
 }
 
@@ -411,21 +509,20 @@ int16_t store_save_sample(Sample *sample) {
     return *((int16_t *) sample);
 }
 
-bool store_get_sample(int16_t id, Sample *sample) {
-    *((int16_t *) sample) = id;
-    process_post_synch(&store_process, STORE_EVENT_GET_SAMPLE, sample);
-    return *((int16_t *) sample) != STORE_PROCESS_FAIL;
+bool store_get_sample(int16_t id, uint8_t *buffer) {
+    *((int16_t *) buffer) = id;
+    process_post_synch(&store_process, STORE_EVENT_GET_RAW_SAMPLE, buffer);
+    return *((int16_t *) buffer) != STORE_PROCESS_FAIL;
 }
 
-bool store_get_latest_sample(Sample *sample) {
-    process_post_synch(&store_process, STORE_EVENT_GET_LATEST_SAMPLE, sample);
-    return *((int16_t *) sample) != STORE_PROCESS_FAIL;
+bool store_get_latest_raw_sample(uint8_t *buffer) {
+    process_post_synch(&store_process, STORE_EVENT_GET_LATEST_RAW_SAMPLE, buffer);
+    return *((int16_t *) buffer) != STORE_PROCESS_FAIL;
 }
 
-bool store_delete_sample(int16_t id) {
-    // TODO this shouldn't modify the ID on failure!
-    process_post_synch(&store_process, STORE_EVENT_DELETE_SAMPLE, &id);
-    return id != STORE_PROCESS_FAIL;
+bool store_delete_sample(int16_t *id) {
+    process_post_synch(&store_process, STORE_EVENT_DELETE_SAMPLE, id);
+    return *id != STORE_PROCESS_FAIL;
 }
 
 bool store_save_config(SensorConfig *config) {
