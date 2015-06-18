@@ -39,8 +39,9 @@ PROCESS(store_process, "Store Process");
 
 /**
  * Magic canary to indicate that processing the given event has failed.
+ * Everything will break if the start of a Config or Sample is every equal to this.
  */
-#define STORE_PROCESS_FAIL      (-456)
+#define STORE_PROCESS_FAIL INT16_MAX
 
 /**
  * Data should point to sample to save
@@ -210,7 +211,7 @@ PROCESS_THREAD(store_process, ev, data) {
             case STORE_EVENT_SAVE_CONFIG:
                 // Only overwrite the config if we failed
                 if (!save_config((SensorConfig *) data)) {
-                    *((bool *) data) = false;
+                    *((int16_t *) data) = STORE_PROCESS_FAIL;
                 }
                 break;
 
@@ -218,7 +219,7 @@ PROCESS_THREAD(store_process, ev, data) {
                 // If succesfull, just return the buffer.
                 // Otherwise set it to false
                 if (!get_config((SensorConfig *) data)) {
-                    *((bool *) data) = false;
+                    *((int16_t *) data) = STORE_PROCESS_FAIL;
                 }
                 break;
 
@@ -429,10 +430,10 @@ bool store_delete_sample(int16_t id) {
 
 bool store_save_config(SensorConfig *config) {
     process_post_synch(&store_process, STORE_EVENT_SAVE_CONFIG, config);
-    return *((bool *) config);
+    return *((int16_t *) config) != STORE_PROCESS_FAIL;
 }
 
 bool store_get_config(SensorConfig *config) {
     process_post_synch(&store_process, STORE_EVENT_GET_CONFIG, config);
-    return *((bool *) config);
+    return *((int16_t *) config) != STORE_PROCESS_FAIL;
 }
