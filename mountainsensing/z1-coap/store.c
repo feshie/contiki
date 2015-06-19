@@ -42,9 +42,13 @@ PROCESS(store_process, "Store Process");
 #define CONFIG_FILENAME "sampleconfig"
 
 /*
- * Size is set to Sample_size, as Sample is assumed to be bigger than config.
+ * Size is the largest one of SensorConfig and Sample
  */
-#define PB_BUF_SIZE (Sample_size)
+#if Sample_size > SensorConfig_size
+    #define PB_BUF_SIZE Sample_size
+#else
+    #define PB_BUF_SIZE SensorConfig_size
+#endif
 
 /**
  * Maximum length of a file name
@@ -68,13 +72,13 @@ PROCESS(store_process, "Store Process");
  * Data should point to a int16_t (but needs to point to a chunk of memory Sample sized)
  * Data will point to the sample with that id on success, STORE_PROCESS_FAIL otherwise.
  */
-#define STORE_EVENT_GET_RAW_SAMPLE          2
+#define STORE_EVENT_GET_SAMPLE          2
 
 /**
  * Data should point to a chunk of memory Sample sized.
  * Data will point to the lastest sample on success, STORE_PROCESS_FAIL otherwise.
  */
-#define STORE_EVENT_GET_LATEST_RAW_SAMPLE   3
+#define STORE_EVENT_GET_LATEST_SAMPLE   3
 
 /**
  * Data should point to a int16_t
@@ -163,10 +167,10 @@ static bool write_file(char* filename, uint8_t *buffer, int length);
 static int16_t save_sample(Sample *sample);
 
 /**
- * Get a raw sample (ie undecoded protocol buffer) from flash.
+ * Get a Sample from flash.
  * @return STORE_PROCESS_FAIL on failure (including if the file does not exist), STORE_PROCESS_SUCCESS on success.
  */
-static int16_t get_raw_sample(int16_t id, uint8_t *buffer);
+static int16_t get_sample(int16_t id, Sample *sample);
 
 /**
  * Delete a given sample. Will search backwards for the last known stored Sample
@@ -214,15 +218,15 @@ PROCESS_THREAD(store_process, ev, data) {
                 *((int16_t *) data) = save_sample((Sample *) data);
                 break;
 
-            case STORE_EVENT_GET_RAW_SAMPLE:
+            case STORE_EVENT_GET_SAMPLE:
                 // Id is passed by value so that it doesn't change when something is written to the passed buffer
-                *((int16_t *) data) = get_raw_sample(*((int16_t *) data), (uint8_t *) data);
+                *((int16_t *) data) = get_sample(*((int16_t *) data), (Sample *) data);
                 break;
 
-            case STORE_EVENT_GET_LATEST_RAW_SAMPLE:
+            case STORE_EVENT_GET_LATEST_SAMPLE:
                 id = *((int16_t *) data);
                 // Loop around to avoid files "marked" as deleted - decrement id to go through all possible sample ids.
-                while ((*((int16_t *) data) = get_raw_sample(id, (uint8_t *) data)) != STORE_PROCESS_FAIL) {
+                while ((*((int16_t *) data) = get_sample(id, (Sample *) data)) != STORE_PROCESS_FAIL) {
                     id--;
                     if (id == 0) {
                         break;
@@ -284,7 +288,7 @@ int16_t save_sample(Sample *sample) {
     return last_id;
 }
 
-int16_t get_raw_sample(int16_t id, uint8_t *buffer) {
+int16_t get_sample(int16_t id, Sample *sample) {
     DEBUG("Attempting to get sample %d\n", id);
 
     radio_lock();
@@ -305,6 +309,9 @@ int16_t get_raw_sample(int16_t id, uint8_t *buffer) {
 
     cfs_close(fd);
     radio_release();
+
+    pb_istream = pb_istream_from_buffer(pb_buffer, bytes);
+    pb_decode_delimited(&pb_istream, Sample_fields, sample);
 
     return STORE_PROCESS_SUCCESS;
 }
@@ -476,15 +483,15 @@ int16_t store_save_sample(Sample *sample) {
     return *((int16_t *) sample);
 }
 
-bool store_get_sample(int16_t id, uint8_t *buffer) {
-    *((int16_t *) buffer) = id;
-    process_post_synch(&store_process, STORE_EVENT_GET_RAW_SAMPLE, buffer);
-    return *((int16_t *) buffer) != STORE_PROCESS_FAIL;
+bool store_get_sample(int16_t id, Sample *sample) {
+    *((int16_t *) sample) = id;
+    process_post_synch(&store_process, STORE_EVENT_GET_SAMPLE, sample);
+    return *((int16_t *) sample) != STORE_PROCESS_FAIL;
 }
 
-bool store_get_latest_raw_sample(uint8_t *buffer) {
-    process_post_synch(&store_process, STORE_EVENT_GET_LATEST_RAW_SAMPLE, buffer);
-    return *((int16_t *) buffer) != STORE_PROCESS_FAIL;
+bool store_get_latest_sample(Sample *sample) {
+    process_post_synch(&store_process, STORE_EVENT_GET_LATEST_SAMPLE, sample);
+    return *((int16_t *) sample) != STORE_PROCESS_FAIL;
 }
 
 bool store_delete_sample(int16_t *id) {
