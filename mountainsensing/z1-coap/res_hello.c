@@ -3,6 +3,9 @@
  * does almost nothing - useful for tests
  */
 #include "er-server.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #include "rest-engine.h"
 #include "sampler.h"
 #include "dev/batv-sensor.h" // Batt
