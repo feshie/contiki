@@ -2,7 +2,6 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "contiki.h"
-#include "pt-sem.h"
 #include "cfs/cfs.h"
 #include "pb_decode.h"
 #include "pb_encode.h"
@@ -199,8 +198,6 @@ static char* id_to_file(int16_t id, char* filename);
 
 
 PROCESS_THREAD(store_process, ev, data) {
-    static int16_t id;
-
     PROCESS_BEGIN();
 
     DEBUG("Initializing...\n");
@@ -224,14 +221,8 @@ PROCESS_THREAD(store_process, ev, data) {
                 break;
 
             case STORE_EVENT_GET_LATEST_SAMPLE:
-                id = *((int16_t *) data);
-                // Loop around to avoid files "marked" as deleted - decrement id to go through all possible sample ids.
-                while ((*((int16_t *) data) = get_sample(id, (Sample *) data)) != STORE_PROCESS_FAIL) {
-                    id--;
-                    if (id == 0) {
-                        break;
-                    }
-                }
+                // Just get last_id. We keep our state clean (ie last_id always points to a valid Sample) so this isn't an issue.
+                *((int16_t *) data) = get_sample(last_id, (Sample *) data);
                 break;
 
             case STORE_EVENT_DELETE_SAMPLE:
