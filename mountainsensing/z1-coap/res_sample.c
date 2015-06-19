@@ -16,11 +16,9 @@
 #define DEBUG_ON
 #include "debug.h"
 
-/*
- * A handler function named [resource name]_handler must be implemented for each RESOURCE.
- * A buffer for the response payload is provided through the buffer pointer. Simple resources can ignore
- * preferred_size and offset, but must respect the REST_MAX_CHUNK_SIZE limit for the buffer.
- * If a smaller block size is requested for CoAP, the REST framework automatically splits the data.
+/**
+ * Get handler for Samplers.
+ * Supports the optional param id. Serves latest if id isn't specified.
  */
 static void res_get_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
     static Sample sample;
@@ -30,7 +28,8 @@ static void res_get_handler(void* request, void* response, uint8_t *buffer, uint
 
     DEBUG("Serving request! Offset %d, PrefSize %d\n", (int) *offset, preferred_size);
 
-    if (!store_get_latest_sample(&sample)) {
+    // Only get data if this is the first request of a blockwise transfer
+    if (*offset == 0 && !store_get_latest_sample(&sample)) {
         // 500 internal error
         DEBUG("Unable to get sample!\n");
         REST.set_response_status(response, REST.status.INTERNAL_SERVER_ERROR);
@@ -66,5 +65,5 @@ static void res_get_handler(void* request, void* response, uint8_t *buffer, uint
     REST.set_response_payload(response, buffer, buffer_len);
 }
 
-RESOURCE(res_sample, "Sample", res_get_handler, NULL, NULL, NULL);
+PARENT_RESOURCE(res_sample, "Sample", res_get_handler, NULL, NULL, NULL);
 
