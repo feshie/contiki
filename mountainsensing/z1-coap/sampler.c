@@ -1,9 +1,8 @@
-
 #include "sampler.h"
 
 PROCESS(sample_process, "Sample Process");
 
-//#define SENSEDEFBUG
+#define SENSEDEFBUG
 #ifdef SENSEDEFBUG
     #define SPRINT(...) printf(__VA_ARGS__)
 #else
@@ -19,13 +18,16 @@ PROCESS(sample_process, "Sample Process");
 
 //#define SENSE_ON /*Do not turn sensor power off */
 
+/**
+ * Print the sensor config.
+ */
+void print_sensor_config(SensorConfig *conf);
+
 static SensorConfig sensor_config;
 static process_event_t protobuf_event;
 
-
-void
-refreshSensorConfig(void){
-    if(get_config(&sensor_config, SAMPLE_CONFIG) == 1){ 
+void refreshSensorConfig(void) {
+    if (!store_get_config(&sensor_config)) {
         // Config file does not exist! Use default and set file
       	SPRINT("No Sensor config found\n");
         sensor_config.interval = SENSOR_INTERVAL;
@@ -33,54 +35,36 @@ refreshSensorConfig(void){
         sensor_config.hasADC1 = SENSOR_HASADC1;
         sensor_config.hasADC2 = SENSOR_HASADC2;
         sensor_config.hasRain = SENSOR_HASRAIN;
-        set_config(&sensor_config, SAMPLE_CONFIG);
-    }else{
+        store_save_config(&sensor_config);
+    } else {
       	SPRINT("Sensor config loaded\n");
     }
 }
 
-
-
-
-
-
-PROCESS_THREAD(sample_process, ev, data)
-{
-    //sample variables
+PROCESS_THREAD(sample_process, ev, data) {
     static struct etimer sample_timer;
-    static uint8_t pb_buf[Sample_size];
     static Sample sample;
     static int i;
-#ifndef SAMPLE_SEND
-    static int fd;
-    static char filename[FILENAME_LENGTH];
-#endif
     static uint8_t avr_id;
     static struct ctimer avr_timeout_timer;
     static uint8_t avr_recieved;
     static uint8_t avr_retry_count;
-    static pb_ostream_t ostream;
-
-    //poster variables
+    static int16_t id;
 
     PROCESS_BEGIN();
+
     refreshSensorConfig();
-    filenames_init();
     avr_recieved = 0;
     avr_retry_count = 0;
 
     protobuf_event = process_alloc_event();
     protobuf_register_process_callback(&sample_process, protobuf_event) ;
-    SPRINT("Refreshed Sensor config to:\n"); 
+    SPRINT("Refreshed Sensor config to:\n");
     print_sensor_config(&sensor_config);
 
 #ifdef SENSE_ON
     ms1_sense_on();
     SPRINT("Sensor power permanently on\n");
-#endif
-
-#ifdef SAMPLE_SEND
-    SPRINT("<<<<< SAMPLE AND SEND ENABLED >>>>>\n");
 #endif
 
     SENSORS_ACTIVATE(event_sensor);
@@ -120,7 +104,7 @@ PROCESS_THREAD(sample_process, ev, data)
             sample.has_rain = 1;
             sample.rain = get_sensor_rain();
         }
-      
+
         AVRDPRINT("[SAMP][AVR] number: %d\n", sensor_config.avrIDs_count);
         for(i=0; i < sensor_config.avrIDs_count; i++){
             avr_id = sensor_config.avrIDs[i] & 0xFF; //only use 8bits
@@ -173,48 +157,53 @@ PROCESS_THREAD(sample_process, ev, data)
         ms1_sense_off();
 #endif
 
-        ostream = pb_ostream_from_buffer(pb_buf, sizeof(pb_buf));
-        pb_encode_delimited(&ostream, Sample_fields, &sample);
+        id = store_save_sample(&sample);
 
-#ifndef SAMPLE_SEND
-        filenames_next_write(filename);
-        if(filename == 0) {
-          continue;
+        if (id < 0) {
+            SPRINT("[SAMP] Failed to save sample!\n");
+        } else {
+            SPRINT("[SAMP] Sample saved with id %d\n", id);
         }
-
-        AVRDPRINT("[SAMP] Writing %d bytes to %s...\n", ostream.bytes_written, filename);
-    #ifdef SPI_LOCKING
-        LPRINT("LOCK: write sample\n");
-        NETSTACK_MAC.off(0);
-        cc1120_arch_interrupt_disable();
-        CC1120_LOCK_SPI();
-    #endif
-        fd = cfs_open(filename, CFS_WRITE | CFS_APPEND);
-        if(fd >= 0){
-            SPRINT("  [1/3] Writing to file...\n");
-            cfs_write(fd, pb_buf, ostream.bytes_written);
-            SPRINT("  [2/3] Closing file...\n");
-            cfs_close(fd);
-            SPRINT("  [3/3] Done\n");
-        }else{
-            SPRINT("[SAMP] Failed to open file %s\n", filename);
-        }
-    #ifdef SPI_LOCKING
-        LPRINT("UNLOCK: write sample\n");
-        CC1120_RELEASE_SPI();
-        cc1120_arch_interrupt_enable();
-        NETSTACK_MAC.on();
-    #endif
-#endif
-
     }
     PROCESS_END();
 }
 
-void 
-avr_timer_handler(void *p)
-{
-	process_post(&sample_process, protobuf_event, (process_data_t)NULL);
+void print_sensor_config(SensorConfig *conf) {
+    static uint8_t i;
+    SPRINT("\tInterval = %d\n", (unsigned int)conf->interval);
+    SPRINT("\tADC1: ");
+    if (conf->hasADC1 == 1){
+        SPRINT("yes\n");
+    } else {
+        SPRINT("no\n");
+    }
+    SPRINT("\tADC2: ");
+    if (conf->hasADC2) {
+        SPRINT("yes\n");
+    } else {
+        SPRINT("no\n");
+    }
+    SPRINT("\tRain: ");
+    if (conf->hasRain) {
+        SPRINT("yes\n");
+    } else {
+        SPRINT("no\n");
+    }
+    SPRINT("\tAVRs: ");
+    if (conf->avrIDs_count == 0) {
+        SPRINT("NONE\n");
+    } else {
+        for(i = 0; i < conf->avrIDs_count; i++) {
+            SPRINT("%02x", (int)conf->avrIDs[i] & 0xFF);
+            if (i < conf->avrIDs_count - 1) {
+                SPRINT(", ");
+            } else {
+                SPRINT("\n");
+            }
+        }
+    }
 }
 
-
+void avr_timer_handler(void *p) {
+	process_post(&sample_process, protobuf_event, (process_data_t)NULL);
+}
