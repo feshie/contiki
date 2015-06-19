@@ -194,15 +194,6 @@ PROCESS_THREAD(sample_process, ev, data) {
                     DEBUG("Sample saved with id %d\n", id);
                 }
 
-                if (id % 10 == 0) {
-                    id--;
-                    store_delete_sample(&id);
-                    id--;
-                    store_delete_sample(&id);
-                    id++;
-                    id++;
-                    store_delete_sample(&id);
-                }
                 break;
         }
     }
