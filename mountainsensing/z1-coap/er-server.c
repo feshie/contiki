@@ -1,5 +1,18 @@
 #include "er-server.h"
 #include "rest-engine.h"
+#include "cfs/cfs.h"
+#include <stdint.h>
+#include "sampling-sensors.h"
+#include "dev/reset-sensor.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+// Config
+#include "settings.pb.h"
+#include "readings.pb.h"
+
+// Networking
+#include "contiki-net.h"
 
 #define DEBUG
 

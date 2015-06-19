@@ -5,6 +5,9 @@
  * only for feshie nodes
  */
 #include "er-server.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #include "rest-engine.h"
 #include "dev/ds3231-sensor.h"  // Clock
 

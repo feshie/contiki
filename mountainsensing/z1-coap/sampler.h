@@ -1,33 +1,34 @@
+/**
+ * @file
+ * Process that periodically takes samples from onboard sensors and stores them in flash.
+ * The sensors to sample as well as the sampling interval are defined by the SampleConfig stored in the Store.
+ * The sampler can be instrcuted to reload it from the Store by calling sampler_refresh_config()
+ *
+ * @author
+ *      Dan Playle      <djap1g12@soton.ac.uk>
+ *      Philip Basford  <pjb@ecs.soton.ac.uk>
+ *      Graeme Bragg    <gmb1g08@ecs.soton.ac.uk>
+ *      Tyler Ward      <tw16g08@ecs.soton.ac.uk>
+ *      Kirk Martinez   <km@ecs.soton.ac.uk>
+ *      Arthur Fabre    <af1g12@ecs.soton.ac.uk>
+ */
+
 #ifndef SAMPLER_H
 #define SAMPLER_H
 
 #include "contiki.h"
-#include "contiki-conf.h"
-#include <stdio.h>
 
-#include "store.h"
-
-// Sensors
-#include "sampling-sensors.h"
-#include "ms1-io.h"
-
-// Config
-#include "settings.pb.h"
-#include "readings.pb.h"
-
-#include "z1-coap-config-defaults.h"
-
-#include "dev/temperature-sensor.h"
-#include "dev/battery-sensor.h"
-#include "dev/protobuf-handler.h"
-#include "dev/event-sensor.h"
-#include "platform-conf.h"
-
-void avr_timer_handler(void *p);
-void refreshSensorConfig(void);
-
+/**
+ * Process the sampler runs as.
+ */
 PROCESS_NAME(sample_process);
 
-#define AVR_TIMEOUT_SECONDS 10
+void avr_timer_handler(void *p);
+
+/**
+ * Get the Sampler to reload it's config from flash.
+ * This is a non blocking asynchronous call.
+ */
+void sampler_refresh_config(void);
 
 #endif // ifndef SAMPLER_H

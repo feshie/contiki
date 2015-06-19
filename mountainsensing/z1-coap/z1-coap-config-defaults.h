@@ -1,10 +1,23 @@
-#ifndef Z1_SAMPLER_DEFAULTS_H
-#define Z1_SAMPLER_DEFAULTS_H
+/**
+ * @file
+ * Definitions of the default configurations to use.
+ */
 
-#define SENSOR_INTERVAL 120
-#define SENSOR_AVRIDS_COUNT 0
-#define SENSOR_HASADC1 0
-#define SENSOR_HASADC2 0
-#define SENSOR_HASRAIN 0
+#ifndef Z1_COAP_DEFAULTS_H
+#define Z1_COAP_DEFAULTS_H
 
-#endif
+#include "settings.pb.h"
+#include <stdbool.h>
+
+/**
+ * Default configuration to use when no configuration is curently defined.
+ */
+SensorConfig SENSOR_DEFAULT_CONFIG = {
+    .interval = 120,
+    .avrIDs_count = 0,
+    .hasADC1 = false,
+    .hasADC2 = false,
+    .hasRain = false
+};
+
+#endif // ifndef Z1_COAP_DEFAULTS_H
