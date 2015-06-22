@@ -23,7 +23,7 @@
 #endif
 
 /* declare the resources functions from the separate files */
-extern resource_t res_hello, res_date;
+extern resource_t res_hello, res_date, res_sample;
 
 
 /**
@@ -52,7 +52,7 @@ PROCESS_THREAD(er_server_process, ev, data) {
 
     rest_activate_resource(&res_hello, "hello");
     rest_activate_resource(&res_date, "date");
-
+    rest_activate_resource(&res_sample, "sample");
 
     while (1) {
         PROCESS_WAIT_EVENT();
