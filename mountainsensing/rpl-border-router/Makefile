@@ -1,11 +1,8 @@
 CONTIKI_PROJECT=border-router
-all: $(CONTIKI_PROJECT) 
+all: $(CONTIKI_PROJECT)
+
 TARGET=z1-feshie
 CONTIKI=../../
-
-WITH_UIP6=1
-UIP_CONF_IPV6=1
-CFLAGS+= -DUIP_CONF_IPV6_RPL
 
 #linker optimizations
 SMALL=1
@@ -27,10 +24,12 @@ PROJECT_SOURCEFILES += slip-bridge.c
 
 WITH_WEBSERVER=1
 ifeq ($(WITH_WEBSERVER),1)
+CFLAGS += -DUIP_CONF_TCP=1
 CFLAGS += -DWEBSERVER=1
 PROJECT_SOURCEFILES += httpd-simple.c
 else ifneq ($(WITH_WEBSERVER), 0)
 APPS += $(WITH_WEBSERVER)
+CFLAGS += -DUIP_CONF_TCP=1
 CFLAGS += -DWEBSERVER=2
 endif
 
@@ -38,6 +37,7 @@ ifeq ($(PREFIX),)
  PREFIX = aaaa::1/64
 endif
 
+CONTIKI_WITH_IPV6 = 1
 include $(CONTIKI)/Makefile.include
 
 $(CONTIKI)/tools/tunslip6:	$(CONTIKI)/tools/tunslip6.c
@@ -49,5 +49,5 @@ connect-router:	$(CONTIKI)/tools/tunslip6
 connect-router-cooja:	$(CONTIKI)/tools/tunslip6
 	sudo $(CONTIKI)/tools/tunslip6 -a 127.0.0.1 $(PREFIX)
 
-install: 
+install:
 	make border-router.upload
