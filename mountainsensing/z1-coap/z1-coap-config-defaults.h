@@ -15,6 +15,7 @@
 SensorConfig SENSOR_DEFAULT_CONFIG = {
     .interval = 120,
     .avrIDs_count = 0,
+    .avrIDs = {},
     .hasADC1 = false,
     .hasADC2 = false,
     .hasRain = false

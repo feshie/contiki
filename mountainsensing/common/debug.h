@@ -15,9 +15,14 @@
 
 #ifdef DEBUG_ON
 #define DEBUG_VAL 1
+#warning "DEBUG Output Enabled"
 #else
 #define DEBUG_VAL 0
 #endif
+
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+#define AT __FILE__ ":" TOSTRING(__LINE__) ":"
 
 /**
  * DEBUG Printing.
@@ -29,4 +34,4 @@
  *  The do while loop makes the macro exapand to a proper statement (and not a conditional).
  */
 #define DEBUG(fmt, ...) \
-    do { if (DEBUG_VAL) printf("%s:%d:%s():\t" fmt, __FILE__, __LINE__, __FUNCTION__, ## __VA_ARGS__); } while(0)
+    do { if (DEBUG_VAL) printf("%16s%-36s " fmt, AT, __func__, ## __VA_ARGS__); } while(0)
