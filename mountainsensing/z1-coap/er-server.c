@@ -15,7 +15,6 @@ PROCESS_THREAD(er_server_process, ev, data) {
     /* Initialize the REST engine. */
     rest_init_engine();
 
-    rest_activate_resource(&res_hello, "hello");
     rest_activate_resource(&res_date, "date");
     rest_activate_resource(&res_sample, "sample");
     rest_activate_resource(&res_config, "config");
