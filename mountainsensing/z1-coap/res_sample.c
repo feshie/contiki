@@ -2,9 +2,8 @@
  * @file
  * Sample ressource.
  * Serves stored samples, and can delete them.
- *
- * TODO Does not yet serve any arbitrary readings
  */
+
 #include "er-server.h"
 #include "rest-engine.h"
 #include "pb_decode.h"
@@ -38,12 +37,14 @@
 /**
  * Get handler for Samples.
  * Supports the optional param id. Serves latest if id isn't specified.
+ * Format is GET /sample/23 to get sample #23. GET /sample to get the latest sample.
  */
 static void res_get_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 /**
  * Delete handler for Samples.
- * Supports deleting arbitrary Samples
+ * Supports deleting arbitrary Samples.
+ * Format is DELETE /sample/23 to delete sample #23
  */
 static void res_delete_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
@@ -68,17 +69,38 @@ void res_get_handler(void* request, void* response, uint8_t *buffer, uint16_t pr
     static uint8_t pb_buffer[Sample_size];
     static pb_ostream_t pb_ostream;
     static uint8_t buffer_len;
+    static int16_t sample_id;
+    static bool ret;
 
     DEBUG("Serving request! Offset %d, PrefSize %d\n", (int) *offset, preferred_size);
 
     current_offset = *offset;
 
     // Only get data if this is the first request of a blockwise transfer
-    if (current_offset == 0 && !store_get_latest_sample(&sample)) {
-        // 500 internal error
-        DEBUG("Unable to get sample!\n");
-        REST.set_response_status(response, REST.status.INTERNAL_SERVER_ERROR);
-        return;
+    if (current_offset == 0) {
+
+        sample_id = parse_sample_id(request);
+
+        // Error out if a sample specified was invalid
+        if (sample_id == INVALID_SAMPLE_ID) {
+            DEBUG("Get request with invalid sample id!\n");
+            REST.set_response_status(response, REST.status.BAD_REQUEST);
+            return;
+        }
+
+        // Get the latest sample if no sample id was specified
+        if (sample_id == NO_SAMPLE_ID) {
+            ret = store_get_latest_sample(&sample);
+        } else {
+            ret = store_get_sample(sample_id, &sample);
+        }
+
+        if (!ret) {
+            // 500 internal error
+            DEBUG("Unable to get sample!\n");
+            REST.set_response_status(response, REST.status.INTERNAL_SERVER_ERROR);
+            return;
+        }
     }
 
     DEBUG("Got sample with id %" PRIu32  "\n", sample.id);
