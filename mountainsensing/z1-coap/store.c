@@ -471,7 +471,8 @@ char* id_to_file(int16_t id, char* filename) {
 
 int16_t store_save_sample(Sample *sample) {
     process_post_synch(&store_process, STORE_EVENT_SAVE_SAMPLE, sample);
-    return *((int16_t *) sample);
+    // Return -1 on failure
+    return *((int16_t *) sample) == STORE_PROCESS_FAIL ? -1 : *((int16_t *) sample);
 }
 
 bool store_get_sample(int16_t id, Sample *sample) {
