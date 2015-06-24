@@ -4,7 +4,6 @@
  * Serves stored samples, and can delete them.
  *
  * TODO Does not yet serve any arbitrary readings
- * TODO Does not yest support deleteing
  */
 #include "er-server.h"
 #include "rest-engine.h"
@@ -13,15 +12,57 @@
 #include "readings.pb.h"
 #include "store.h"
 #include <inttypes.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
 
 #define DEBUG_ON
 #include "debug.h"
 
 /**
- * Get handler for Samplers.
+ * Indicates no trailing sample id was found in the URI
+ */
+#define NO_SAMPLE_ID        -1
+
+/**
+ * Indicates a sample id was found in the URI, but that it could not be sucesfully parsed
+ */
+#define INVALID_SAMPLE_ID   -2
+
+/**
+ * The separator used in URIs, either as a character, or as a string literal.
+ */
+#define SEPARATOR_CHAR  '/'
+#define SEPARATOR_STR   "/"
+
+/**
+ * Get handler for Samples.
  * Supports the optional param id. Serves latest if id isn't specified.
  */
-static void res_get_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
+static void res_get_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+
+/**
+ * Delete handler for Samples.
+ * Supports deleting arbitrary Samples
+ */
+static void res_delete_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+
+/**
+ * Parse a trailing sample id from a URI.
+ * Deals with validating the ID, trailing slashes.
+ * @return NO_SAMPLE_ID if no trailing sample id was found in the uri.
+ *         INVALID_SAMPLE_ID If a trailing sample if was found, but it could not be parsed.
+ *         The sample id on success.
+ */
+static int16_t parse_sample_id(void *request);
+
+/**
+ * Sample ressource.
+ * Parent ressource as we use URL based parametes (like GET /sample/32)
+ */
+PARENT_RESOURCE(res_sample, "Sample", res_get_handler, NULL, NULL, res_delete_handler);
+
+void res_get_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
     static Sample sample;
     static int32_t current_offset;
     static uint8_t pb_buffer[Sample_size];
@@ -69,5 +110,62 @@ static void res_get_handler(void* request, void* response, uint8_t *buffer, uint
     REST.set_response_payload(response, buffer, buffer_len);
 }
 
-PARENT_RESOURCE(res_sample, "Sample", res_get_handler, NULL, NULL, NULL);
+void res_delete_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
+    static int16_t sample_id;
 
+    sample_id = parse_sample_id(request);
+
+    if (sample_id == NO_SAMPLE_ID || sample_id == INVALID_SAMPLE_ID) {
+        DEBUG("Delete request with invalid / missing sample id!\n");
+        REST.set_response_status(response, REST.status.BAD_REQUEST);
+        return;
+    }
+
+    DEBUG("Delete request for: %d\n", sample_id);
+
+    if (!store_delete_sample(&sample_id)) {
+        DEBUG("Failed to delete sample\n");
+        REST.set_response_status(response, REST.status.INTERNAL_SERVER_ERROR);
+        return;
+    }
+
+    REST.set_response_status(response, REST.status.DELETED);
+}
+
+int16_t parse_sample_id(void *request) {
+    static const char *uri_path;
+    static int uri_length;
+    static char *terminated_uri_path;
+    static char *endptr;
+    static int16_t sample_id;
+
+    uri_length = REST.get_url(request, &uri_path);
+
+    // The returned uir isn't NULL terminated - need to do it ourselves
+    terminated_uri_path = malloc(uri_length + 1);
+    strncpy(terminated_uri_path, uri_path, uri_length);
+    terminated_uri_path[uri_length] = '\0';
+
+    // Parse the uri
+    strsep(&terminated_uri_path, SEPARATOR_STR);
+    if (terminated_uri_path == NULL) {
+        DEBUG("Request with no sample id!\n");
+        free(terminated_uri_path);
+        return NO_SAMPLE_ID;
+    }
+
+    // Convert the string to an int
+    errno = 0;
+    sample_id = strtoul(terminated_uri_path, &endptr, 0);
+    // Errno being set indicates an error occured.
+    // endptr != \0 indicates that the entire string was not parsed succesfully - we want to ensure the entire string is valid.
+    // endptr == SEPARATOR is valid to accept trailing SEPARATOR
+    if (errno != 0 || (*endptr != '\0' && *endptr != SEPARATOR_CHAR)) {
+        DEBUG("Request with invalid sample id!\n");
+        free(terminated_uri_path);
+        return INVALID_SAMPLE_ID;
+    }
+
+    free(terminated_uri_path);
+    return sample_id;
+}
