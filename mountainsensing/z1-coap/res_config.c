@@ -6,6 +6,7 @@
 
 #include "er-server.h"
 #include "rest-engine.h"
+#include "er-coap.h"
 #include "pb_decode.h"
 #include "pb_encode.h"
 #include "settings.pb.h"
@@ -26,12 +27,12 @@ static void res_get_handler(void* request, void* response, uint8_t *buffer, uint
  * Post handler for Config.
  * Sets the current config.
  */
-//static void res_post_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_post_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 /**
  * Config ressource.
  */
-RESOURCE(res_config, "Config", res_get_handler, /*res_post_handler*/ NULL, NULL, NULL);
+RESOURCE(res_config, "Config", res_get_handler, res_post_handler, NULL, NULL);
 
 void res_get_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
     static SensorConfig config;
@@ -81,65 +82,66 @@ void res_get_handler(void* request, void* response, uint8_t *buffer, uint16_t pr
     REST.set_response_payload(response, buffer, buffer_len);
 }
 
-/*
 void res_post_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
-    static coap_packet_t *const coap_req;
+    static coap_packet_t *coap_req;
     static uint8_t *incoming;
+    static size_t incoming_len;
     static uint8_t pb_buffer[SensorConfig_size];
     static uint8_t buffer_len;
-    static size_t len;
-    static int ct;
     static SensorConfig config;
     static pb_istream_t pb_istream;
 
     coap_req = (coap_packet_t *)request;
 
-    if ((len = REST.get_request_payload(request, (const uint8_t **)&incoming))) {
+    DEBUG("Config post request!\n");
 
-        if (coap_req->block1_num * coap_req->block1_size + len <= SensorConfig_size) {
+    // Check there's a payload, and get it
+    if ((incoming_len = REST.get_request_payload(request, (const uint8_t **)&incoming))) {
 
-            memcpy(pb_buffer + coap_req->block1_num * coap_req->block1_size, incoming, len);
+        if (coap_req->block1_num * coap_req->block1_size + incoming_len <= SensorConfig_size) {
 
+            DEBUG("Got config payload\n");
 
-            pb_istream = pb_istream_from_buffer(incoming, len);
+            // Store the payload in our static buffer
+            memcpy(pb_buffer + coap_req->block1_num * coap_req->block1_size, incoming, incoming_len);
+            buffer_len = coap_req->block1_num * coap_req->block1_size + incoming_len;
 
-            // Check it was sucesfully decoded.
-            if (!pb_decode(&pb_istream, SensorConfig_fields, config)) {
-                REST.set_response_status(response, REST.status.BAD_REQUEST);
-                return;
+            // If this is the last packet
+            if (!coap_req->block1_more) {
+
+                DEBUG("Last (or only) config block, saving...\n");
+
+                pb_istream = pb_istream_from_buffer(pb_buffer, buffer_len);
+
+                // Check it was sucesfully decoded.
+                if (!pb_decode_delimited(&pb_istream, SensorConfig_fields, &config)) {
+                    DEBUG("Failed to decode config!\n");
+                    REST.set_response_status(response, REST.status.BAD_REQUEST);
+                    return;
+                }
+
+                // Save it
+                if (!store_save_config(&config)) {
+                    DEBUG("Failed to save config!\n");
+                    REST.set_response_status(response, REST.status.INTERNAL_SERVER_ERROR);
+                    return;
+                }
+
+                DEBUG("Config saved and decoded\n");
             }
-
 
             REST.set_response_status(response, REST.status.CHANGED);
             coap_set_header_block1(response, coap_req->block1_num, 0, coap_req->block1_size);
 
         } else {
+            DEBUG("Config post request too big!\n");
             REST.set_response_status(response, REST.status.REQUEST_ENTITY_TOO_LARGE);
             return;
         }
 
     } else {
+        DEBUG("Unable to get payload!\n");
         REST.set_response_status(response, REST.status.BAD_REQUEST);
         return;
     }
-
-    static int16_t sample_id;
-
-    sample_id = parse_sample_id(request);
-
-    if (sample_id == NO_SAMPLE_ID || sample_id == INVALID_SAMPLE_ID) {
-        DEBUG("Delete request with invalid / missing sample id!\n");
-        REST.set_response_status(response, REST.status.BAD_REQUEST);
-        return;
-    }
-
-    DEBUG("Delete request for: %d\n", sample_id);
-
-    if (!store_delete_sample(&sample_id)) {
-        DEBUG("Failed to delete sample\n");
-        REST.set_response_status(response, REST.status.INTERNAL_SERVER_ERROR);
-        return;
-    }
-
-    REST.set_response_status(response, REST.status.DELETED);
-}*/
+}
