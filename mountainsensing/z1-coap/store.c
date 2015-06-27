@@ -103,36 +103,6 @@ PROCESS(store_process, "Store Process");
 static int16_t last_id;
 
 /**
- * Protocol Buffer output_stream
- */
-static pb_ostream_t pb_ostream;
-
-/**
- * Protocol Buffer input_stream
- */
-static pb_istream_t pb_istream;
-
-/**
- * Protocol Buffer buffer to use for enconding / decoding.
- */
-static uint8_t pb_buffer[PB_BUF_SIZE];
-
-/**
- * File descriptor to use.
- */
-static int fd;
-
-/**
- * Bytes written / read to / from filesystem
- */
-static int bytes;
-
-/**
- * Buffer for filename to use
- */
-static char filename[FILENAME_LENGTH];
-
-/**
  * Initialize the data store.
  * Includes finding the latest reading.
  */
@@ -256,6 +226,10 @@ PROCESS_THREAD(store_process, ev, data) {
 }
 
 int16_t save_sample(Sample *sample) {
+    pb_ostream_t pb_ostream;
+    uint8_t pb_buffer[Sample_size];
+    char filename[FILENAME_LENGTH];
+
     last_id++;
 
     sample->id = last_id;
@@ -263,7 +237,7 @@ int16_t save_sample(Sample *sample) {
     DEBUG("Attempting to save reading with id %d\n", last_id);
 
     pb_ostream = pb_ostream_from_buffer(pb_buffer, sizeof(pb_buffer));
-    pb_encode(&pb_ostream, Sample_fields, sample);
+    pb_encode_delimited(&pb_ostream, Sample_fields, sample);
 
     radio_lock();
 
@@ -280,6 +254,12 @@ int16_t save_sample(Sample *sample) {
 }
 
 int16_t get_sample(int16_t id, Sample *sample) {
+    pb_istream_t pb_istream;
+    uint8_t pb_buffer[Sample_size];
+    int fd;
+    int bytes;
+    char filename[FILENAME_LENGTH];
+
     DEBUG("Attempting to get sample %d\n", id);
 
     radio_lock();
@@ -302,12 +282,15 @@ int16_t get_sample(int16_t id, Sample *sample) {
     radio_release();
 
     pb_istream = pb_istream_from_buffer(pb_buffer, bytes);
-    pb_decode(&pb_istream, Sample_fields, sample);
+    pb_decode_delimited(&pb_istream, Sample_fields, sample);
 
     return STORE_PROCESS_SUCCESS;
 }
 
 bool delete_sample(int16_t sample) {
+    int fd = 0;
+    char filename[FILENAME_LENGTH];
+
     if (sample < 1) {
         DEBUG("Attempting to delete invalid sample %d\n", sample);
         return false;
@@ -351,10 +334,13 @@ bool delete_sample(int16_t sample) {
 }
 
 bool save_config(SensorConfig *config) {
+    pb_ostream_t pb_ostream;
+    uint8_t pb_buffer[SensorConfig_size];
+
     DEBUG("Attempting to save config\n");
 
     pb_ostream = pb_ostream_from_buffer(pb_buffer, sizeof(pb_buffer));
-    pb_encode(&pb_ostream, SensorConfig_fields, config);
+    pb_encode_delimited(&pb_ostream, SensorConfig_fields, config);
 
     radio_lock();
 
@@ -366,6 +352,11 @@ bool save_config(SensorConfig *config) {
 }
 
 bool get_config(SensorConfig *config) {
+    pb_istream_t pb_istream;
+    uint8_t pb_buffer[SensorConfig_size];
+    int fd;
+    int bytes;
+
     DEBUG("Attempting to get config\n");
 
     radio_lock();
@@ -388,12 +379,15 @@ bool get_config(SensorConfig *config) {
     radio_release();
 
     pb_istream = pb_istream_from_buffer(pb_buffer, bytes);
-    pb_decode(&pb_istream, SensorConfig_fields, config);
+    pb_decode_delimited(&pb_istream, SensorConfig_fields, config);
 
     return true;
 }
 
 bool write_file(char* filename, uint8_t *buffer, int length) {
+    int fd;
+    int bytes;
+
     fd = cfs_open(filename, CFS_WRITE);
 
     if (fd < 0) {
@@ -438,10 +432,10 @@ void radio_release(void) {
 }
 
 int16_t find_latest_sample(void) {
-    static struct cfs_dirent dirent;
-    static struct cfs_dir dir;
-    static int16_t file_num;
-    static int16_t max_num;
+    struct cfs_dirent dirent;
+    struct cfs_dir dir;
+    int16_t file_num;
+    int16_t max_num;
 
     max_num = 0;
     DEBUG("Refreshing filename cache\n");
