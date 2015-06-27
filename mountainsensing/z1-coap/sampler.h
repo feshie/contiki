@@ -23,8 +23,6 @@
  */
 PROCESS_NAME(sample_process);
 
-void avr_timer_handler(void *p);
-
 /**
  * Get the Sampler to reload it's config from flash.
  * This is a non blocking asynchronous call.

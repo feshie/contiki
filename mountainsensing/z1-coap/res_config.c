@@ -29,17 +29,20 @@ static void res_get_handler(void* request, void* response, uint8_t *buffer, uint
  */
 static void res_post_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
+static uint8_t pb_buffer[SensorConfig_size];
+
+static SensorConfig config;
+
+static uint8_t buffer_len;
+
 /**
  * Config ressource.
  */
 RESOURCE(res_config, "Config", res_get_handler, res_post_handler, NULL, NULL);
 
 void res_get_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
-    static SensorConfig config;
     static int32_t current_offset;
-    static uint8_t pb_buffer[SensorConfig_size];
     static pb_ostream_t pb_ostream;
-    static uint8_t buffer_len;
 
     DEBUG("Serving request! Offset %d, PrefSize %d\n", (int) *offset, preferred_size);
 
@@ -86,9 +89,6 @@ void res_post_handler(void* request, void* response, uint8_t *buffer, uint16_t p
     static coap_packet_t *coap_req;
     static uint8_t *incoming;
     static size_t incoming_len;
-    static uint8_t pb_buffer[SensorConfig_size];
-    static uint8_t buffer_len;
-    static SensorConfig config;
     static pb_istream_t pb_istream;
 
     coap_req = (coap_packet_t *)request;

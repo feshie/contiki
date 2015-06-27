@@ -48,6 +48,9 @@ PROCESS(sample_process, "Sample Process");
  */
 static SensorConfig sensor_config;
 
+/**
+ * Asynchronous event sent by the AVR Handler when it receives data fro man AVR sensor.
+ */
 static process_event_t protobuf_event;
 
 /**
@@ -67,10 +70,11 @@ PROCESS_THREAD(sample_process, ev, data) {
     static Sample sample;
     static int i;
     static uint8_t avr_id;
-    static struct ctimer avr_timeout_timer;
+    static struct etimer avr_timeout_timer;
     static uint8_t avr_recieved;
     static uint8_t avr_retry_count;
     static int16_t id;
+    static uint8_t j;
 
     PROCESS_BEGIN();
 
@@ -94,78 +98,84 @@ PROCESS_THREAD(sample_process, ev, data) {
         etimer_set(&sample_timer, CLOCK_SECOND * (sensor_config.interval - (get_time() % sensor_config.interval)));
         PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&sample_timer));
 
-        switch(ev) {
-            case SAMPLER_EVENT_REFRESH_CONFIG:
-                refresh_config();
-                break;
+        if (ev == SAMPLER_EVENT_REFRESH_CONFIG) {
+            refresh_config();
+            continue;
+        }
 
-            case PROCESS_EVENT_TIMER:
+        if (ev == PROCESS_EVENT_TIMER) {
 
-                ms1_sense_on();
-                sample.time = get_time();
+            ms1_sense_on();
+            sample.time = get_time();
 
-                sample.batt = get_sensor_batt();
-                sample.has_batt = true;
+            sample.batt = get_sensor_batt();
+            sample.has_batt = true;
 
-                SENSORS_ACTIVATE(temperature_sensor);
-                sample.temp = get_sensor_temp();
-                sample.has_temp = true;
-                SENSORS_DEACTIVATE(temperature_sensor);
+            SENSORS_ACTIVATE(temperature_sensor);
+            sample.temp = get_sensor_temp();
+            sample.has_temp = true;
+            SENSORS_DEACTIVATE(temperature_sensor);
 
-                sample.accX = get_sensor_acc_x();
-                sample.accY = get_sensor_acc_y();
-                sample.accZ = get_sensor_acc_z();
+            sample.accX = get_sensor_acc_x();
+            sample.accY = get_sensor_acc_y();
+            sample.accZ = get_sensor_acc_z();
 
-                sample.has_accX = true;
-                sample.has_accY = true;
-                sample.has_accZ = true;
+            sample.has_accX = true;
+            sample.has_accY = true;
+            sample.has_accZ = true;
 
-                if(sensor_config.hasADC1) {
-                    sample.has_ADC1 = 1;
-                    sample.ADC1 = get_sensor_ADC1();
-                }
-                if(sensor_config.hasADC2) {
+            if (sensor_config.hasADC1) {
+                sample.has_ADC1 = true;
+                sample.ADC1 = get_sensor_ADC1();
+            }
 
-                    sample.has_ADC2 = true;
-                    sample.ADC2 = get_sensor_ADC2();
-                }
-                if(sensor_config.hasRain) {
-                    sample.has_rain = true;
-                    sample.rain = get_sensor_rain();
-                }
+            if (sensor_config.hasADC2) {
+                sample.has_ADC2 = true;
+                sample.ADC2 = get_sensor_ADC2();
+            }
 
-                DEBUG("Sampling from %d AVRs\n", sensor_config.avrIDs_count);
-                for(i = 0; i < sensor_config.avrIDs_count; i++) {
-                    avr_id = sensor_config.avrIDs[i] & 0xFF; //only use 8bits
-                    DEBUG("AVR ID: %d\n", avr_id);
-                    avr_recieved = 0;
-                    avr_retry_count = 0;
-                    data = NULL;
-                    do {
-                        protobuf_send_message(avr_id, PROTBUF_OPCODE_GET_DATA, NULL, (int)NULL);
-                        DEBUG("Sent message %d\n", i);
-                        i = i + 1;
-                        ctimer_set(&avr_timeout_timer, CLOCK_SECOND * AVR_TIMEOUT_SECONDS, avr_timer_handler, NULL);
-                        PROCESS_YIELD_UNTIL(ev == protobuf_event);
-                        if(data != NULL) {
+            if (sensor_config.hasRain) {
+                sample.has_rain = true;
+                sample.rain = get_sensor_rain();
+            }
+
+            DEBUG("Sampling from %d AVRs\n", sensor_config.avrIDs_count);
+            for (i = 0; i < sensor_config.avrIDs_count; i++) {
+                avr_id = sensor_config.avrIDs[i] & 0xFF; //only use 8bits
+                DEBUG("AVR ID: %d\n", avr_id);
+                avr_recieved = 0;
+                avr_retry_count = 0;
+
+                do {
+                    protobuf_send_message(avr_id, PROTBUF_OPCODE_GET_DATA, NULL, (int)NULL);
+                    DEBUG("Retry %d\n", avr_retry_count);
+
+                    etimer_set(&avr_timeout_timer, CLOCK_SECOND * AVR_TIMEOUT_SECONDS);
+
+                    DEBUG("Yielding for timeout\n");
+
+                    PROCESS_WAIT_EVENT_UNTIL(ev == protobuf_event || etimer_expired(&avr_timeout_timer));
+
+                    if (ev == PROCESS_EVENT_TIMER) {
+                        DEBUG("AVR Timeout Reached!\n");
+                        avr_retry_count++;
+
+                    } else if (ev == protobuf_event) {
+
+                        if (data != NULL) {
                             DEBUG("\tavr data recieved on retry %d\n", avr_retry_count);
-                            ctimer_stop(&avr_timeout_timer);
                             protobuf_data_t *pbd;
                             pbd = data;
                             sample.has_AVR = 1;
                             sample.AVR.size = pbd->length;
-                            static uint8_t k;
-                            for(k=0; k < pbd->length; k++){
-                                sample.AVR.bytes[k] = pbd->data[k];
+                            for(j=0; j < pbd->length; j++){
+                                sample.AVR.bytes[j] = pbd->data[j];
                             }
-#ifdef AVRDEFBUG
                             DEBUG("\tRecieved %d bytes\t", pbd->length);
-                            static uint8_t j;
                             for(j = 0; j < pbd->length; j++) {
                                 DEBUG("%d:", pbd->data[j]);
                             }
                             DEBUG("\n");
-#endif
                             //process data
                             if (avr_id < 0x10) {
                                 //it's a temp accel chain and so needs to be read twice to get valid data
@@ -175,26 +185,25 @@ PROCESS_THREAD(sample_process, ev, data) {
                             } else {
                                 avr_recieved = 2;
                             }
-                        } else {
-                            DEBUG("AVR timedout\n");
-                            avr_retry_count++;
                         }
-                        DEBUG("avr_recieved = %d\n", avr_recieved);
-                    } while(avr_recieved < 2 && avr_retry_count < PROTOBUF_RETRIES);
-                }
+                    }
+
+                    DEBUG("avr_recieved = %d\n", avr_recieved);
+                } while(avr_recieved < 2 && avr_retry_count < PROTOBUF_RETRIES);
+            }
 #ifndef SENSE_ON
-                ms1_sense_off();
+            ms1_sense_off();
 #endif
 
-                id = store_save_sample(&sample);
+            id = store_save_sample(&sample);
 
-                if (id < 0) {
-                    DEBUG("Failed to save sample!\n");
-                } else {
-                    DEBUG("Sample saved with id %d\n", id);
-                }
+            if (id < 0) {
+                DEBUG("Failed to save sample!\n");
+            } else {
+                DEBUG("Sample saved with id %d\n", id);
+            }
 
-                break;
+            continue;
         }
     }
     PROCESS_END();
@@ -221,14 +230,11 @@ void print_sensor_config(SensorConfig *conf) {
 
     DEBUG("\t%d AVRs\n", conf->avrIDs_count);
     for (i = 0; i < conf->avrIDs_count; i++) {
+        // uint32_t is not necessarilly an unsigned int. Cast it to an int, and mask out the sign bits.
         DEBUG("\t\t AVR %d: %02x\n", i, (int)conf->avrIDs[i] & 0xFF);
     }
 }
 
 void sampler_refresh_config(void) {
     process_post(&sample_process, SAMPLER_EVENT_REFRESH_CONFIG, NULL);
-}
-
-void avr_timer_handler(void *p) {
-	process_post(&sample_process, protobuf_event, (process_data_t)NULL);
 }

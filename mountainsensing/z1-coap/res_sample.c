@@ -19,6 +19,11 @@
 #include "debug.h"
 
 /**
+ * Maximum length of a URI
+ */
+#define MAX_URI_LENGTH  20
+
+/**
  * Indicates no trailing sample id was found in the URI
  */
 #define NO_SAMPLE_ID        -1
@@ -157,37 +162,40 @@ void res_delete_handler(void* request, void* response, uint8_t *buffer, uint16_t
 int16_t parse_sample_id(void *request) {
     static const char *uri_path;
     static int uri_length;
-    static char *terminated_uri_path;
-    static char *endptr;
+    // Need extra byte for null terminator
+    static char terminated_uri_path[MAX_URI_LENGTH + 1];
+    static char *token_ptr;
+    static char *end_ptr;
     static int16_t sample_id;
 
     uri_length = REST.get_url(request, &uri_path);
 
+    if (uri_length > MAX_URI_LENGTH) {
+        uri_length = MAX_URI_LENGTH;
+    }
+
     // The returned uir isn't NULL terminated - need to do it ourselves
-    terminated_uri_path = malloc(uri_length + 1);
     strncpy(terminated_uri_path, uri_path, uri_length);
     terminated_uri_path[uri_length] = '\0';
+    token_ptr = &terminated_uri_path[0];
 
     // Parse the uri
-    strsep(&terminated_uri_path, SEPARATOR_STR);
-    if (terminated_uri_path == NULL) {
+    strsep(&token_ptr, SEPARATOR_STR);
+    if (token_ptr == NULL) {
         DEBUG("Request with no sample id!\n");
-        free(terminated_uri_path);
         return NO_SAMPLE_ID;
     }
 
     // Convert the string to an int
     errno = 0;
-    sample_id = strtoul(terminated_uri_path, &endptr, 0);
+    sample_id = strtoul(token_ptr, &end_ptr, 0);
     // Errno being set indicates an error occured.
     // endptr != \0 indicates that the entire string was not parsed succesfully - we want to ensure the entire string is valid.
     // endptr == SEPARATOR is valid to accept trailing SEPARATOR
-    if (errno != 0 || (*endptr != '\0' && *endptr != SEPARATOR_CHAR)) {
+    if (errno != 0 || (*end_ptr != '\0' && *end_ptr != SEPARATOR_CHAR)) {
         DEBUG("Request with invalid sample id!\n");
-        free(terminated_uri_path);
         return INVALID_SAMPLE_ID;
     }
 
-    free(terminated_uri_path);
     return sample_id;
 }
