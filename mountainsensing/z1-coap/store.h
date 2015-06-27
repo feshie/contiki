@@ -44,13 +44,31 @@ int16_t store_save_sample(Sample *sample);
 bool store_get_sample(int16_t id, Sample *sample);
 
 /**
- * Get the most recent sample from the flash,
+ * Get a given sample from the flash,
  * in the form of an encoded protocol buffer.
+ * @param id The id of the sample.
+ * @param buffer An allocated buffer at least Samle_size big to which the sample protocol buffer will be written.
+ * @return `true` on success, `false` otherwise.
+ * NOTE: On failure, buffer will be overwritten.
+ */
+bool store_get_raw_sample(int16_t id, uint8_t buffer[Sample_size]);
+
+/**
+ * Get the most recent sample from the flash.
  * @param *sample The Sample to write the sample to.
  * @return `true` on success, `false` otherwise.
  * NOTE: On failure, *sample will be overwritten.
  */
 bool store_get_latest_sample(Sample *sample);
+
+/**
+ * Get the most recent sample from the flash,
+ * in the form of an encoded protocol buffer.
+ * @param buffer An allocated buffer at last Sample_size big to which the sample protocol buffer will be written.
+ * @return `true` on success, `false` otherwise.
+ * NOTE: On failure, buffer will be overwritten.
+ */
+bool store_get_latest_raw_sample(uint8_t buffer[Sample_size]);
 
 /**
  * Delete a given sample from the flash.
@@ -75,5 +93,13 @@ bool store_save_config(SensorConfig *config);
  * NOTE: On failure, *config will be overwritten.
  */
 bool store_get_config(SensorConfig *config);
+
+/**
+ * Get the configuration from the flash.
+ * @param An allocated buffer at least SensorConfig_size big to which the config protocol buffer will be written.
+ * @return `true` on success, `false` otherwise.
+ * NOTE: On failure, *config will be overwritten.
+ */
+bool store_get_raw_config(uint8_t buffer[SensorConfig_size]);
 
 #endif // ifndef Z1_COAP_STORE_H
