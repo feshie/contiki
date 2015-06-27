@@ -237,7 +237,7 @@ int16_t save_sample(Sample *sample) {
     DEBUG("Attempting to save reading with id %d\n", last_id);
 
     pb_ostream = pb_ostream_from_buffer(pb_buffer, sizeof(pb_buffer));
-    pb_encode(&pb_ostream, Sample_fields, sample);
+    pb_encode_delimited(&pb_ostream, Sample_fields, sample);
 
     radio_lock();
 
@@ -282,7 +282,7 @@ int16_t get_sample(int16_t id, Sample *sample) {
     radio_release();
 
     pb_istream = pb_istream_from_buffer(pb_buffer, bytes);
-    pb_decode(&pb_istream, Sample_fields, sample);
+    pb_decode_delimited(&pb_istream, Sample_fields, sample);
 
     return STORE_PROCESS_SUCCESS;
 }
@@ -340,7 +340,7 @@ bool save_config(SensorConfig *config) {
     DEBUG("Attempting to save config\n");
 
     pb_ostream = pb_ostream_from_buffer(pb_buffer, sizeof(pb_buffer));
-    pb_encode(&pb_ostream, SensorConfig_fields, config);
+    pb_encode_delimited(&pb_ostream, SensorConfig_fields, config);
 
     radio_lock();
 
@@ -379,7 +379,7 @@ bool get_config(SensorConfig *config) {
     radio_release();
 
     pb_istream = pb_istream_from_buffer(pb_buffer, bytes);
-    pb_decode(&pb_istream, SensorConfig_fields, config);
+    pb_decode_delimited(&pb_istream, SensorConfig_fields, config);
 
     return true;
 }
