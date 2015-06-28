@@ -1,7 +1,7 @@
 #ifndef FILENAMES_H
 #define FILENAMES_H
 
-#define FILENAME_PREFIX 'r'
+#define FILENAME_PREFIX "r_"
 #define FILENAME_LENGTH 8
 void filenames_init(void);
 char* filenames_next_read(char*);

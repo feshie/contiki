@@ -40,8 +40,8 @@ filenames_refresh(void){
     if(cfs_opendir(&dir, "/") == 0) {
         FPRINT("\tOpened folder\n");
         while(cfs_readdir(&dir, &dirent) != -1) {
-            if(strncmp(dirent.name, FILENAME_PREFIX, 1) == 0) {
-                file_num = atoi(dirent.name + 1);
+            if(strncmp(dirent.name, FILENAME_PREFIX, 2) == 0) {
+                file_num = atoi(dirent.name + 2);
                 FPRINT("Filename %d found\n", file_num);
                 FPRINT("\tMax: %d Filenum: %d\n", max_num, file_num);
                 if(file_num > max_num) {
@@ -73,8 +73,9 @@ filenames_init(void){
 
 char*
 filenames_next_read(char* filename){
-    filename[0] = FILENAME_PREFIX;
-    itoa(number, filename + 1, 10);
+    filename[0] = 'r';
+    filename[1] = '_';
+    itoa(number, filename + 2, 10);
     FPRINT("Next read filename = %s\n", filename);
     return filename;
 }
@@ -92,13 +93,13 @@ filenames_next_write(char * filename){
 void
 filenames_delete(char* filename){
     char fname[FILENAME_LENGTH];
-    if (strcmp(filename,filenames_next_read(fname)) == 0){
-        cfs_remove(filename);
-        FPRINT("File deleted\n");
+    //if (strcmp(filename,filenames_next_read(fname)) == 0){
+        //cfs_remove(filename);
+        //FPRINT("File deleted\n");
         number--;
         FPRINT("Number decremented\n");
-    }else{
-        printf("Number mismatch not deleting\n");
-        filenames_refresh();
-    }
+    //}else{
+    //    printf("Number mismatch not deleting\n");
+    //    filenames_refresh();
+    //}
 }
