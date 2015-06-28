@@ -59,7 +59,6 @@ PROCESS(store_process, "Store Process");
  * Everything will break if the start of a Config or Sample is every equal to this.
  */
 #define STORE_PROCESS_FAIL      INT16_MAX
-#define STORE_PROCESS_SUCCESS   0
 
 /**
  * Data should point to sample to save
@@ -155,15 +154,15 @@ static int16_t save_sample(Sample *sample);
 
 /**
  * Get a Sample from flash.
- * @return STORE_PROCESS_FAIL on failure (including if the file does not exist), STORE_PROCESS_SUCCESS on success.
+ * @return true on success, false otherwise (including if the file does not exist)
  */
-static int16_t get_sample(int16_t id, Sample *sample);
+static bool get_sample(int16_t id, Sample *sample);
 
 /**
  * Get a Sample from flash, in the form a raw protocol buffer.
- * @return STORE_PROCESS_FAIL on failure (including if the file does not exist), STORE_PROCESS_SUCCESS on success.
+ * @return true on success, false otherwise (including if the file does not exist)
  */
-static int16_t get_raw_sample(int16_t id, uint8_t buffer[Sample_size]);
+static bool get_raw_sample(int16_t id, uint8_t buffer[Sample_size]);
 
 /**
  * Delete a given sample. Will search backwards for the last known stored Sample
@@ -216,22 +215,30 @@ PROCESS_THREAD(store_process, ev, data) {
 
             case STORE_EVENT_GET_SAMPLE:
                 // Id is passed by value so that it doesn't change when something is written to the passed buffer
-                *((int16_t *) data) = get_sample(*((int16_t *) data), (Sample *) data);
+                if (!get_sample(*((int16_t *) data), (Sample *) data)) {
+                    *((int16_t *) data) = STORE_PROCESS_FAIL;
+                }
                 break;
 
             case STORE_EVENT_GET_RAW_SAMPLE:
                 // Id is passed by value so that it doesn't change when something is written to the passed buffer
-                *((int16_t *) data) = get_raw_sample(*((int16_t *) data), (uint8_t *) data);
+                if (!get_raw_sample(*((int16_t *) data), (uint8_t *) data)) {
+                    *((int16_t *) data) = STORE_PROCESS_FAIL;
+                }
                 break;
 
             case STORE_EVENT_GET_LATEST_SAMPLE:
                 // Just get last_id. We keep our state clean (ie last_id always points to a valid Sample) so this isn't an issue.
-                *((int16_t *) data) = get_sample(last_id, (Sample *) data);
+                if (!get_sample(last_id, (Sample *) data)) {
+                    *((int16_t *) data) = STORE_PROCESS_FAIL;
+                }
                 break;
 
             case STORE_EVENT_GET_LATEST_RAW_SAMPLE:
                 // Just get last_id. We keep our state clean (ie last_id always points to a valid Sample) so this isn't an issue.
-                *((int16_t *) data) = get_raw_sample(last_id, (uint8_t *) data);
+                if (!get_raw_sample(last_id, (uint8_t *) data)) {
+                    *((int16_t *) data) = STORE_PROCESS_FAIL;
+                }
                 break;
 
             case STORE_EVENT_DELETE_SAMPLE:
@@ -300,22 +307,22 @@ int16_t save_sample(Sample *sample) {
     return last_id;
 }
 
-int16_t get_sample(int16_t id, Sample *sample) {
+bool get_sample(int16_t id, Sample *sample) {
     pb_istream_t pb_istream;
     uint8_t pb_buffer[Sample_size];
 
     if (get_raw_sample(id, pb_buffer) == STORE_PROCESS_FAIL) {
-        return STORE_PROCESS_FAIL;
+        return false;
     }
 
     pb_istream = pb_istream_from_buffer(pb_buffer, sizeof(pb_buffer));
     // TODO - better error checking
     pb_decode_delimited(&pb_istream, Sample_fields, sample);
 
-    return STORE_PROCESS_SUCCESS;
+    return true;
 }
 
-int16_t get_raw_sample(int16_t id, uint8_t buffer[Sample_size]) {
+bool get_raw_sample(int16_t id, uint8_t buffer[Sample_size]) {
     int fd;
     int bytes;
     char filename[FILENAME_LENGTH];
@@ -331,7 +338,7 @@ int16_t get_raw_sample(int16_t id, uint8_t buffer[Sample_size]) {
 
         radio_release();
 
-        return STORE_PROCESS_FAIL;
+        return false;
     }
 
     bytes = cfs_read(fd, buffer, Sample_size);
@@ -342,7 +349,7 @@ int16_t get_raw_sample(int16_t id, uint8_t buffer[Sample_size]) {
     cfs_close(fd);
     radio_release();
 
-    return STORE_PROCESS_SUCCESS;
+    return true;
 }
 
 bool delete_sample(int16_t sample) {
