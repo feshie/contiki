@@ -75,8 +75,8 @@ AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process);
 /* The internal webserver can provide additional information if
  * enough program flash is available.
  */
-#define WEBSERVER_CONF_LOADTIME 1
-#define WEBSERVER_CONF_FILESTATS 1
+#define WEBSERVER_CONF_LOADTIME 0
+#define WEBSERVER_CONF_FILESTATS 0
 #define WEBSERVER_CONF_NEIGHBOR_STATUS 1
 /* Adding links requires a larger RAM buffer. To avoid static allocation
  * the stack can be used for formatting; however tcp retransmissions
