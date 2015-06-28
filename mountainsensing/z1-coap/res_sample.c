@@ -69,13 +69,14 @@ static int16_t parse_sample_id(void *request);
 PARENT_RESOURCE(res_sample, "Sample", res_get_handler, NULL, NULL, res_delete_handler);
 
 void res_get_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
-    static Sample sample;
     static int32_t current_offset;
     static uint8_t pb_buffer[Sample_size];
-    static pb_ostream_t pb_ostream;
-    static uint8_t buffer_len;
-    static int16_t sample_id;
     static bool ret;
+    int16_t sample_id;
+    // All of these are used after the only blocking call - it's safe to allocate them on the stack
+    pb_istream_t pb_istream;
+    uint64_t pb_len;
+    uint8_t buffer_len;
 
     DEBUG("Serving request! Offset %d, PrefSize %d\n", (int) *offset, preferred_size);
 
@@ -95,9 +96,9 @@ void res_get_handler(void* request, void* response, uint8_t *buffer, uint16_t pr
 
         // Get the latest sample if no sample id was specified
         if (sample_id == NO_SAMPLE_ID) {
-            ret = store_get_latest_sample(&sample);
+            ret = store_get_latest_raw_sample(pb_buffer);
         } else {
-            ret = store_get_sample(sample_id, &sample);
+            ret = store_get_raw_sample(sample_id, pb_buffer);
         }
 
         if (!ret) {
@@ -108,16 +109,21 @@ void res_get_handler(void* request, void* response, uint8_t *buffer, uint16_t pr
         }
     }
 
-    DEBUG("Got sample with id %" PRIu32  "\n", sample.id);
+    pb_istream = pb_istream_from_buffer(pb_buffer, sizeof(pb_buffer));
 
-    pb_ostream = pb_ostream_from_buffer(pb_buffer, sizeof(pb_buffer));
-    pb_encode_delimited(&pb_ostream, Sample_fields, &sample);
+    // TODO better error checking
+    pb_decode_varint(&pb_istream, &pb_len);
+
+    // need to account for the size of the varint we decoded
+    pb_len += sizeof(pb_buffer) - pb_istream.bytes_left;
+
+    DEBUG("Got a Sample, size: %" PRId64 "\n", pb_len);
 
     // If whatever we have to send fits in one block, just send that
-    if (pb_ostream.bytes_written - current_offset <= preferred_size) {
+    if (pb_len - current_offset <= preferred_size) {
         DEBUG("Request fits in a single block\n");
 
-        buffer_len = pb_ostream.bytes_written - current_offset;
+        buffer_len = pb_len - current_offset;
 
         // Indicates this is the last chunk
         *offset = -1;
@@ -135,6 +141,7 @@ void res_get_handler(void* request, void* response, uint8_t *buffer, uint16_t pr
 
     REST.set_header_content_type(response, REST.type.APPLICATION_OCTET_STREAM);
     REST.set_response_payload(response, buffer, buffer_len);
+    DEBUG("Done!\n");
 }
 
 void res_delete_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
