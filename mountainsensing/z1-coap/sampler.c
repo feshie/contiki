@@ -38,10 +38,10 @@ PROCESS(sample_process, "Sample Process");
 //#define SENSE_ON
 
 /**
- * Event to tell the sampler process to reload the config.
- * The data pointer is not used.
+ * True if we should reload our config, false otherwise.
+ * Intitially set to true to load our config on start.
  */
-#define SAMPLER_EVENT_REFRESH_CONFIG  1
+static bool should_refresh_config = true;
 
 /**
  * The current sensor config being used.
@@ -78,14 +78,11 @@ PROCESS_THREAD(sample_process, ev, data) {
 
     PROCESS_BEGIN();
 
-    refresh_config();
     avr_recieved = 0;
     avr_retry_count = 0;
 
     protobuf_event = process_alloc_event();
     protobuf_register_process_callback(&sample_process, protobuf_event) ;
-    DEBUG("Refreshed Sensor config to:\n");
-    print_sensor_config(&sensor_config);
 
 #ifdef SENSE_ON
     ms1_sense_on();
@@ -95,13 +92,17 @@ PROCESS_THREAD(sample_process, ev, data) {
     SENSORS_ACTIVATE(event_sensor);
 
     while(true) {
+        // Reload our config if we need to
+        if (should_refresh_config) {
+            refresh_config();
+            should_refresh_config = false;
+
+            DEBUG("Refreshed Sensor config to:\n");
+            print_sensor_config(&sensor_config);
+        }
+
         etimer_set(&sample_timer, CLOCK_SECOND * (sensor_config.interval - (get_time() % sensor_config.interval)));
         PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&sample_timer));
-
-        if (ev == SAMPLER_EVENT_REFRESH_CONFIG) {
-            refresh_config();
-            continue;
-        }
 
         if (ev == PROCESS_EVENT_TIMER) {
 
@@ -236,5 +237,6 @@ void print_sensor_config(SensorConfig *conf) {
 }
 
 void sampler_refresh_config(void) {
-    process_post(&sample_process, SAMPLER_EVENT_REFRESH_CONFIG, NULL);
+    DEBUG("Config marked for refresh!\n");
+    should_refresh_config = true;
 }
