@@ -40,6 +40,12 @@
 #include "contiki.h"
 #include "dev/batv-sensor.h"
 #include <stdio.h>		
+#include "ms1-io.h"
+
+float floor(float x){
+  if(x>=0.0f) return (float) ((int)x);
+  else        return (float) ((int)x-1);
+}
 
 
 /*---------------------------------------------------------------------------*/
@@ -50,14 +56,15 @@ PROCESS_THREAD(test_batv_process, ev, data)
 {
 
   PROCESS_BEGIN();
-
+  ms1_io_init();
+  ms1_sense_on();
   SENSORS_ACTIVATE(batv_sensor);
 
   while(1) {
     uint16_t value = batv_sensor.value(0);
-    uint16_t voltage = value / 273;
+    float voltage = (float)value / 273;
     printf("Batv Value: %i\n", value);
-    printf("Approx Voltage: %iV\n", voltage);
+    printf("Approx Voltage: %ld.%02d\n", (long)voltage, (voltage - floor(voltage))*100 );
   }
 
   SENSORS_DEACTIVATE(batv_sensor);
