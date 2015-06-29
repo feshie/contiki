@@ -38,7 +38,7 @@ get_sensor_ADC2(void)
 {
     uint16_t ret;
     rtimer_clock_t t0;
-    SENSORS_ACTIVATE(adc1_sensor);
+    SENSORS_ACTIVATE(adc2_sensor);
     t0 = RTIMER_NOW();
     while(RTIMER_CLOCK_LT(RTIMER_NOW(), (t0 + (uint32_t) ADC_ACTIVATE_DELAY)));
     ret =  adc2_sensor.value(0);
