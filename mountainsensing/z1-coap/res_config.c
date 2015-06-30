@@ -13,6 +13,7 @@
 #include "store.h"
 #include <inttypes.h>
 #include <stdlib.h>
+#include <sampler.h>
 
 #define DEBUG_ON
 #include "debug.h"
@@ -128,6 +129,8 @@ void res_post_handler(void* request, void* response, uint8_t *buffer, uint16_t p
                 }
 
                 DEBUG("Config saved and decoded\n");
+
+                sampler_refresh_config();
             }
 
             REST.set_response_status(response, REST.status.CHANGED);
