@@ -102,17 +102,19 @@ void res_get_handler(void* request, void* response, uint8_t *buffer, uint16_t pr
         }
 
         if (!ret) {
-            // 500 internal error
             DEBUG("Unable to get sample!\n");
-            REST.set_response_status(response, REST.status.INTERNAL_SERVER_ERROR);
+            REST.set_response_status(response, REST.status.NOT_FOUND);
             return;
         }
     }
 
     pb_istream = pb_istream_from_buffer(pb_buffer, sizeof(pb_buffer));
 
-    // TODO better error checking
-    pb_decode_varint(&pb_istream, &pb_len);
+    if (!pb_decode_varint(&pb_istream, &pb_len)) {
+        DEBUG("Error decoding sample length!\n");
+        REST.set_response_status(response, REST.status.INTERNAL_SERVER_ERROR);
+        return;
+    }
 
     // need to account for the size of the varint we decoded
     pb_len += sizeof(pb_buffer) - pb_istream.bytes_left;
