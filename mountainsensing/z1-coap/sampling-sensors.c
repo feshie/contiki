@@ -93,17 +93,8 @@ get_time(void)
 #endif
 }
 
-uint8_t 
-set_time(uint16_t y, uint8_t mo, uint8_t d, uint8_t h, uint8_t mi, uint8_t s)
+bool
+set_time(uint32_t seconds)
 {
-    tm t;
-
-    t.tm_year = y - 1900;
-    t.tm_mon = mo - 1;
-    t.tm_mday = d - 1;
-    t.tm_hour = h;
-    t.tm_min = mi;
-    t.tm_sec = s;
-
-    return (uint8_t)ds3231_set_time(&t);
+    return ds3231_set_epoch_seconds(seconds);
 }

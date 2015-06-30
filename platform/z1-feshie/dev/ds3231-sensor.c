@@ -44,7 +44,8 @@
 #include <contiki.h>
 #include "ds3231-sensor.h"
 #include "i2cmaster.h"
-
+#include <time.h>
+#include <inttypes.h>
 
 //#define DEBUG
 #ifdef DEBUG
@@ -137,6 +138,28 @@ uint32_t ds3231_get_epoch_seconds(void)
 	dprintf("epoch is %lu\n", epoch);
 
 	return epoch;
+}
+
+/**
+ * ds3231_set_epoch_seconds
+ *
+ * @param   seconds The number of seconds since the Unix epoch, or 0 in case of error.
+ *
+ * @return  true on success, false otherwise.
+ *
+ * @note	Unix epoch is taken as 1970-01-01 00:00:00 UTC.
+ *
+ * @note	The base date of tm struct is 1900-01-01 and the base date stored
+ * 			in the RTC for this application is 2000-01-01. An adjustment of
+ * 			100 is made before setting the time.
+ */
+bool ds3231_set_epoch_seconds(uint32_t seconds) {
+    tm *t = gmtime((time_t *) &seconds);
+
+	dprintf("years %d, months %d, days %lu, hours %lu, minutes %d, seconds %d\n", t->tm_year, t->tm_mon, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec);
+    dprintf("epoch %" PRIu32 "\n", seconds);
+
+    return ds3231_set_time(gmtime((time_t *) &seconds)) == 0;
 }
 
 /**
@@ -320,8 +343,6 @@ int value(int type)
 int configure(int type, int c)
 {
 	int rc = 0;
-	uint8_t addr_set[1] = { 0 };
-	uint8_t register_map[19];
 
 	switch (type) {
 	case DS3231_CONFIG_SET_TIME:

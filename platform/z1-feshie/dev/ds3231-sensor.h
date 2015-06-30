@@ -40,6 +40,8 @@
 #define __DS3231_SENSOR__
 
 #include <lib/sensors.h>
+#include <stdbool.h>
+#include <time.h>
 
 /**
  * DS3231 Sensor and Config Command List.
@@ -57,20 +59,7 @@
 #define DS3231_CONTROL_A1IE_CLEAR_MASK	0xfe
 #define DS3231_STATUS_A1F_CLEAR_MASK	0xfe
 
-/**
- * tm
- *
- * An abbreviated version of tm struct from time.h. See Open Group for full
- * documentation of this structure.
- */
-typedef struct {
-	int tm_sec; 	// seconds [0,61]
-	int tm_min; 	// minutes [0,59]
-	int tm_hour; 	// hour [0,23]
-	int tm_mday; 	// day of month [1,31]
-	int tm_mon; 	// month of year [0,11]
-	int tm_year; 	// years since 1900
-} tm;
+typedef struct tm tm;
 
 typedef union {
 	struct {
@@ -151,6 +140,7 @@ typedef union {
 extern const struct sensors_sensor ds3231_sensor;
 
 uint32_t ds3231_get_epoch_seconds(void);
+bool ds3231_set_epoch_seconds(uint32_t seconds);
 int ds3231_set_time(tm *t);
 int ds3231_set_alarm(tm *t);
 int ds3231_clear_alarm(void);
