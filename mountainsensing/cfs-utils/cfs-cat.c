@@ -31,7 +31,7 @@ PROCESS(listcoffee_process, "CFS/Coffee dir list process");
 AUTOSTART_PROCESSES(&listcoffee_process);
 
 
-int8_t
+uint8_t
 load_file(char *data_buffer, char *filename)
 {
     int fd;
@@ -66,17 +66,17 @@ struct cfs_dir dir;
 struct cfs_dirent dirent;
     char data_buffer[DATA_BUFFER_LENGTH];
     int i = 0;
-
+    uint16_t c;
+    uint16_t length;
 if(cfs_opendir(&dir, "/") == 0) {
    while(cfs_readdir(&dir, &dirent) != -1) {
-     load_file(data_buffer, dirent.name); 
-     i = 0;
-     
-     printf("%s %ld ",
-            dirent.name, (long)dirent.size);
-    while(i < dirent.size){
-	printf("%x", data_buffer[i]);
-	i++;
+     length = load_file(data_buffer, dirent.name); 
+     i = 0; 
+     c = 0;    
+     printf("%s %d ", dirent.name, length);
+     while(i < length){
+	printf("%02x", (uint8_t)data_buffer[i]);
+	i = i + 1;
     }
     printf("\n");
    }
