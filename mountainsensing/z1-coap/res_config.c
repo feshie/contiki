@@ -1,7 +1,8 @@
 /**
- * @file
+ * @file res_config
  * Config ressource
  * Serves the current config, and supports setting the config.
+ * Arthur Fabre 2015
  */
 
 #include "er-server.h"

@@ -1,7 +1,8 @@
 /**
- * @file
- * Sample ressource.
+ * @file res_sample.c
+ * Sample resource.
  * Serves stored samples, and can delete them.
+ * Arthur Fabre 2015
  */
 
 #include "er-server.h"

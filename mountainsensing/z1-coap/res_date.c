@@ -1,8 +1,10 @@
 /**
+ * \file res_date.c
  * date resource
  * GET RTC date-time
  * POST RTC date-time to set the rtc
  * only for feshie nodes
+ * Arthur Fabre 2015
  */
 #include "er-server.h"
 #include <stdlib.h>
