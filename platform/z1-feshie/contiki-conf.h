@@ -152,7 +152,7 @@
 #define NETSTACK_CONF_WITH_IPV6_RPL               1
 
 /* Handle 10 neighbors */
-#define NBR_TABLE_CONF_MAX_NEIGHBORS     15
+#define NBR_TABLE_CONF_MAX_NEIGHBORS     8
 /* Handle 10 routes    */
 #define UIP_CONF_MAX_ROUTES   15
 
