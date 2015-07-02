@@ -22,6 +22,9 @@
 #include "platform-conf.h"
 #include <stdbool.h>
 
+// Routing mode
+#include "net/rpl/rpl.h"
+
 #define DEBUG_ON
 #include "debug.h"
 
@@ -219,6 +222,10 @@ static void refresh_config(void) {
     } else {
       	DEBUG("Sensor config loaded\n");
     }
+
+    // Set the RPL mode. Doesn't really belong here, but oh well
+    DEBUG("Setting RPL mode to %d\n", sensor_config.routingMode);
+    rpl_set_mode(sensor_config.routingMode);
 }
 
 void print_sensor_config(SensorConfig *conf) {
@@ -234,6 +241,8 @@ void print_sensor_config(SensorConfig *conf) {
         // uint32_t is not necessarilly an unsigned int. Cast it to an int, and mask out the sign bits.
         DEBUG("\t\t AVR %d: %02x\n", i, (int)conf->avrIDs[i] & 0xFF);
     }
+
+    DEBUG("\tRoutingMode: %d\n", conf->routingMode);
 }
 
 void sampler_refresh_config(void) {

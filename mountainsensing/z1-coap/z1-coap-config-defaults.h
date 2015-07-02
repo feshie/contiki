@@ -13,12 +13,13 @@
  * Default configuration to use when no configuration is curently defined.
  */
 SensorConfig SENSOR_DEFAULT_CONFIG = {
-    .interval = 120,
+    .interval = 1200,
     .avrIDs_count = 0,
     .avrIDs = {},
     .hasADC1 = false,
     .hasADC2 = false,
-    .hasRain = false
+    .hasRain = false,
+    .routingMode = SensorConfig_RoutingMode_MESH
 };
 
 #endif // ifndef Z1_COAP_DEFAULTS_H
