@@ -64,15 +64,21 @@ int coffee_cat()
 {
 struct cfs_dir dir;
 struct cfs_dirent dirent;
-int count = 0;
-int used = 0;
+    char data_buffer[DATA_BUFFER_LENGTH];
+    int i = 0;
 
 if(cfs_opendir(&dir, "/") == 0) {
    while(cfs_readdir(&dir, &dirent) != -1) {
-     printf("%s %ld\n",
+     load_file(data_buffer, dirent.name); 
+     i = 0;
+     
+     printf("%s %ld ",
             dirent.name, (long)dirent.size);
-	count++;
-	used += (long)dirent.size;
+    while(i < dirent.size){
+	printf("%x", data_buffer[i]);
+	i++;
+    }
+    printf("\n");
    }
    //cfs_closedir(&dir);
  }
