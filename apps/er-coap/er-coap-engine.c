@@ -326,7 +326,9 @@ coap_get_rest_method(void *packet)
 /*---------------------------------------------------------------------------*/
 
 /* the discover resource is automatically included for CoAP */
+#ifndef COAP_RES_WITHOUT_WELL_KNOWN
 extern resource_t res_well_known_core;
+#endif
 #ifdef WITH_DTLS
 extern resource_t res_dtls;
 #endif
@@ -337,8 +339,9 @@ PROCESS_THREAD(coap_engine, ev, data)
   PROCESS_BEGIN();
   PRINTF("Starting %s receiver...\n", coap_rest_implementation.name);
 
+#ifndef COAP_RES_WITHOUT_WELL_KNOWN
   rest_activate_resource(&res_well_known_core, ".well-known/core");
-
+#endif
   coap_register_as_transaction_handler();
   coap_init_connection(SERVER_LISTEN_PORT);
 

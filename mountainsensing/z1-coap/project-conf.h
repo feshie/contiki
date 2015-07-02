@@ -59,4 +59,7 @@
 /* Enable client-side support for COAP observe */
 #define COAP_OBSERVE_CLIENT            0
 
+/* Disable .well-known/core ressource. */
+#define COAP_RES_WITHOUT_WELL_KNOWN
+
 #endif
