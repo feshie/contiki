@@ -15,9 +15,7 @@ ARCH=msp430.c leds.c watchdog.c xmem.c \
      node-id.c sensors.c button-sensor.c cfs-coffee.c \
      uart0.c uart0-putchar.c uip-ipchksum.c \
      slip.c slip_uart0.c \
-     light-sensor.c \
      battery-sensor.c sky-sensors.c tmp102.c temperature-sensor.c  \
-      tlc59116.c \
      ds3231-sensor.c batv-sensor.c adc1-sensor.c adc2-sensor.c \
      uart1-putchar.c ms1-io.c reset-sensor.c \
 	 epoch_to_tm.c tm_to_epoch.c
