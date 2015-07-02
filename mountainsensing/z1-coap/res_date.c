@@ -9,9 +9,9 @@
 #include <stdio.h>
 #include <string.h>
 #include "rest-engine.h"
-#include "dev/ds3231-sensor.h"  // Clock
 #include <errno.h>
 #include <inttypes.h>
+#include "sampling-sensors.h"
 
 #define DEBUG_ON
 #include "debug.h"
@@ -21,7 +21,7 @@ static void res_get_handler(void* request, void* response, uint8_t *buffer, uint
     int length;
 
 	/* read RTC and get Epoch (int_32) */
-    length = sprintf(message, "%" PRIu32, ds3231_get_epoch_seconds());
+    length = sprintf(message, "%" PRIu32, get_time());
     memcpy(buffer, message, length);
 
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
@@ -58,7 +58,7 @@ static void res_post_put_handler(void *request, void *response, uint8_t *buffer,
 
     DEBUG("Requested time is %" PRIu32 "\n", seconds);
 
-    if (!ds3231_set_epoch_seconds(seconds)) {
+    if (!set_time(seconds)) {
         DEBUG("Failed to set epoch\n");
         REST.set_response_status(response, REST.status.INTERNAL_SERVER_ERROR);
         return;

@@ -41,7 +41,7 @@
 
 #include <lib/sensors.h>
 #include <stdbool.h>
-#include <time.h>
+#include "utc_time.h"
 
 /**
  * DS3231 Sensor and Config Command List.
@@ -139,10 +139,9 @@ typedef union {
  */
 extern const struct sensors_sensor ds3231_sensor;
 
-uint32_t ds3231_get_epoch_seconds(void);
-bool ds3231_set_epoch_seconds(uint32_t seconds);
-int ds3231_set_time(tm *t);
-int ds3231_set_alarm(tm *t);
+int ds3231_get_time(struct tm *t);
+int ds3231_set_time(struct tm *t);
+int ds3231_set_alarm(struct tm *t);
 int ds3231_clear_alarm(void);
 int ds3231_temperature(void);
 int value(int type);

@@ -44,7 +44,6 @@
 #include <contiki.h>
 #include "ds3231-sensor.h"
 #include "i2cmaster.h"
-#include <time.h>
 #include <inttypes.h>
 
 //#define DEBUG
@@ -53,7 +52,6 @@
 #else
 #define dprintf(...)
 #endif
-
 
 /**
  * DS3231 is connected to TWI Master on Port C (Pins 0 & 1). The active low
@@ -90,76 +88,40 @@ enum {
 };
 static uint8_t state = OFF;
 
-static int accum_days[] = {
-		0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334
-};
-
 /**
- * ds3231_get_epoch_seconds
+ * ds3231_get_time
  *
- * @return	The number of seconds since the Unix epoch, or 0 in case of error.
- *
- * @note	Unix epoch is taken as 1970-01-01 00:00:00 UTC.
- *
- * @note	In this application the base date stored in the RTC
- * 			is from 2000-01-01.
- *
- * @note	When accessed via the 'value' method, for the MSB and LSB, the
- * 			return value will need to be cast from int to uint_16t and shifted
- * 			accordingly.
- */
-uint32_t ds3231_get_epoch_seconds(void)
-{
-	int rc;
-	int years, months, minutes, seconds;
-	uint32_t days, hours, epoch;
-	ds_3231_time_t time;
-
-	/* Read the time from the DS3231. */
-	time.tm.address = 0;
-	rc = I2C(time.data, 1, &time.data[1], 7);
-	if (rc != 0) {
-		return 0;
-	}
-
-	/* Convert to epoch seconds. */
-	years = time.tm.year + time.tm.dyear * 10 + 30;
-	months = time.tm.mon + time.tm.dmon * 10 - 1;
-	days = time.tm.date + time.tm.ddate * 10 - 1;
-	days += accum_days[months] + years * 365 + ((years + 2) / 4);
-	days += ((years + 3) % 4 == 0) && (months > 1) ? 1 : 0;
-	hours = time.tm.hour + time.tm.dhour * 10;
-	minutes = time.tm.min + time.tm.dmin * 10;
-	seconds = time.tm.sec + time.tm.dsec * 10;
-	epoch = days * 86400 + hours * 3600 + minutes * 60 + seconds;
-
-	dprintf("years %d, months %d, days %lu, hours %lu, minutes %d, seconds %d\n",
-			years, months, days, hours, minutes, seconds);
-	dprintf("epoch is %lu\n", epoch);
-
-	return epoch;
-}
-
-/**
- * ds3231_set_epoch_seconds
- *
- * @param   seconds The number of seconds since the Unix epoch, or 0 in case of error.
- *
- * @return  true on success, false otherwise.
- *
- * @note	Unix epoch is taken as 1970-01-01 00:00:00 UTC.
+ * @return	0 for success, -ve for error.
  *
  * @note	The base date of tm struct is 1900-01-01 and the base date stored
  * 			in the RTC for this application is 2000-01-01. An adjustment of
- * 			100 is made before setting the time.
+ * 			100 is made before getting the time.
  */
-bool ds3231_set_epoch_seconds(uint32_t seconds) {
-    tm *t = gmtime((time_t *) &seconds);
+int ds3231_get_time(struct tm *t) {
+    int rc;
+	ds_3231_time_t time;
 
-	dprintf("years %d, months %d, days %lu, hours %lu, minutes %d, seconds %d\n", t->tm_year, t->tm_mon, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec);
-    dprintf("epoch %" PRIu32 "\n", seconds);
+	memset(time.data, 0, 8);
 
-    return ds3231_set_time(gmtime((time_t *) &seconds)) == 0;
+	/* Read the time from the DS3231. */
+	time.tm.address = 0;
+    rc = I2C(time.data, 1, &time.data[1], 7);
+	if (rc != 0) {
+		return rc;
+	}
+
+	/* Convert to tm struct */
+	t->tm_year = time.tm.year + time.tm.dyear * 10 + 100;
+    // Month field should be 0 indexed.
+	t->tm_mon = time.tm.mon + time.tm.dmon * 10 -1;
+	t->tm_mday = time.tm.date + time.tm.ddate * 10;
+	t->tm_hour = time.tm.hour + time.tm.dhour * 10;
+	t->tm_min = time.tm.min + time.tm.dmin * 10;
+	t->tm_sec = time.tm.sec + time.tm.dsec * 10;
+
+	dprintf("years %d, months %d, days %d, hours %d, minutes %d, seconds %d\n", t->tm_year, t->tm_mon, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec);
+
+    return 0;
 }
 
 /**
@@ -171,8 +133,7 @@ bool ds3231_set_epoch_seconds(uint32_t seconds) {
  * 			in the RTC for this application is 2000-01-01. An adjustment of
  * 			100 is made before setting the time.
  */
-int ds3231_set_time(tm *t)
-{
+int ds3231_set_time(struct tm *t) {
 	int rc;
 	ds_3231_time_t time;
 
@@ -181,6 +142,7 @@ int ds3231_set_time(tm *t)
 	/* Convert the tm struct to the register representation of the DS3231. */
 	time.tm.dyear = (t->tm_year - 100) / 10;
 	time.tm.year = (t->tm_year - 100) % 10;
+    // Months in struct tm are 0 indexed
 	time.tm.dmon = (t->tm_mon + 1) / 10;
 	time.tm.mon = (t->tm_mon + 1) % 10;
 	time.tm.ddate = t->tm_mday / 10;
@@ -193,6 +155,7 @@ int ds3231_set_time(tm *t)
 	time.tm.dsec = t->tm_sec / 10;
 	time.tm.sec = t->tm_sec % 10;
 
+	dprintf("year %d%d, months %d%d, days %d%d, hours %d%d, minutes %d%d, seconds %d%d\n", time.tm.dyear, time.tm.year, time.tm.dmon, time.tm.mon, time.tm.ddate, time.tm.date, time.tm.dhour, time.tm.hour, time.tm.dmin, time.tm.min, time.tm.dsec, time.tm.sec);
 	/* Send the new time to the DS3231. */
 	rc = I2C(time.data, 8, NULL, 0);
 	if (rc != 0) {
@@ -214,7 +177,7 @@ int ds3231_set_time(tm *t)
  *
  * @return	0 for success, -ve for error.
  */
-int ds3231_set_alarm(tm *t)
+int ds3231_set_alarm(struct tm *t)
 {
 	int rc;
 	ds_3231_alarm_t alarm;
@@ -319,25 +282,6 @@ int ds3231_temperature(void)
 }
 
 /**
- * value
- */
-int value(int type)
-{
-	switch (type) {
-	case DS3231_SENSOR_TEMP:
-		return ds3231_temperature();
-	case DS3231_SENSOR_GET_EPOCH_SECONDS_MSB:
-		return (int)(ds3231_get_epoch_seconds() >> 16);
-	case DS3231_SENSOR_GET_EPOCH_SECONDS_LSB:
-		return (int)(ds3231_get_epoch_seconds() & 0xffff);
-	default:
-		break;
-	}
-
-	return 0;
-}
-
-/**
  * configure
  */
 int configure(int type, int c)
@@ -385,6 +329,5 @@ int status(int type)
 	}
 }
 
-
 /* Initialise the sensor object and make it available to Contiki OS. */
-SENSORS_SENSOR(ds3231_sensor, "ds3231", value, configure, status);
+SENSORS_SENSOR(ds3231_sensor, "ds3231", NULL, configure, status);

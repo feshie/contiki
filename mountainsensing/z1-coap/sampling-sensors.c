@@ -9,10 +9,19 @@
 #include "adxl345.h" 		// Accel
 #include "dev/event-sensor.h"	//event sensor (rain)
 #include "sampling-sensors.h"
+#include "utc_time.h"
+
+#define DEBUG_ON
+#include "debug.h"
 
 #define ADC_ACTIVATE_DELAY 10 //delay in ticks of the rtimer  PLATFORM DEPENDANT!
 
 //#define NO_RTC
+
+/**
+ * Earliest time supported by the rtc - 2000/01/01 00:00:00
+ */
+#define EARLIEST_EPOCH 946684800
 
 uint16_t 
 get_sensor_rain(void)
@@ -83,18 +92,35 @@ get_sensor_acc_z(void)
    return accm_read_axis(Z_AXIS);
 }
 
-uint32_t 
+uint32_t
 get_time(void)
 {
 #ifdef NO_RTC
     return (uint32_t)12345;
 #else
-    return ds3231_get_epoch_seconds();
+    struct tm t;
+    ds3231_get_time(&t);
+
+    uint32_t seconds = (uint32_t) tm_to_epoch(&t);
+
+	DEBUG("years %d, months %d, days %d, hours %d, minutes %d, seconds %d\n", t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
+	DEBUG("epoch is %" PRIu32 "\n", seconds);
+	return seconds;
 #endif
 }
 
 bool
 set_time(uint32_t seconds)
 {
-    return ds3231_set_epoch_seconds(seconds);
+    if (seconds < EARLIEST_EPOCH) {
+        return false;
+    }
+
+    struct tm t;
+    epoch_to_tm((time_t *) &seconds, &t);
+
+	DEBUG("years %d, months %d, days %d, hours %d, minutes %d, seconds %d\n", t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
+    DEBUG("epoch %" PRIu32 "\n", seconds);
+
+    return ds3231_set_time(&t) == 0;
 }
