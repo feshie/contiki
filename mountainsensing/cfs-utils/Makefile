@@ -3,7 +3,7 @@ ifndef TARGET
 TARGET=z1-feshie
 endif
 
-all: cfs-ls
+all: cfs-ls cfs-cat
 
 %.tgz: %.ihex
 	mkdir $(basename $<) ; \
