@@ -1,3 +1,7 @@
+/* CC1120 transceiver config file - 
+* this sets the parameters (so beware changing them!)
+* Graeme Bragg, University of Southampton 2014
+*/
 /* Deviation = 24.963379 */
 /* PA ramping = true */
 /* RX filter BW = 100.000000 */
@@ -25,7 +29,7 @@
  *  "File" contains cc1120-config.c
  *  "Comment" contains C-Comment initiator and terminator
  *  "Parameter Summary" box is ticked
- *  "Header" contains all text from "/* CC1120 setttings..." to opening {
+ *  "Header" contains all text from * CC1120 setttings... to opening {
  *  "Registers" contains the formatting string "   cc1120_spi_single_write(CC1120_ADDR_@RN@, 0x@VH@); @<<@ // @Rd@."
  *  "Footer" contains a closing brace }
  *
