@@ -3,7 +3,7 @@
 #include "contiki-net.h"
 
 /* declare the resources functions from the separate files */
-extern resource_t res_date, res_sample, res_config, res_reboot;
+extern resource_t res_date, res_sample, res_config, res_reboot, res_routes;
 
 PROCESS(er_server_process, "CoAP Server");
 
@@ -19,6 +19,7 @@ PROCESS_THREAD(er_server_process, ev, data) {
     rest_activate_resource(&res_sample, "sample");
     rest_activate_resource(&res_config, "config");
     rest_activate_resource(&res_reboot, "reboot");
+    rest_activate_resource(&res_routes, "routes");
 
     while (1) {
         PROCESS_WAIT_EVENT();
