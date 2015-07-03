@@ -12,6 +12,7 @@
 #include <string.h>
 #include "net/ip/uip.h"
 #include "net/ipv6/uip-ds6.h"
+#include "net/rpl/rpl.h"
 
 #define DEBUG_ON
 #include "debug.h"
@@ -90,6 +91,12 @@ void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t pr
             *offset = -1;
             return;
         }
+
+        DEBUG("Printing preferred parent\n");
+
+        rpl_dag_t *dag = rpl_get_any_dag();
+
+        buffer_len += snprintf((char *) buffer, preferred_size, "%04x\n\n", get_hex_ip(rpl_get_parent_ipaddr(dag->preferred_parent)));
     }
 
     // Assume we have things left to send until we don't
