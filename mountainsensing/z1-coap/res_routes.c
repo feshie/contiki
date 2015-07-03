@@ -18,6 +18,11 @@
 #include "debug.h"
 
 /**
+ * Maximum length of an single nbr / route entry.
+ */
+#define MAX_ENTRY_SIZE 10
+
+/**
  * The next route to use.
  * Cam be null.
  */
@@ -87,7 +92,8 @@ void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t pr
             // No routes at all, end of request.
             char *error = "No nbrs / routes\n";
             DEBUG("%s", error);
-            REST.set_response_payload(response, error, strlen(error));
+            memcpy(buffer, error, strlen(error));
+            REST.set_response_payload(response, buffer, strlen(error));
             *offset = -1;
             return;
         }
@@ -102,13 +108,16 @@ void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t pr
     // Assume we have things left to send until we don't
     *offset += preferred_size;
 
-    while (buffer_len < preferred_size) {
+    // Keep going until we don't have enough room to fit an entry in
+    while (preferred_size - buffer_len > MAX_ENTRY_SIZE) {
+
+        // Write a maximum of MAX_ENTRY_SIZE, as we know we have at least that much buffer space avail at this point.
         if (!hasReachedRoutes) {
             DEBUG("Printing nbr\n");
-            buffer_len += snprintf((char *) buffer + buffer_len, preferred_size, "%04x\n", get_hex_ip(&(nbr->ipaddr)));
+            buffer_len += snprintf((char *) buffer + buffer_len, MAX_ENTRY_SIZE, "%04x\n", get_hex_ip(&(nbr->ipaddr)));
         } else {
             DEBUG("Printing route\n");
-            buffer_len += snprintf((char *) buffer + buffer_len, preferred_size, "%04x@%04x\n", get_hex_ip(&(route->ipaddr)), get_hex_ip(uip_ds6_route_nexthop(route)));
+            buffer_len += snprintf((char *) buffer + buffer_len, MAX_ENTRY_SIZE, "%04x@%04x\n", get_hex_ip(&(route->ipaddr)), get_hex_ip(uip_ds6_route_nexthop(route)));
         }
 
         // Get the next thing
@@ -119,7 +128,6 @@ void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t pr
             break;
         }
     }
-
 
     REST.set_response_payload(response, buffer, buffer_len);
 }
