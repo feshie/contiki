@@ -13,11 +13,21 @@
  *  Arthur Fabre    <af1g12@ecs.soton.ac.uk>
  */
 
-#ifdef DEBUG_ON
-#define DEBUG_VAL 1
-#warning "DEBUG Output Enabled"
+/**
+ * Globally turn debugging on and off.
+ * 0: Off
+ */
+#define GLOBAL_DEBUG 0
+
+#if GLOBAL_DEBUG
+    #ifdef DEBUG_ON
+        #define DEBUG_VAL 1
+        #warning "DEBUG Output Enabled"
+    #else
+        #define DEBUG_VAL 0
+    #endif
 #else
-#define DEBUG_VAL 0
+    #define DEBUG_VAL 0
 #endif
 
 #define STRINGIFY(x) #x
