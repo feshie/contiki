@@ -1,7 +1,8 @@
 /**
  * @file
- * Route ressource.
+ * Route resource.
  * Displays the neighbour and route tables of the node.
+ * Arthur Fabre
  */
 
 #include "er-server.h"
@@ -24,7 +25,7 @@
 
 /**
  * The next route to use.
- * Cam be null.
+ * Can be null.
  */
 static uip_ds6_route_t *route;
 
@@ -51,38 +52,36 @@ static void reset_nbr_route();
 
 /**
  * Get the next neighbour if there is one, otherwise the next route. Set hasReachedRoutes accordingly.
- * @return true if something was gotten, false otherwise.
+ * @return true if something was received, false otherwise.
  */
 static bool get_next_nbr_route();
 
 /**
  * Get the next neighbour if there is one.
- * @return true if something was gotten, false otherwise.
+ * @return true if something was received, false otherwise.
  */
 static bool get_next_nbr();
 
 /**
  * Get the next route if there is one.
- * @return true if something was gotten, false otherwise.
+ * @return true if something was received, false otherwise.
  */
 static bool get_next_route();
 
 /**
- * Get handler for Samples.
- * Supports the optional param id. Serves latest if id isn't specified.
- * Format is GET /sample/23 to get sample #23. GET /sample to get the latest sample.
+ * Get handler for this resource
  */
 static void res_get_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 /**
- * Route ressource.
+ * Route resource.
  */
 RESOURCE(res_routes, "Routes", res_get_handler, NULL, NULL, NULL);
 
 void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
     int buffer_len = 0;
 
-    DEBUG("Serving request! Offset %d, PrefSize %d\n", (int) *offset, preferred_size);
+    DEBUG("Serving routes req Offset %d, PrefSize %d\n", (int) *offset, preferred_size);
 
     // If this is the first request get the first ip address
     if (*offset == 0) {
@@ -94,6 +93,7 @@ void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t pr
             DEBUG("%s", error);
             memcpy(buffer, error, strlen(error));
             REST.set_response_payload(response, buffer, strlen(error));
+            // offset -1 means it is the end of a block req
             *offset = -1;
             return;
         }
