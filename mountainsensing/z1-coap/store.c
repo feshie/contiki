@@ -3,6 +3,7 @@
 #include "stdlib.h"
 #include "contiki.h"
 #include "cfs/cfs.h"
+#include "cfs/cfs-coffee.h"
 #include "pb_decode.h"
 #include "pb_encode.h"
 
@@ -481,6 +482,10 @@ bool get_raw_config(uint8_t buffer[SensorConfig_size]) {
 bool write_file(char* filename, uint8_t *buffer, int length) {
     int fd;
     int bytes;
+
+    if (cfs_coffee_reserve(filename, length) < 0) {
+        DEBUG("Failed to reserve space for file %s\n", filename);
+    }
 
     fd = cfs_open(filename, CFS_WRITE);
 
