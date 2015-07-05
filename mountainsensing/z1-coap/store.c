@@ -208,72 +208,62 @@ PROCESS_THREAD(store_process, ev, data) {
     while (true) {
         PROCESS_WAIT_EVENT();
 
-        switch(ev) {
+        DEBUG("Got event %d\n", ev);
 
-            case STORE_EVENT_SAVE_SAMPLE:
-                *((int16_t *) data) = save_sample((Sample *) data);
-                break;
+        if (ev == STORE_EVENT_SAVE_SAMPLE) {
+            *((int16_t *) data) = save_sample((Sample *) data);
 
-            case STORE_EVENT_GET_SAMPLE:
-                // Id is passed by value so that it doesn't change when something is written to the passed buffer
-                if (!get_sample(*((int16_t *) data), (Sample *) data)) {
-                    *((int16_t *) data) = STORE_PROCESS_FAIL;
-                }
-                break;
+        } else if (ev == STORE_EVENT_GET_SAMPLE) {
+            // Id is passed by value so that it doesn't change when something is written to the passed buffer
+            if (!get_sample(*((int16_t *) data), (Sample *) data)) {
+                *((int16_t *) data) = STORE_PROCESS_FAIL;
+            }
 
-            case STORE_EVENT_GET_RAW_SAMPLE:
-                // Id is passed by value so that it doesn't change when something is written to the passed buffer
-                if (!get_raw_sample(*((int16_t *) data), (uint8_t *) data)) {
-                    *((int16_t *) data) = STORE_PROCESS_FAIL;
-                }
-                break;
+        } else if (ev == STORE_EVENT_GET_RAW_SAMPLE) {
+            // Id is passed by value so that it doesn't change when something is written to the passed buffer
+            if (!get_raw_sample(*((int16_t *) data), (uint8_t *) data)) {
+                *((int16_t *) data) = STORE_PROCESS_FAIL;
+            }
 
-            case STORE_EVENT_GET_LATEST_SAMPLE:
-                // Just get last_id. We keep our state clean (ie last_id always points to a valid Sample) so this isn't an issue.
-                if (!get_sample(last_id, (Sample *) data)) {
-                    *((int16_t *) data) = STORE_PROCESS_FAIL;
-                }
-                break;
+        } else if (ev == STORE_EVENT_GET_LATEST_SAMPLE) {
+            // Just get last_id. We keep our state clean (ie last_id always points to a valid Sample) so this isn't an issue.
+            if (!get_sample(last_id, (Sample *) data)) {
+                *((int16_t *) data) = STORE_PROCESS_FAIL;
+            }
 
-            case STORE_EVENT_GET_LATEST_RAW_SAMPLE:
-                // Just get last_id. We keep our state clean (ie last_id always points to a valid Sample) so this isn't an issue.
-                if (!get_raw_sample(last_id, (uint8_t *) data)) {
-                    *((int16_t *) data) = STORE_PROCESS_FAIL;
-                }
-                break;
+        } else if (ev == STORE_EVENT_GET_LATEST_RAW_SAMPLE) {
+            // Just get last_id. We keep our state clean (ie last_id always points to a valid Sample) so this isn't an issue.
+            if (!get_raw_sample(last_id, (uint8_t *) data)) {
+                *((int16_t *) data) = STORE_PROCESS_FAIL;
+            }
 
-            case STORE_EVENT_DELETE_SAMPLE:
-                if (!delete_sample(*((int16_t *) data))) {
-                    *((int16_t *) data) = STORE_PROCESS_FAIL;
-                }
-                break;
+        } else if (ev == STORE_EVENT_DELETE_SAMPLE) {
+            if (!delete_sample(*((int16_t *) data))) {
+                *((int16_t *) data) = STORE_PROCESS_FAIL;
+            }
 
-            case STORE_EVENT_SAVE_CONFIG:
-                // Only overwrite the config if we failed
-                if (!save_config((SensorConfig *) data)) {
-                    *((int16_t *) data) = STORE_PROCESS_FAIL;
-                }
-                break;
+        } else if (ev == STORE_EVENT_SAVE_CONFIG) {
+            // Only overwrite the config if we failed
+            if (!save_config((SensorConfig *) data)) {
+                *((int16_t *) data) = STORE_PROCESS_FAIL;
+            }
 
-            case STORE_EVENT_GET_CONFIG:
-                // If succesfull, just return the buffer.
-                // Otherwise set it to false
-                if (!get_config((SensorConfig *) data)) {
-                    *((int16_t *) data) = STORE_PROCESS_FAIL;
-                }
-                break;
+        } else if (ev == STORE_EVENT_GET_CONFIG) {
+            // If succesfull, just return the buffer.
+            // Otherwise set it to false
+            if (!get_config((SensorConfig *) data)) {
+                *((int16_t *) data) = STORE_PROCESS_FAIL;
+            }
 
-            case STORE_EVENT_GET_RAW_CONFIG:
-                // If succesfull, just return the buffer.
-                // Otherwise set it to false
-                if (!get_raw_config((uint8_t *) data)) {
-                    *((int16_t *) data) = STORE_PROCESS_FAIL;
-                }
-                break;
+        } else if (ev == STORE_EVENT_GET_RAW_CONFIG) {
+            // If succesfull, just return the buffer.
+            // Otherwise set it to false
+            if (!get_raw_config((uint8_t *) data)) {
+                *((int16_t *) data) = STORE_PROCESS_FAIL;
+            }
 
-            default:
-                DEBUG("Unknown Event %d!\n", ev);
-                break;
+        } else {
+            DEBUG("Unknown Event %d!\n", ev);
         }
     }
 
