@@ -32,35 +32,12 @@
  *
  */
 
-#ifndef CONTIKI_CONF_H_
-#define CONTIKI_CONF_H_
+#include <unistd.h>
 
-#include "6502def.h"
-
-#define CTK_CONF_MENU_KEY         CH_ESC
-#define CTK_CONF_WINDOWSWITCH_KEY 0x17  /* Ctrl-W */
-#define CTK_CONF_WIDGETUP_KEY     0x01  /* Ctrl-A */
-#define CTK_CONF_WIDGETDOWN_KEY   '\t'  /* Tab or Ctrl-I */
-
-#define MOUSE_CONF_XTOC(x) ((x) * 2 / 7)
-#define MOUSE_CONF_YTOC(y) ((y) / 8)
-
-#define EMAIL_CONF_WIDTH  79
-#define EMAIL_CONF_HEIGHT 19
-#define EMAIL_CONF_ERASE   0
-
-#define FTP_CONF_WIDTH  38
-#define FTP_CONF_HEIGHT 21
-
-#define IRC_CONF_WIDTH  80
-#define IRC_CONF_HEIGHT 23
-
-#ifndef TELNETD_CONF_MAX_IDLE_TIME
-#define TELNETD_CONF_MAX_IDLE_TIME 300
-#endif
-
-#define WWW_CONF_WEBPAGE_HEIGHT 19
-#define WWW_CONF_HISTORY_SIZE    4
-#define WWW_CONF_WGET_EXEC(url) exec("wget", url)
-
-#endif /* CONTIKI_CONF_H_ */
+/*-----------------------------------------------------------------------------------*/
+off_t
+__fastcall__ lseek(int fd, off_t offset, int whence)
+{
+  return (off_t)-1;
+}
+/*-----------------------------------------------------------------------------------*/
