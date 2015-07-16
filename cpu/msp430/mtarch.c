@@ -66,10 +66,10 @@ mtarch_start(struct mtarch_thread *t,
 
   t->sp = &t->stack[MTARCH_STACKSIZE - 1];
 
-  *t->sp = (unsigned short)mt_exit;
+  *t->sp = (unsigned short)(void *)mt_exit;
   --t->sp;
 
-  *t->sp = (unsigned short)mtarch_wrapper;
+  *t->sp = (unsigned short)(void *)mtarch_wrapper;
   --t->sp;
 
   /* Space for registers. */
