@@ -130,6 +130,8 @@
 static void on(void);
 static void off(void);
 static void processor(void);
+static void cc1120_gpio_config(void);
+static void cc1120_misc_config(void);
 
 /* ---------------------- CC1120 SPI Functions ----------------------------- */
 static uint8_t cc1120_spi_write_addr(uint16_t addr, uint8_t burst, uint8_t rw);
