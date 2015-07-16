@@ -43,6 +43,12 @@
 #include "i2cmaster.h"
 #include "tmp102.h"
 
+#ifdef TMP_DEBUG
+#define PRINTFDEBUG(...) printf(__VA_ARGS__)
+#else
+#define PRINTFDEBUG(...)
+#endif
+
 /* Bitmasks and bit flag variable for keeping track of tmp102 status. */
 enum TMP102_STATUSTYPES {
   /* must be a bit and not more, not using 0x00. */
