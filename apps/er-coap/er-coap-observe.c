@@ -234,8 +234,6 @@ coap_observe_handler(resource_t *resource, void *request, void *response)
   coap_packet_t *const coap_res = (coap_packet_t *)response;
   coap_observer_t * obs;
 
-  static char content[16];
-
   if(coap_req->code == COAP_GET && coap_res->code < 128) { /* GET request and response without error code */
     if(IS_OPTION(coap_req, COAP_OPTION_OBSERVE)) {
       if(coap_req->observe == 0) {
@@ -250,6 +248,7 @@ coap_observe_handler(resource_t *resource, void *request, void *response)
            * Uncomment if you want an information about the avaiable observers.
            */
           /*
+           * static char content[16];
            * coap_set_payload(coap_res,
            *                  content,
            *                  snprintf(content, sizeof(content), "Added %u/%u",
