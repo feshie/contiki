@@ -19,9 +19,10 @@
 #include "debug.h"
 
 /**
- * Maximum length of an single nbr / route entry.
+ * Maximum length of an single nbr / route entry,
+ * including terminating null byte
  */
-#define MAX_ENTRY_SIZE 10
+#define MAX_ENTRY_SIZE 12
 
 /**
  * The next route to use.
