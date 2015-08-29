@@ -1,7 +1,7 @@
 The Contiki Operating System
 ============================
 
-[![Build Status](https://secure.travis-ci.org/contiki-os/contiki.png)](http://travis-ci.org/contiki-os/contiki)
+[![Build Status](https://travis-ci.org/contiki-os/contiki.svg?branch=master)](https://travis-ci.org/contiki-os/contiki/branches)
 
 If this is your first time cloning this repo, please ensure you also clone the submodules.
 This can be achieved by running:
