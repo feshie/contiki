@@ -43,6 +43,13 @@
 
 #include "contiki.h"
 
+#if 0
+#include <stdio.h>
+#define PRINTFDEBUG(...) printf(__VA_ARGS__)
+#else
+#define PRINTFDEBUG(...)
+#endif
+
 void i2c_enable(void);
 void i2c_disable(void);
 
