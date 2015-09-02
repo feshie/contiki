@@ -2,6 +2,7 @@
 #include "sampling-sensors.h"
 #include "dev/sht25.h"
 #include "dev/battery-sensor.h"
+#include "adxl345.h"
 
 #define DEBUG_ON
 #include "debug.h"
