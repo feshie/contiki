@@ -2,10 +2,17 @@
 #include "sampling-sensors.h"
 #include "dev/sht25.h"
 #include "dev/battery-sensor.h"
+#include "i2cmaster.h"
 #include "adxl345.h"
 
 #define DEBUG_ON
 #include "debug.h"
+
+/**
+ * Get the accelerometer reading from a single axis.
+ * This will enable and disable i2c as required.
+ */
+static int16_t get_acc(enum ADXL345_AXIS axis);
 
 void sampler_init(void) {
     // We don't need to do anything
@@ -28,15 +35,22 @@ float sampler_get_batt(void) {
 }
 
 int16_t sampler_get_acc_x(void) {
-    return accm_read_axis(X_AXIS);
+    return get_acc(X_AXIS);
 }
 
 int16_t sampler_get_acc_y(void) {
-    return accm_read_axis(Y_AXIS);
+    return get_acc(Y_AXIS);
 }
 
 int16_t sampler_get_acc_z(void) {
-    return accm_read_axis(Z_AXIS);
+    return get_acc(Z_AXIS);
+}
+
+int16_t get_acc(enum ADXL345_AXIS axis) {
+    i2c_enable();
+    int16_t acc = accm_read_axis(axis);
+    i2c_disable();
+    return acc;
 }
 
 uint32_t sampler_get_time(void) {
