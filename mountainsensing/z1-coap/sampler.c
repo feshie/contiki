@@ -66,7 +66,7 @@ PROCESS_THREAD(sample_process, ev, data) {
             print_sensor_config(&sensor_config);
         }
 
-        etimer_set(&sample_timer, CLOCK_SECOND * (sensor_config.interval - (get_time() % sensor_config.interval)));
+        etimer_set(&sample_timer, CLOCK_SECOND * (sensor_config.interval - (sampler_get_time() % sensor_config.interval)));
         PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&sample_timer));
 
         if (ev == PROCESS_EVENT_TIMER) {

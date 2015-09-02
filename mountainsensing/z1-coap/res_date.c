@@ -23,7 +23,7 @@ static void res_get_handler(void* request, void* response, uint8_t *buffer, uint
     int length;
 
 	/* read RTC and get Epoch (int_32) */
-    length = sprintf(message, "%" PRIu32, get_time());
+    length = sprintf(message, "%" PRIu32, sampler_get_time());
     memcpy(buffer, message, length);
 
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
@@ -60,7 +60,7 @@ static void res_post_put_handler(void *request, void *response, uint8_t *buffer,
 
     DEBUG("Requested time is %" PRIu32 "\n", seconds);
 
-    if (!set_time(seconds)) {
+    if (!sampler_set_time(seconds)) {
         DEBUG("Failed to set epoch\n");
         REST.set_response_status(response, REST.status.INTERNAL_SERVER_ERROR);
         return;
