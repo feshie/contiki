@@ -12,6 +12,7 @@
 *.native
 *.z1
 *.z1-feshie
+*.z1-wais
 *.minimal-net
 *.sky
 *.wismote
