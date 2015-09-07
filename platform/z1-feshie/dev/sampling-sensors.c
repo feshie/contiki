@@ -1,7 +1,4 @@
-// Sensors
 #include "dev/uart1_i2c_master.h"
-
-#include "dev/protobuf-handler.h"
 #include "ms1-io.h"
 #include "dev/ds3231-sensor.h" 	// Clock
 #include "dev/adc1-sensor.h" 	// ADC 1
@@ -12,9 +9,6 @@
 #include "dev/event-sensor.h"	//event sensor (rain)
 #include "sampling-sensors.h"
 #include "utc_time.h"
-
-// Hack for the context switching for events
-#include "sampler.h"
 
 #define DEBUG_ON
 #include "debug.h"
@@ -30,19 +24,9 @@
 #define EARLIEST_EPOCH 946684800
 
 /**
- * Timeout for avr sensors in seconds.
- */
-#define AVR_TIMEOUT_SECONDS 10
-
-/**
  * If defined, do not turn sensor power off
  */
 //#define SENSE_ON
-
-/**
- * Asynchronous event sent by the AVR Handler when it receives data fro man AVR sensor.
- */
-static process_event_t protobuf_event;
 
 static uint16_t get_rain(void);
 
@@ -51,9 +35,6 @@ static uint16_t get_ADC1(void);
 static uint16_t get_ADC2(void);
 
 void sampler_init(void) {
-    protobuf_event = process_alloc_event();
-    protobuf_register_process_callback(&sample_process, protobuf_event) ;
-
 #ifdef SENSE_ON
     ms1_sense_on();
     DEBUG("Sensor power permanently on\n");
@@ -147,12 +128,12 @@ bool sampler_set_time(uint32_t seconds) {
 }
 
 bool sampler_get_extra(Sample *sample, SensorConfig *config) {
-    static int i;
+    /*static int i;
     static uint8_t j;
     static uint8_t avr_id;
     static struct etimer avr_timeout_timer;
     static uint8_t avr_recieved;
-    static uint8_t avr_retry_count;
+    static uint8_t avr_retry_count;*/
 
     ms1_sense_on();
 
