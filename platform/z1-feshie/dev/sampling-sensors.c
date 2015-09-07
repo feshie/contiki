@@ -171,7 +171,7 @@ bool sampler_get_extra(Sample *sample, SensorConfig *config) {
         sample->rain = get_rain();
     }
 
-    avr_recieved = 0;
+    /*avr_recieved = 0;
     avr_retry_count = 0;
 
     DEBUG("Sampling from %d AVRs\n", config->avrIDs_count);
@@ -230,7 +230,7 @@ bool sampler_get_extra(Sample *sample, SensorConfig *config) {
         } while(avr_recieved < 2 && avr_retry_count < PROTOBUF_RETRIES);
     }
 
-    PROCESS_CONTEXT_END(&sample_process);
+    PROCESS_CONTEXT_END(&sample_process);*/
 
 #ifndef SENSE_ON
     ms1_sense_off();
