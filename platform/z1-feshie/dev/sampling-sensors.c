@@ -9,11 +9,15 @@
 #include "dev/event-sensor.h"	//event sensor (rain)
 #include "sampling-sensors.h"
 #include "utc_time.h"
+#include "dev/avr-handler.h"
+#include "sampler.h"
 
-#define DEBUG_ON
+//#define DEBUG_ON
 #include "debug.h"
 
 #define ADC_ACTIVATE_DELAY 10 //delay in ticks of the rtimer  PLATFORM DEPENDANT!
+
+#define AVR_RETRIES 3
 
 //#define NO_RTC
 //#define NO_ACC
@@ -27,6 +31,16 @@
  * If defined, do not turn sensor power off
  */
 //#define SENSE_ON
+
+/**
+ *
+ */
+static Sample *sample_extra;
+
+/**
+ *
+ */
+static void extra_callback(bool success);
 
 static uint16_t get_rain(void);
 
@@ -43,6 +57,9 @@ void sampler_init(void) {
     // Turn the rain sensor on.
     // It needs to be permanently on to count the rain ticks.
     SENSORS_ACTIVATE(event_sensor);
+
+    // Set the AVR callback
+    avr_set_callback(&extra_callback);
 }
 
 float sampler_get_temp(void) {
@@ -103,8 +120,8 @@ uint32_t sampler_get_time(void) {
 
     uint32_t seconds = (uint32_t) tm_to_epoch(&t);
 
-	DEBUG("years %d, months %d, days %d, hours %d, minutes %d, seconds %d\n", t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
-	DEBUG("epoch is %" PRIu32 "\n", seconds);
+	//DEBUG("years %d, months %d, days %d, hours %d, minutes %d, seconds %d\n", t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
+	//DEBUG("epoch is %" PRIu32 "\n", seconds);
 	return seconds;
 #endif // ifdef NO_RTC
 }
@@ -120,21 +137,15 @@ bool sampler_set_time(uint32_t seconds) {
     struct tm t;
     epoch_to_tm((time_t *) &seconds, &t);
 
-	DEBUG("years %d, months %d, days %d, hours %d, minutes %d, seconds %d\n", t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
-    DEBUG("epoch %" PRIu32 "\n", seconds);
+	//DEBUG("years %d, months %d, days %d, hours %d, minutes %d, seconds %d\n", t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
+    //DEBUG("epoch %" PRIu32 "\n", seconds);
 
     return ds3231_set_time(&t) == 0;
 #endif // ifdef NO_RTC
 }
 
 bool sampler_get_extra(Sample *sample, SensorConfig *config) {
-    /*static int i;
-    static uint8_t j;
-    static uint8_t avr_id;
-    static struct etimer avr_timeout_timer;
-    static uint8_t avr_recieved;
-    static uint8_t avr_retry_count;*/
-
+    sample_extra = sample;
     ms1_sense_on();
 
     if (config->hasADC1) {
@@ -152,71 +163,60 @@ bool sampler_get_extra(Sample *sample, SensorConfig *config) {
         sample->rain = get_rain();
     }
 
-    /*avr_recieved = 0;
-    avr_retry_count = 0;
-
-    DEBUG("Sampling from %d AVRs\n", config->avrIDs_count);
-
-    PROCESS_CONTEXT_BEGIN(&sample_process);
-
-    for (i = 0; i < config->avrIDs_count; i++) {
-        avr_id = config->avrIDs[i] & 0xFF; //only use 8bits
-        DEBUG("AVR ID: %d\n", avr_id);
-        avr_recieved = 0;
-        avr_retry_count = 0;
-
-        do {
-            protobuf_send_message(avr_id, PROTBUF_OPCODE_GET_DATA, NULL, (int)NULL);
-            DEBUG("Retry %d\n", avr_retry_count);
-
-            etimer_set(&avr_timeout_timer, CLOCK_SECOND * AVR_TIMEOUT_SECONDS);
-
-            DEBUG("Yielding for timeout\n");
-
-            PROCESS_WAIT_EVENT_UNTIL(ev == protobuf_event || etimer_expired(&avr_timeout_timer));
-
-            if (ev == PROCESS_EVENT_TIMER) {
-                DEBUG("AVR Timeout Reached!\n");
-                avr_retry_count++;
-
-            } else if (ev == protobuf_event) {
-
-                if (data != NULL) {
-                    DEBUG("\tavr data recieved on retry %d\n", avr_retry_count);
-                    protobuf_data_t *pbd;
-                    pbd = data;
-                    sample->has_AVR = 1;
-                    sample->AVR.size = pbd->length;
-                    for(j=0; j < pbd->length; j++){
-                        sample->AVR.bytes[j] = pbd->data[j];
-                    }
-                    DEBUG("\tRecieved %d bytes\t", pbd->length);
-                    for(j = 0; j < pbd->length; j++) {
-                        DEBUG("%d:", pbd->data[j]);
-                    }
-                    DEBUG("\n");
-                    //process data
-                    if (avr_id < 0x10) {
-                        //it's a temp accel chain and so needs to be read twice to get valid data
-                        //otherwise just once is ok
-                        // It will break out of this loop when avr_recieved == 2
-                        avr_recieved++;
-                    } else {
-                        avr_recieved = 2;
-                    }
-                }
-            }
-
-        DEBUG("avr_recieved = %d\n", avr_recieved);
-        } while(avr_recieved < 2 && avr_retry_count < PROTOBUF_RETRIES);
+    // If there are no avrs, we're done
+    if (config->avrIDs_count < 1) {
+#ifndef SENSE_ON
+        ms1_sense_off();
+#endif
+        // No need to wait on anything else
+        return true;
     }
 
-    PROCESS_CONTEXT_END(&sample_process);*/
+    uint8_t avr_id = (uint8_t) config->avrIDs[0];
 
+    printf("Sampling sensors: data %p bytes %p\n", &sample->AVR, sample->AVR.bytes);
+
+    if (avr_get_data(avr_id, &sample->AVR)) {
+        return false;
+    } else {
+#ifndef SENSE_ON
+        ms1_sense_off();
+#endif
+        return true;
+    }
+
+    /*
+    uint8_t avr_requests = 1;
+
+    // If it's a temp accel chain, it needs to be read twice to get valid data
+    if (avr_id < 0x10) {
+        avr_requests = 2;
+    }
+
+    uint8_t request;
+    for (request = 0; request < avr_requests; request++) {
+        uint8_t retry_count = 0;
+        while (!avr_get_data(avr_id, &sample->AVR) && retry_count < AVR_RETRIES) {
+            retry_count++;
+        }
+
+        // If we failed to get anything on this round, there's no point proceeding to the next one
+        if (retry_count == AVR_RETRIES) {
+            break;
+        }
+    } */
+}
+
+static void extra_callback(bool success) {
+    DEBUG("In the callback!\n");
+
+    if (success) {
+        sample_extra->has_AVR = true;
+    }
 #ifndef SENSE_ON
     ms1_sense_off();
 #endif
-    return true;
+    sampler_extra_performed();
 }
 
 uint16_t get_rain(void) {

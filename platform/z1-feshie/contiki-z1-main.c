@@ -41,8 +41,7 @@
 #include "dev/leds.h"
 #include "dev/serial-line.h"
 #include "dev/slip.h"
-#include "dev/serial-timeout.h"
-#include "dev/protobuf-handler.h"
+#include "dev/avr-handler.h"
 #ifndef NO_SLIP
 	#include "dev/slip.h"
 #endif
@@ -391,10 +390,9 @@ main(int argc, char **argv)
 #endif
 
 #ifndef Z1_SAMPLER_AVR_DISABLE
-  uart1_set_input(serial_timeout_input_byte);
-  protobuf_init();
-  serial_timeout_init();
-  protobuf_handler_set_writeb(uart1_writeb);
+  uart1_set_input(avr_input_byte);
+  avr_set_output(uart1_writearray);
+  process_start(&avr_process, NULL);
 #endif
 
 #if PROFILE_CONF_ON
