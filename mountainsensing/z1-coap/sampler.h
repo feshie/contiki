@@ -29,4 +29,10 @@ PROCESS_NAME(sample_process);
  */
 void sampler_refresh_config(void);
 
+/**
+ * Notify the sampler that an asynchronous request as part of the sampler_get_extra
+ * interface has been completed (whether it was succesfull or not).
+ */
+void sampler_extra_performed(void);
+
 #endif // ifndef SAMPLER_H

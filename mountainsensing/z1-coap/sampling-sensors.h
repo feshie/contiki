@@ -41,7 +41,10 @@ bool sampler_set_time(uint32_t seconds);
 /**
  * Get any extra platform specific readings.
  * These should be directly inserted into the sample struct.
- * @return True on success, false on failure.
+ * @return True if all the operations were completed synchronously,
+ * false if some operations are being completed asychronously (in this case
+ * sampler_extra_performed() should be called to notify the sampler when
+ * the processing is complete).
  */
 bool sampler_get_extra(Sample *sample, SensorConfig *config);
 

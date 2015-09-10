@@ -26,6 +26,12 @@
 PROCESS(sample_process, "Sample Process");
 
 /**
+ * Event sent to the Sampler when extra processsing for
+ * sampler_get_extra is complete.
+ */
+#define SAMPLER_EVENT_EXTRA_PERFORMED 1
+
+/**
  * True if we should reload our config, false otherwise.
  * Intitially set to true to load our config on start.
  */
@@ -71,6 +77,8 @@ PROCESS_THREAD(sample_process, ev, data) {
 
         if (ev == PROCESS_EVENT_TIMER) {
 
+            DEBUG("Sampling\n");
+
             sample.time = sampler_get_time();
 
             sample.batt = sampler_get_batt();
@@ -86,7 +94,11 @@ PROCESS_THREAD(sample_process, ev, data) {
             sample.accZ = sampler_get_acc_z();
             sample.has_accZ = true;
 
-            sampler_get_extra(&sample, &sensor_config);
+            // If get_extra requires some asynch things, wait until they're completed
+            if(!sampler_get_extra(&sample, &sensor_config)) {
+                DEBUG("Yielding for sampling_sensors_extra\n");
+                PROCESS_WAIT_EVENT_UNTIL(ev == SAMPLER_EVENT_EXTRA_PERFORMED);
+            }
 
             id = store_save_sample(&sample);
 
@@ -130,6 +142,10 @@ void print_sensor_config(SensorConfig *conf) {
     }
 
     DEBUG("\tRoutingMode: %d\n", conf->routingMode);
+}
+
+void sampler_extra_performed(void) {
+    process_post(&sample_process, SAMPLER_EVENT_EXTRA_PERFORMED, NULL);
 }
 
 void sampler_refresh_config(void) {
