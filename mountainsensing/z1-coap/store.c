@@ -115,15 +115,6 @@ PROCESS(store_process, "Store Process");
  */
 #define STORE_EVENT_GET_RAW_CONFIG          9
 
-// Stack variable paranoia.
-// These are used by the event handlers.
-static pb_ostream_t pb_ostream;
-static pb_istream_t pb_istream;
-static uint8_t pb_buffer[Sample_size];
-static char filename[FILENAME_LENGTH];
-static int fd;
-static int bytes;
-
 /**
  * Identifier of the last sample.
  */
@@ -280,6 +271,9 @@ PROCESS_THREAD(store_process, ev, data) {
 }
 
 int16_t save_sample(Sample *sample) {
+    pb_ostream_t pb_ostream;
+    uint8_t pb_buffer[Sample_size];
+    char filename[FILENAME_LENGTH];
 
     last_id++;
 
@@ -308,6 +302,8 @@ int16_t save_sample(Sample *sample) {
 }
 
 bool get_sample(int16_t id, Sample *sample) {
+    pb_istream_t pb_istream;
+    uint8_t pb_buffer[Sample_size];
 
     if (get_raw_sample(id, pb_buffer)) {
         return false;
@@ -322,6 +318,9 @@ bool get_sample(int16_t id, Sample *sample) {
 }
 
 bool get_raw_sample(int16_t id, uint8_t buffer[Sample_size]) {
+    int fd;
+    int bytes;
+    char filename[FILENAME_LENGTH];
 
     DEBUG("Attempting to get sample %d\n", id);
 
@@ -354,6 +353,8 @@ bool get_raw_sample(int16_t id, uint8_t buffer[Sample_size]) {
 }
 
 bool delete_sample(int16_t sample) {
+    int fd = 0;
+    char filename[FILENAME_LENGTH];
 
     if (sample < 1) {
         DEBUG("Attempting to delete invalid sample %d\n", sample);
@@ -398,6 +399,8 @@ bool delete_sample(int16_t sample) {
 }
 
 bool save_config(SensorConfig *config) {
+    pb_ostream_t pb_ostream;
+    uint8_t pb_buffer[SensorConfig_size];
 
     DEBUG("Attempting to save config\n");
 
@@ -420,6 +423,8 @@ bool save_config(SensorConfig *config) {
 }
 
 bool get_config(SensorConfig *config) {
+    pb_istream_t pb_istream;
+    uint8_t pb_buffer[SensorConfig_size];
 
     if (!get_raw_config(pb_buffer)) {
         return false;
@@ -431,6 +436,8 @@ bool get_config(SensorConfig *config) {
 }
 
 bool get_raw_config(uint8_t buffer[SensorConfig_size]) {
+    int fd;
+    int bytes;
 
     DEBUG("Attempting to get config\n");
 
@@ -463,6 +470,8 @@ bool get_raw_config(uint8_t buffer[SensorConfig_size]) {
 }
 
 bool write_file(char* filename, uint8_t *buffer, int length) {
+    int fd;
+    int bytes;
 
     if (cfs_coffee_reserve(filename, length) < 0) {
         DEBUG("Failed to reserve space for file %s\n", filename);
