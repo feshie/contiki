@@ -12,15 +12,12 @@
 #include "dev/avr-handler.h"
 #include "sampler.h"
 
-//#define DEBUG_ON
+#define DEBUG_ON
 #include "debug.h"
 
 #define ADC_ACTIVATE_DELAY 10 //delay in ticks of the rtimer  PLATFORM DEPENDANT!
 
 #define AVR_RETRIES 3
-
-//#define NO_RTC
-//#define NO_ACC
 
 /**
  * Earliest time supported by the rtc - 2000/01/01 00:00:00
@@ -33,19 +30,47 @@
 //#define SENSE_ON
 
 /**
- *
+ * If defined, do not attempt to read the time from the RTC
+ */
+//#define NO_RTC
+
+/**
+ * If defined, do not attempt to read the acceleration from the acelerometer
+ */
+//#define NO_ACC
+
+/**
+ * Pointer to the sample we're currently working on.
+ * Used by the extra callback.
  */
 static Sample *sample_extra;
+
+/**
+ * Struct used to get data from an AVR
+ */
+static struct avr_data data = {
+    // Size of the buffer is the size of the buffer in the Sample
+    .size = sizeof(((Sample_AVR_t *)0)->bytes)
+};
 
 /**
  *
  */
 static void extra_callback(bool success);
 
+/**
+ * Get the value of the rain sensor (number of bucket tips).
+ */
 static uint16_t get_rain(void);
 
+/**
+ * Get the value of adc1.
+ */
 static uint16_t get_ADC1(void);
 
+/**
+ * Get the value of adc1.
+ */
 static uint16_t get_ADC2(void);
 
 void sampler_init(void) {
@@ -146,6 +171,11 @@ bool sampler_set_time(uint32_t seconds) {
 
 bool sampler_get_extra(Sample *sample, SensorConfig *config) {
     sample_extra = sample;
+
+    // Use the buffer in the sample directly
+    data.data = sample->AVR.bytes;
+    data.len = &sample->AVR.size;
+
     ms1_sense_on();
 
     if (config->hasADC1) {
@@ -174,9 +204,8 @@ bool sampler_get_extra(Sample *sample, SensorConfig *config) {
 
     uint8_t avr_id = (uint8_t) config->avrIDs[0];
 
-    printf("Sampling sensors: data %p bytes %p\n", &sample->AVR, sample->AVR.bytes);
-
-    if (avr_get_data(avr_id, &sample->AVR)) {
+    DEBUG("Getting data from avr %x", avr_id);
+    if (avr_get_data(avr_id, &data)) {
         return false;
     } else {
 #ifndef SENSE_ON
@@ -184,27 +213,6 @@ bool sampler_get_extra(Sample *sample, SensorConfig *config) {
 #endif
         return true;
     }
-
-    /*
-    uint8_t avr_requests = 1;
-
-    // If it's a temp accel chain, it needs to be read twice to get valid data
-    if (avr_id < 0x10) {
-        avr_requests = 2;
-    }
-
-    uint8_t request;
-    for (request = 0; request < avr_requests; request++) {
-        uint8_t retry_count = 0;
-        while (!avr_get_data(avr_id, &sample->AVR) && retry_count < AVR_RETRIES) {
-            retry_count++;
-        }
-
-        // If we failed to get anything on this round, there's no point proceeding to the next one
-        if (retry_count == AVR_RETRIES) {
-            break;
-        }
-    } */
 }
 
 static void extra_callback(bool success) {

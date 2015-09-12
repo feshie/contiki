@@ -1,8 +1,17 @@
 #include "avr-handler.h"
 
+/**
+ * Turn debuggin on.
+ * NOTE: A lot of debugging calls are disabled as interrupts are not rentrant,
+ * and the debugging calls can cause us to miss interrupts.
+ */
 #define DEBUG_ON
-#include "debug.h"
-#include "contiki-conf.h"
+#ifdef DEBUG_ON
+    #include <stdio.h>
+    #define DEBUG(...) printf(__VA_ARGS__)
+#else
+    #define DEBUG(...)
+#endif
 
 PROCESS(avr_process, "AVR Process");
 
@@ -10,7 +19,11 @@ PROCESS(avr_process, "AVR Process");
  * Event to get data from an AVR
  */
 #define AVR_EVENT_GET_DATA 1
-#define AVR_EVENT_GOT_DATA 3
+
+/**
+ * Event indicating we've received valid data from an AVR
+ */
+#define AVR_EVENT_GOT_DATA 2
 
 /**
  * Timeout for receiving a reply in seconds
@@ -34,11 +47,31 @@ PROCESS(avr_process, "AVR Process");
 #define AVR_MASTER_ADDR 0x00
 
 /**
- * We need 4 extra bytes - two at the start for the address + type,
- * and two at then end for the checksum
+ * The destination address (ie 1st byte) of the received message.
  */
-static uint8_t buffer[sizeof(((Sample_AVR_t *)0)->bytes) + 4];
-static uint8_t buffer_len;
+static uint8_t incm_dest;
+
+/**
+ * The type (ie 2nd byte) of the received message.
+ */
+static uint8_t incm_type;
+
+/**
+ * The size of the received message.
+ * This should / could only only be a byte, but the odd number of bytes messes up alignmenent and the compiler generates
+ * broken code (msp430 cannot deal with relocation of unaligned addresses)
+ */
+static uint16_t incm_num;
+
+/**
+ * The crc of the received message (ie last 2 bytes).
+ */
+static uint8_t incm_crc[2];
+
+/**
+ * The avr_data to write the received message payload to.
+ */
+static struct avr_data *incm_data;
 
 /**
  * True if we're expecting to receive things, false otherwise
@@ -46,37 +79,60 @@ static uint8_t buffer_len;
 static volatile bool isReceiving;
 
 /**
- *
+ * Function to write to the serial port.
+ * @param buf The data to write.
+ * @param len The amount of bytes to write.
  */
 static void (*serial_write)(uint8_t *buf, int len);
 
 /**
- *
+ * Callback for when we're done dealing with an AVR.
+ * @param isSuccess True if we succesfully read data from the AVR and wrote it
+ * to the passed in avr_data, false otherwise.
  */
 static void (*callback)(bool isSuccess);
 
 /**
- * The exact crc function used in the AVR & python
+ * Add a byte to a CRC.
+ * @param crc The existing CRC. 0xFFFF should be used as a starting value.
+ * @param a The byte to add
+ * @return The new crc
+ *
+ * Note: This is the exact crc function used in the AVR & python
  * There is a contiki CRC function but not sure it'll
  * behave in the same way.
  */
 static uint16_t crc16(uint16_t crc, uint8_t a);
+
+/**
+ * Add several bytes to a CRC.
+ * @param crc The existing CRC. 0xFFFF should be used as a starting value.
+ * @param buf The bytes to add
+ * @param len The number of bytes to add
+ * @return The new crc
+ */
 static uint16_t crc16_all(uint16_t crc, uint8_t *buf, uint8_t len);
 
 /**
- *
+ * Chack a given message is a valid response message.
+ * (ie the message is for us, is of type response, and has a valid crc).
+ * @param addr The address of the AVR
+ * @param opcode The type of the message
+ * @param payload The payload to send in the message
+ * @parama payload_length The length of the payload
+ * @param crc The two crc bytes of the message
  */
-static bool check_message(uint8_t *buf, uint8_t buf_len);
+static bool check_message(uint8_t addr, uint8_t opcode, uint8_t *payload, uint8_t payload_length, uint8_t crc[2]);
 
 /**
- *
+ * Send a message to an AVR
+ * @param addr The address of the AVR
+ * @param opcode The type of the message
+ * @param payload The payload to send in the message
+ * @parama payload_length The length of the payload
+ * @return True if the message was sent, false otherwise.
  */
 static bool send_message(uint8_t addr, uint8_t opcode, uint8_t *payload, uint8_t payload_length);
-
-/**
- *
- */
-static bool process_message(uint8_t *buf, uint8_t bytes, Sample_AVR_t *data);
 
 int avr_input_byte(uint8_t byte) {
     //DEBUG("Got some data!\n");
@@ -87,28 +143,55 @@ int avr_input_byte(uint8_t byte) {
     }
 
     // If the buffer is full, just ignore whatever extra data comes in
-    if (buffer_len >= sizeof(buffer)) {
-        DEBUG("Buffer full! Discarding data\n");
+    if (*incm_data->len >= incm_data->size) {
+        DEBUG("Incm Buffer full! Discarding data\n");
         return false;
     }
 
-    buffer[buffer_len++] = byte;
+    incm_num++;
 
-    //DEBUG("Data saved as %d\n", buffer_len);
+    // Cases 1-4 progressively "load the bases",
+    // default case assumes bases are loaded and simply shuffles everything by one
+    // to store the new byte
+    // Cases 1-3 return directly, as a message of that length can't be valid, so there's no point in checking.
+    switch (incm_num) {
+        case 1:
+            // First byte is the address
+            incm_dest = byte;
+            return true;
+
+        case 2:
+            // Second byte is the type
+            incm_type = byte;
+            return true;
+
+        case 3:
+            incm_crc[0] = byte;
+            return true;
+
+        case 4:
+            incm_crc[1] = byte;
+            break;
+
+        default:
+            incm_data->data[(*incm_data->len)++] = incm_crc[0];
+            incm_crc[0] = incm_crc[1];
+            incm_crc[1] = byte;
+            break;
+    }
 
     // If this is a valid message, notify the process
-    if (check_message(buffer, buffer_len)) {
+    if (check_message(incm_dest, incm_type, incm_data->data, *incm_data->len, incm_crc)) {
         process_post(&avr_process, AVR_EVENT_GOT_DATA, NULL);
     }
 
     return true;
 }
 
-PROCESS_THREAD(avr_process, ev, data) {
+PROCESS_THREAD(avr_process, ev, data_ptr) {
     static struct etimer avr_timeout_timer;
     static uint8_t attempt;
     static uint8_t id;
-    static Sample_AVR_t *sample;
 
     PROCESS_BEGIN();
 
@@ -119,13 +202,17 @@ PROCESS_THREAD(avr_process, ev, data) {
 
         if (ev == AVR_EVENT_GET_DATA) {
 
-            id = *((uint8_t *) data);
-            sample = data;
+            id = *((uint8_t *) data_ptr);
+            incm_data = data_ptr;
 
             for (attempt = 0; attempt < AVR_RETRY; attempt++) {
-                buffer_len = 0;
+                // Reset the len of the payload
+                *incm_data->len = 0;
+                incm_num = 0;
 
                 DEBUG("Getting data from avr %x, attempt %d\n", id, attempt);
+
+                etimer_set(&avr_timeout_timer, CLOCK_SECOND * AVR_TIMEOUT);
 
                 isReceiving = true;
 
@@ -133,41 +220,36 @@ PROCESS_THREAD(avr_process, ev, data) {
                 send_message(id, AVR_OPCODE_GET_DATA, NULL, (int)NULL);
 
                 // Wait for the data
-                etimer_set(&avr_timeout_timer, CLOCK_SECOND * AVR_TIMEOUT);
-                DEBUG("Yielding until we get all the data\n");
                 PROCESS_WAIT_EVENT_UNTIL(ev == AVR_EVENT_GOT_DATA || etimer_expired(&avr_timeout_timer));
                 etimer_stop(&avr_timeout_timer);
 
-                if (ev == AVR_EVENT_GOT_DATA) {
-                    DEBUG("Data received!\n");
-                } else {
-                    DEBUG("Timeout reached\n");
-                }
-
                 isReceiving = false;
 
-                DEBUG("Received %d bytes: ", buffer_len);
+                DEBUG("Received %d bytes. ADDR %u TYPE %u CRC %u: ", incm_num, incm_dest, incm_type, *((uint16_t *) incm_crc));
 #ifdef DEBUG_ON
                 int i;
-                for (i = 0; i < buffer_len; i++) {
-                    printf("%02x,", buffer[i]);
+                for (i = 0; i < *incm_data->len; i++) {
+                    printf("%02x,", incm_data->len[i]);
                 }
                 printf("\n");
 #endif
 
-                // Attempt to parse the data
-                if (process_message((uint8_t *) buffer, buffer_len, sample)) {
+                // If we got a got_data event, it means the message is valid
+                if (ev == AVR_EVENT_GOT_DATA) {
+                    DEBUG("Data received!\n");
                     break;
+
+                // Otherwise it was a timeout
+                } else {
+                    DEBUG("Timeout reached\n");
                 }
             }
 
             DEBUG("Done after %d retries\n", attempt);
 
-            // Call the callback
+            // TODO - check this Call the callback
             callback(attempt < AVR_RETRY);
 
-        } else {
-            DEBUG("Unknown Event %d!\n", ev);
         }
     }
 
@@ -201,8 +283,6 @@ uint16_t crc16_all(uint16_t crc, uint8_t *buf, uint8_t len) {
 }
 
 bool send_message(uint8_t addr, uint8_t opcode, uint8_t *payload, uint8_t payload_length) {
-    uint16_t crc = 0xFFFF;
-
     //DEBUG("Dest: %02x\n", addr);
     //DEBUG("Optcode: %02x\n", opcode);
     //DEBUG("Payload length: %i\n", payload_length);
@@ -213,7 +293,7 @@ bool send_message(uint8_t addr, uint8_t opcode, uint8_t *payload, uint8_t payloa
     }
 
     // Add the address and type to the crc
-    crc = crc16(crc, addr);
+    uint16_t crc = crc16(0xFFFF, addr);
     crc = crc16(crc, opcode);
 
     // Add the payload to the crc
@@ -232,27 +312,24 @@ bool send_message(uint8_t addr, uint8_t opcode, uint8_t *payload, uint8_t payloa
     return true;
 }
 
-bool check_message(uint8_t *buf, uint8_t buf_len) {
-    if (buf_len <= 4) {
-        //DEBUG("Too small for valid protocol buffer: %d\n", buf_len);
-        return false;
-    }
-
-    if (buf[1] != AVR_OPCODE_RESPONSE) {
-        //DEBUG("Not a response packet\n");
-        return false;
-    }
-
-    if (buf[0] != AVR_MASTER_ADDR) {
+bool check_message(uint8_t addr, uint8_t opcode, uint8_t *payload, uint8_t payload_length, uint8_t crc[2]) {
+    if (addr != AVR_MASTER_ADDR) {
         //DEBUG("Not for us");
         return false;
     }
 
-    uint16_t rcv_crc = ((uint16_t)buf[buf_len - 1] << 8) | buf[buf_len - 2];
+    if (opcode != AVR_OPCODE_RESPONSE) {
+        //DEBUG("Not a response packet\n");
+        return false;
+    }
+
+    // MSP430 and avr proto are both little endian, we can just cast the result
+    uint16_t rcv_crc = *((uint16_t *) crc);
     //DEBUG("Recieved CRC: %d\n", rcv_crc);
 
-    // Ignore the crc from the crc calculations
-    uint16_t cal_crc = crc16_all(0xFFFF, buf, buf_len - 2);
+    uint16_t cal_crc = crc16(0xFFFF, addr);
+    cal_crc = crc16(cal_crc, opcode);
+    cal_crc = crc16_all(cal_crc, payload, payload_length);
 
     //DEBUG("Calculated CRC: %d\n", cal_crc);
 
@@ -266,23 +343,11 @@ bool check_message(uint8_t *buf, uint8_t buf_len) {
     return true;
 }
 
-bool process_message(uint8_t *buf, uint8_t buf_len, Sample_AVR_t *data) {
-    if (!check_message(buf, buf_len)) {
-        return false;
-    }
-
-    // Ignore the first 2 and last 2 bytes
-    memcpy(data->bytes, buf + 2, buf_len - 4);
-    data->size = buf_len - 4;
-
-    return true;
-}
-
 void avr_set_callback(void (*cb)(bool isSuccess)) {
     callback = cb;
 }
 
-bool avr_get_data(uint8_t id, Sample_AVR_t *data) {
+bool avr_get_data(uint8_t id, struct avr_data *data) {
     // If we don't have a callback set, we can't do anything
     if (callback == NULL) {
         DEBUG("Callback not set!\n");
@@ -297,8 +362,6 @@ bool avr_get_data(uint8_t id, Sample_AVR_t *data) {
 
     DEBUG("Sending event for avr %x\n", id);
     *((uint8_t *) data) = id;
-
-    DEBUG("Data %p bytes %p\n", data, data->bytes);
 
     return process_post(&avr_process, AVR_EVENT_GET_DATA, data) == PROCESS_ERR_OK;
 }
