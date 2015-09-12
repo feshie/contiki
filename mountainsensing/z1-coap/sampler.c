@@ -79,6 +79,9 @@ PROCESS_THREAD(sample_process, ev, data) {
 
             DEBUG("Sampling\n");
 
+            // Clear the previous sample, as it may have leftover things set we don't anticipate
+            memset(&sample, 0, sizeof(sample));
+
             sample.time = sampler_get_time();
 
             sample.batt = sampler_get_batt();
