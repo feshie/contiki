@@ -5,7 +5,7 @@
  * NOTE: A lot of debugging calls are disabled as interrupts are not rentrant,
  * and the debugging calls can cause us to miss interrupts.
  */
-#define DEBUG_ON
+//#define DEBUG_ON
 #ifdef DEBUG_ON
     #include <stdio.h>
     #define DEBUG(...) printf(__VA_ARGS__)
