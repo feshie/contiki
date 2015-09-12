@@ -641,7 +641,6 @@ coap_parse_message(void *packet, uint8_t *data, uint16_t data_len)
       coap_pkt->block2_offset = (coap_pkt->block2_num & ~0x0000000F)
         << (coap_pkt->block2_num & 0x07);
       coap_pkt->block2_num >>= 4;
-      printf("%d\n", coap_pkt->block2_size);
       PRINTF("Block2 [%lu%s (%u B/blk)]\n", coap_pkt->block2_num,
              coap_pkt->block2_more ? "+" : "", coap_pkt->block2_size);
       break;
