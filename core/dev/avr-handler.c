@@ -32,9 +32,9 @@ PROCESS(avr_process, "AVR Process");
 
 /**
  * Maximum number of retries.
- * There will be AVR_RETRY + 1 attempts in total.
+ * There will be AVR_RETRY attempts in total.
  */
-#define AVR_RETRY 3
+#define AVR_RETRY 4
 
 /**
  * RS484 AVR protocol defintions
@@ -192,6 +192,9 @@ PROCESS_THREAD(avr_process, ev, data_ptr) {
     static struct etimer avr_timeout_timer;
     static uint8_t attempt;
     static uint8_t id;
+    static uint8_t request;
+    static uint8_t num_requests;
+    static bool request_isSuccess;
 
     PROCESS_BEGIN();
 
@@ -204,51 +207,59 @@ PROCESS_THREAD(avr_process, ev, data_ptr) {
 
             id = *((uint8_t *) data_ptr);
             incm_data = data_ptr;
+            num_requests = 1;
+
+            // If it's a temp accel chain, it needs to be read twice to get valid data
+            if (id < 0x10) {
+                num_requests = 2;
+            }
 
             for (attempt = 0; attempt < AVR_RETRY; attempt++) {
-                // Reset the len of the payload
-                *incm_data->len = 0;
-                incm_num = 0;
 
-                DEBUG("Getting data from avr %x, attempt %d\n", id, attempt);
+                request_isSuccess = true;
 
-                etimer_set(&avr_timeout_timer, CLOCK_SECOND * AVR_TIMEOUT);
+                // Keep doing requests to reach the required number as long as they're successful
+                for (request = 0; request < num_requests && request_isSuccess; request++) {
+                    DEBUG("Getting data from avr %x, attempt %d, request %d\n", id, attempt, request);
 
-                isReceiving = true;
+                    // Reset the len of the payload
+                    *incm_data->len = 0;
+                    incm_num = 0;
 
-                // Request data from the node
-                send_message(id, AVR_OPCODE_GET_DATA, NULL, (int)NULL);
+                    etimer_set(&avr_timeout_timer, CLOCK_SECOND * AVR_TIMEOUT);
 
-                // Wait for the data
-                PROCESS_WAIT_EVENT_UNTIL(ev == AVR_EVENT_GOT_DATA || etimer_expired(&avr_timeout_timer));
-                etimer_stop(&avr_timeout_timer);
+                    isReceiving = true;
 
-                isReceiving = false;
+                    // Request data from the node
+                    send_message(id, AVR_OPCODE_GET_DATA, NULL, (int)NULL);
 
-                DEBUG("Received %d bytes. ADDR %u TYPE %u CRC %u: ", incm_num, incm_dest, incm_type, *((uint16_t *) incm_crc));
+                    // Wait for the data
+                    PROCESS_WAIT_EVENT_UNTIL(ev == AVR_EVENT_GOT_DATA || etimer_expired(&avr_timeout_timer));
+                    etimer_stop(&avr_timeout_timer);
+
+                    isReceiving = false;
+
+                    request_isSuccess &= (ev == AVR_EVENT_GOT_DATA);
+
+                    DEBUG("Received %d bytes. Success %d ADDR %u TYPE %u CRC %u: ", incm_num, request_isSuccess, incm_dest, incm_type, *((uint16_t *) incm_crc));
 #ifdef DEBUG_ON
-                int i;
-                for (i = 0; i < *incm_data->len; i++) {
-                    printf("%02x,", incm_data->len[i]);
-                }
-                printf("\n");
+                    int i;
+                    for (i = 0; i < *incm_data->len; i++) {
+                        printf("%02x,", incm_data->len[i]);
+                    }
+                    printf("\n");
 #endif
+                }
 
-                // If we got a got_data event, it means the message is valid
-                if (ev == AVR_EVENT_GOT_DATA) {
-                    DEBUG("Data received!\n");
+                // If this batch of requests all worked, we're done
+                if (request_isSuccess) {
                     break;
-
-                // Otherwise it was a timeout
-                } else {
-                    DEBUG("Timeout reached\n");
                 }
             }
 
             DEBUG("Done after %d retries\n", attempt);
 
-            // TODO - check this Call the callback
-            callback(attempt < AVR_RETRY);
+            callback(request_isSuccess);
 
         }
     }
