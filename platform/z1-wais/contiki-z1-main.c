@@ -279,8 +279,9 @@ main(int argc, char **argv)
   set_rime_addr();
 
   cc2420_init();
+#ifndef FESHIE_NO_ACC
   accm_init();
-
+#endif // FESHIE_NO_ACC
   {
     uint8_t longaddr[8];
     uint16_t shortaddr;

@@ -12,6 +12,9 @@ CFLAGS += -DREST=coap_rest_implementation
 # Disable human readable process names - they're stored in .data
 CFLAGS += -DPROCESS_CONF_NO_PROCESS_NAMES=1
 
+# Disable the accelerometer
+CFLAGS += -DFESHIE_NO_ACC
+
 SMALL=1
 
 APPS += erbium er-coap rest-engine

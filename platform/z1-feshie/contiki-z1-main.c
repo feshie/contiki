@@ -293,7 +293,9 @@ main(int argc, char **argv)
   NETSTACK_RADIO.init();
   //cc11xx_arch_init();
   //cc2420_init();
+#ifndef FESHIE_NO_ACC
   accm_init();
+#endif // FESHIE_NO_ACC
 
   {
     uint8_t longaddr[8];

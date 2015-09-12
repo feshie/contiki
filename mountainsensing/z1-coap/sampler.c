@@ -90,12 +90,14 @@ PROCESS_THREAD(sample_process, ev, data) {
             sample.temp = sampler_get_temp();
             sample.has_temp = true;
 
+#ifndef FESHIE_NO_ACC
             sample.accX = sampler_get_acc_x();
             sample.has_accX = true;
             sample.accY = sampler_get_acc_y();
             sample.has_accY = true;
             sample.accZ = sampler_get_acc_z();
             sample.has_accZ = true;
+#endif // FESHIE_NO_ACC
 
             // If get_extra requires some asynch things, wait until they're completed
             if(!sampler_get_extra(&sample, &sensor_config)) {
