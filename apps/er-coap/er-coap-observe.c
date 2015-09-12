@@ -247,14 +247,14 @@ coap_observe_handler(resource_t *resource, void *request, void *response)
            * A subscription should return the same representation as a normal GET.
            * Uncomment if you want an information about the avaiable observers.
            */
-          /*
-           * static char content[16];
-           * coap_set_payload(coap_res,
-           *                  content,
-           *                  snprintf(content, sizeof(content), "Added %u/%u",
-           *                           list_length(observers_list),
-           *                           COAP_MAX_OBSERVERS));
-           */
+#if 0
+          static char content[16];
+          coap_set_payload(coap_res,
+                           content,
+                           snprintf(content, sizeof(content), "Added %u/%u",
+                                    list_length(observers_list),
+                                    COAP_MAX_OBSERVERS));
+#endif
         } else {
           coap_res->code = SERVICE_UNAVAILABLE_5_03;
           coap_set_payload(coap_res, "TooManyObservers", 16);
