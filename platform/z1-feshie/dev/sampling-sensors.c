@@ -56,7 +56,7 @@ static struct avr_data data = {
 /**
  *
  */
-static void extra_callback(bool success);
+static void extra_callback(bool isSuccess);
 
 /**
  * Get the value of the rain sensor (number of bucket tips).
@@ -204,7 +204,7 @@ bool sampler_get_extra(Sample *sample, SensorConfig *config) {
 
     uint8_t avr_id = (uint8_t) config->avrIDs[0];
 
-    DEBUG("Getting data from avr %x", avr_id);
+    DEBUG("Getting data from avr %x\n", avr_id);
     if (avr_get_data(avr_id, &data)) {
         return false;
     } else {
@@ -215,12 +215,11 @@ bool sampler_get_extra(Sample *sample, SensorConfig *config) {
     }
 }
 
-static void extra_callback(bool success) {
-    DEBUG("In the callback!\n");
+static void extra_callback(bool isSuccess) {
+    DEBUG("Sampled from avr. Success: %d\n", isSuccess);
 
-    if (success) {
-        sample_extra->has_AVR = true;
-    }
+    sample_extra->has_AVR = isSuccess;
+
 #ifndef SENSE_ON
     ms1_sense_off();
 #endif
