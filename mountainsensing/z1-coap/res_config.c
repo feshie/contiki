@@ -31,43 +31,47 @@ static void res_get_handler(void* request, void* response, uint8_t *buffer, uint
  */
 static void res_post_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
-static uint8_t pb_buffer[SensorConfig_size];
+/**
+ * Buffer to store a config. Used for both get and post - requests will fail if they are interleaved.
+ */
+static uint8_t config_buffer[SensorConfig_size];
 
-static SensorConfig config;
-
-static uint8_t buffer_len;
+/**
+ * Length of the configuration buffer.
+ */
+static uint8_t config_len;
 
 /**
  * Config ressource.
  */
 RESOURCE(res_config, "Config", res_get_handler, res_post_handler, NULL, NULL);
 
-void res_get_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
-    static int32_t current_offset;
-    static pb_ostream_t pb_ostream;
+void res_get_handler(void* request, void* response, uint8_t *payload_buffer, uint16_t preferred_size, int32_t *offset) {
+    uint8_t payload_len;
+    int16_t current_offset = *offset;
 
-    DEBUG("Serving request! Offset %d, PrefSize %d\n", (int) *offset, preferred_size);
-
-    current_offset = *offset;
+    DEBUG("Serving request! Offset %d, PrefSize %d\n", current_offset, preferred_size);
 
     // Only get data if this is the first request of a blockwise transfer
-    if (current_offset == 0 && !store_get_config(&config)) {
-        // 500 internal error
-        DEBUG("Unable to get config!\n");
-        REST.set_response_status(response, REST.status.INTERNAL_SERVER_ERROR);
-        return;
+    if (current_offset == 0) {
+
+        config_len = store_get_raw_config(config_buffer);
+
+        if (!config_len) {
+            // 500 internal error
+            DEBUG("Unable to get config!\n");
+            REST.set_response_status(response, REST.status.INTERNAL_SERVER_ERROR);
+            return;
+        }
     }
 
     DEBUG("Got config\n");
 
-    pb_ostream = pb_ostream_from_buffer(pb_buffer, sizeof(pb_buffer));
-    pb_encode_delimited(&pb_ostream, SensorConfig_fields, &config);
-
     // If whatever we have to send fits in one block, just send that
-    if (pb_ostream.bytes_written - current_offset <= preferred_size) {
+    if (config_len - current_offset <= preferred_size) {
         DEBUG("Request fits in a single block\n");
 
-        buffer_len = pb_ostream.bytes_written - current_offset;
+        payload_len = config_len - current_offset;
 
         // Indicates this is the last chunk
         *offset = -1;
@@ -76,24 +80,23 @@ void res_get_handler(void* request, void* response, uint8_t *buffer, uint16_t pr
     } else {
         DEBUG("Request will be split into chunks\n");
 
-        buffer_len = preferred_size;
+        payload_len = preferred_size;
 
         *offset += preferred_size;
     }
 
-    memcpy(buffer, pb_buffer + current_offset, buffer_len);
+    memcpy(payload_buffer, config_buffer + current_offset, payload_len);
 
     REST.set_header_content_type(response, REST.type.APPLICATION_OCTET_STREAM);
-    REST.set_response_payload(response, buffer, buffer_len);
+    REST.set_response_payload(response, payload_buffer, payload_len);
 }
 
-void res_post_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
-    static coap_packet_t *coap_req;
-    static uint8_t *incoming;
-    static size_t incoming_len;
-    static pb_istream_t pb_istream;
-
-    coap_req = (coap_packet_t *)request;
+void res_post_handler(void* request, void* response, uint8_t *payload_buffer, uint16_t preferred_size, int32_t *offset) {
+    uint8_t *incoming;
+    size_t incoming_len;
+    pb_istream_t pb_istream;
+    SensorConfig config;
+    coap_packet_t *coap_req = (coap_packet_t *)request;
 
     DEBUG("Config post request!\n");
 
@@ -105,15 +108,15 @@ void res_post_handler(void* request, void* response, uint8_t *buffer, uint16_t p
             DEBUG("Got config payload\n");
 
             // Store the payload in our static buffer
-            memcpy(pb_buffer + coap_req->block1_num * coap_req->block1_size, incoming, incoming_len);
-            buffer_len = coap_req->block1_num * coap_req->block1_size + incoming_len;
+            memcpy(config_buffer + coap_req->block1_num * coap_req->block1_size, incoming, incoming_len);
+            config_len = coap_req->block1_num * coap_req->block1_size + incoming_len;
 
             // If this is the last packet
             if (!coap_req->block1_more) {
 
                 DEBUG("Last (or only) config block, saving...\n");
 
-                pb_istream = pb_istream_from_buffer(pb_buffer, buffer_len);
+                pb_istream = pb_istream_from_buffer(config_buffer, config_len);
 
                 // Check it was sucesfully decoded.
                 if (!pb_decode_delimited(&pb_istream, SensorConfig_fields, &config)) {
