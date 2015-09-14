@@ -69,19 +69,15 @@ static int16_t parse_sample_id(void *request);
  */
 PARENT_RESOURCE(res_sample, "Sample", res_get_handler, NULL, NULL, res_delete_handler);
 
-void res_get_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
-    static int32_t current_offset;
-    static uint8_t pb_buffer[Sample_size];
-    static bool ret;
+void res_get_handler(void* request, void* response, uint8_t *payload_buffer, uint16_t preferred_size, int32_t *offset) {
+    static uint8_t sample_buffer[Sample_size];
+    static uint8_t sample_len;
     int16_t sample_id;
-    // All of these are used after the only blocking call - it's safe to allocate them on the stack
-    pb_istream_t pb_istream;
-    uint64_t pb_len;
-    uint8_t buffer_len;
+    uint8_t payload_len;
 
-    DEBUG("Serving request! Offset %d, PrefSize %d\n", (int) *offset, preferred_size);
+    int16_t current_offset = *offset;
 
-    current_offset = *offset;
+    DEBUG("Serving request! Offset %d, PrefSize %d\n", current_offset, preferred_size);
 
     // Only get data if this is the first request of a blockwise transfer
     if (current_offset == 0) {
@@ -97,36 +93,25 @@ void res_get_handler(void* request, void* response, uint8_t *buffer, uint16_t pr
 
         // Get the latest sample if no sample id was specified
         if (sample_id == NO_SAMPLE_ID) {
-            ret = store_get_latest_raw_sample(pb_buffer);
+            sample_len = store_get_latest_raw_sample(sample_buffer);
         } else {
-            ret = store_get_raw_sample(sample_id, pb_buffer);
+            sample_len = store_get_raw_sample(sample_id, sample_buffer);
         }
 
-        if (!ret) {
+        if (!sample_len) {
             DEBUG("Unable to get sample!\n");
             REST.set_response_status(response, REST.status.NOT_FOUND);
             return;
         }
     }
 
-    pb_istream = pb_istream_from_buffer(pb_buffer, sizeof(pb_buffer));
-
-    if (!pb_decode_varint(&pb_istream, &pb_len)) {
-        DEBUG("Error decoding sample length!\n");
-        REST.set_response_status(response, REST.status.INTERNAL_SERVER_ERROR);
-        return;
-    }
-
-    // need to account for the size of the varint we decoded
-    pb_len += sizeof(pb_buffer) - pb_istream.bytes_left;
-
-    DEBUG("Got a Sample, size: %" PRId64 "\n", pb_len);
+    DEBUG("Got a Sample, size: %u\n", sample_len);
 
     // If whatever we have to send fits in one block, just send that
-    if (pb_len - current_offset <= preferred_size) {
+    if (sample_len - current_offset <= preferred_size) {
         DEBUG("Request fits in a single block\n");
 
-        buffer_len = pb_len - current_offset;
+        payload_len = sample_len - current_offset;
 
         // Indicates this is the last chunk
         *offset = -1;
@@ -135,20 +120,20 @@ void res_get_handler(void* request, void* response, uint8_t *buffer, uint16_t pr
     } else {
         DEBUG("Request will be split into chunks\n");
 
-        buffer_len = preferred_size;
+        payload_len = preferred_size;
 
         *offset += preferred_size;
     }
 
-    memcpy(buffer, pb_buffer + current_offset, buffer_len);
+    memcpy(payload_buffer, sample_buffer + current_offset, payload_len);
 
     REST.set_header_content_type(response, REST.type.APPLICATION_OCTET_STREAM);
-    REST.set_response_payload(response, buffer, buffer_len);
+    REST.set_response_payload(response, payload_buffer, payload_len);
     DEBUG("Done!\n");
 }
 
 void res_delete_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
-    static int16_t sample_id;
+    int16_t sample_id;
 
     sample_id = parse_sample_id(request);
 
@@ -170,13 +155,13 @@ void res_delete_handler(void* request, void* response, uint8_t *buffer, uint16_t
 }
 
 int16_t parse_sample_id(void *request) {
-    static const char *uri_path;
-    static int uri_length;
+    const char *uri_path;
+    int uri_length;
     // Need extra byte for null terminator
-    static char terminated_uri_path[MAX_URI_LENGTH + 1];
-    static char *token_ptr;
-    static char *end_ptr;
-    static int16_t sample_id;
+    char terminated_uri_path[MAX_URI_LENGTH + 1];
+    char *token_ptr;
+    char *end_ptr;
+    int16_t sample_id;
 
     uri_length = REST.get_url(request, &uri_path);
 
