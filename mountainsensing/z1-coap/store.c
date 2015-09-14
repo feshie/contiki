@@ -25,15 +25,6 @@
  */
 #define CONFIG_FILENAME "sampleconfig"
 
-/*
- * Size is the largest one of SensorConfig and Sample
- */
-#if Sample_size > SensorConfig_size
-    #define PB_BUF_SIZE Sample_size
-#else
-    #define PB_BUF_SIZE SensorConfig_size
-#endif
-
 /**
  * Maximum length of a file name
  */
@@ -42,7 +33,7 @@
 /**
  * Identifier of the last sample.
  */
-static int16_t last_id;
+static uint16_t last_id;
 
 /**
  * Lock the radio for cfs access.
@@ -57,7 +48,7 @@ static void radio_release(void);
 /**
  * Find the id of the latest sample.
  */
-static int16_t find_latest_sample(void);
+static uint16_t find_latest_sample(void);
 
 /**
  * Write to a given file.
@@ -69,10 +60,9 @@ static bool write_file(char* filename, uint8_t *buffer, int length);
  * Convert a sample id to a filename.
  * @return The pointer to filename(usefull for avoiding temp vars).
  */
-static char* id_to_file(int16_t id, char* filename);
+static char* id_to_file(uint16_t id, char* filename);
 
-
-int16_t store_save_sample(Sample *sample) {
+uint16_t store_save_sample(Sample *sample) {
     pb_ostream_t pb_ostream;
     uint8_t pb_buffer[Sample_size];
     char filename[FILENAME_LENGTH];
@@ -86,7 +76,7 @@ int16_t store_save_sample(Sample *sample) {
     pb_ostream = pb_ostream_from_buffer(pb_buffer, sizeof(pb_buffer));
     if (!pb_encode_delimited(&pb_ostream, Sample_fields, sample)) {
         last_id--;
-        return STORE_FAIL;
+        return false;
     }
 
     radio_lock();
@@ -95,7 +85,7 @@ int16_t store_save_sample(Sample *sample) {
         DEBUG("Failed to save reading %d\n", last_id);
         last_id--;
         radio_release();
-        return STORE_FAIL;
+        return false;
     }
 
     radio_release();
@@ -107,11 +97,11 @@ bool store_get_latest_sample(Sample *sample) {
     return store_get_sample(last_id, sample);
 }
 
-bool store_get_latest_raw_sample(uint8_t buffer[Sample_size]) {
+uint8_t store_get_latest_raw_sample(uint8_t buffer[Sample_size]) {
     return store_get_raw_sample(last_id, buffer);
 }
 
-bool store_get_sample(int16_t id, Sample *sample) {
+bool store_get_sample(uint16_t id, Sample *sample) {
     pb_istream_t pb_istream;
     uint8_t pb_buffer[Sample_size];
 
@@ -127,7 +117,7 @@ bool store_get_sample(int16_t id, Sample *sample) {
     return true;
 }
 
-bool store_get_raw_sample(int16_t id, uint8_t buffer[Sample_size]) {
+uint8_t store_get_raw_sample(uint16_t id, uint8_t buffer[Sample_size]) {
     int fd;
     int bytes;
     char filename[FILENAME_LENGTH];
@@ -140,9 +130,7 @@ bool store_get_raw_sample(int16_t id, uint8_t buffer[Sample_size]) {
 
     if (fd < 0) {
         DEBUG("Failed to open file %d\n", last_id);
-
         radio_release();
-
         return false;
     }
 
@@ -159,10 +147,10 @@ bool store_get_raw_sample(int16_t id, uint8_t buffer[Sample_size]) {
     cfs_close(fd);
     radio_release();
 
-    return true;
+    return bytes;
 }
 
-bool store_delete_sample(int16_t sample) {
+bool store_delete_sample(uint16_t sample) {
     int fd = 0;
     char filename[FILENAME_LENGTH];
 
@@ -245,7 +233,7 @@ bool store_get_config(SensorConfig *config) {
     return pb_decode_delimited(&pb_istream, SensorConfig_fields, config);
 }
 
-bool store_get_raw_config(uint8_t buffer[SensorConfig_size]) {
+uint8_t store_get_raw_config(uint8_t buffer[SensorConfig_size]) {
     int fd;
     int bytes;
 
@@ -276,7 +264,7 @@ bool store_get_raw_config(uint8_t buffer[SensorConfig_size]) {
     cfs_close(fd);
     radio_release();
 
-    return true;
+    return bytes;
 }
 
 bool write_file(char* filename, uint8_t *buffer, int length) {
@@ -332,11 +320,11 @@ void radio_release(void) {
 #endif
 }
 
-int16_t find_latest_sample(void) {
+uint16_t find_latest_sample(void) {
     struct cfs_dirent dirent;
     struct cfs_dir dir;
-    int16_t file_num;
-    int16_t max_num;
+    uint16_t file_num;
+    uint16_t max_num;
 
     max_num = 0;
     DEBUG("Refreshing filename cache\n");
@@ -359,7 +347,7 @@ int16_t find_latest_sample(void) {
     return 0;
 }
 
-char* id_to_file(int16_t id, char* filename) {
+char* id_to_file(uint16_t id, char* filename) {
     sprintf(filename, FILENAME_PREFIX "%d", id);
     return filename;
 }
