@@ -15,22 +15,6 @@
 #define DEBUG_ON
 #include "debug.h"
 
-PROCESS(store_process, "Store Process");
-
-/**
- * @file
- * The store runs in a seperate process, and waits for events.
- * The store can only handle one event at a time, ensuring there are no race conditions.
- *
- * The events are dispatched by the convenience functions decalred in store.h
- *
- * To avoid memory shenanigans, all the memory used to return or accept values from other threads
- * must be allocated by the caller.
- *
- * The store allows deleting any given sample, by gracefully dealing with files that do not exist.
- */
-
-
 /**
  * Single char prefix to use for filenames
  */
@@ -56,75 +40,9 @@ PROCESS(store_process, "Store Process");
 #define FILENAME_LENGTH 8
 
 /**
- * Magic canary to indicate that processing the given event has failed.
- * Everything will break if the start of a Config or Sample is every equal to this.
- */
-#define STORE_PROCESS_FAIL      INT16_MAX
-
-/**
- * Data should point to sample to save
- * Data will point to a int16_t >= 0 on success, STORE_PROCESS_FAIL otherwise.
- */
-#define STORE_EVENT_SAVE_SAMPLE             1
-
-/**
- * Data should point to a int16_t (but needs to point to a chunk of memory Sample sized)
- * Data will point to the sample with that id on success, STORE_PROCESS_FAIL otherwise.
- */
-#define STORE_EVENT_GET_SAMPLE              2
-
-/**
- * Data should point to a int16_t (but needs to point to a chunk of memory Sample sized)
- * Data will point to the proto buffer encoded sample with that id on success, STORE_PROCESS_FAIL otherwise.
- */
-#define STORE_EVENT_GET_RAW_SAMPLE          3
-
-/**
- * Data should point to a chunk of memory Sample sized.
- * Data will point to the lastest sample on success, STORE_PROCESS_FAIL otherwise.
- */
-#define STORE_EVENT_GET_LATEST_SAMPLE       4
-
-/**
- * Data should point to a chunk of memory Sample sized.
- * Data will point to the lastest sample iproto buffer encoded on success, STORE_PROCESS_FAIL otherwise.
- */
-#define STORE_EVENT_GET_LATEST_RAW_SAMPLE   5
-
-/**
- * Data should point to a int16_t
- * Data will point to STORE_PROCESS_FAIL on failure.
- */
-#define STORE_EVENT_DELETE_SAMPLE           6
-
-/**
- * Data should point the SampleConfig to save
- * Data will point to STORE_PROCESS_FAIL on failure.
- */
-#define STORE_EVENT_SAVE_CONFIG             7
-
-/**
- * Data should point to a chunk of memory SampleConfig sized
- * Data will point to the SampleConfig on success, STORE_PROCESS_FAIL otherwise.
- */
-#define STORE_EVENT_GET_CONFIG              8
-
-/**
- * Data should point to a chunk of memory SampleConfig sized
- * Data will point to the proto buff encoded SampleConfig on success, STORE_PROCESS_FAIL otherwise.
- */
-#define STORE_EVENT_GET_RAW_CONFIG          9
-
-/**
  * Identifier of the last sample.
  */
 static int16_t last_id;
-
-/**
- * Initialize the data store.
- * Includes finding the latest reading.
- */
-static void store_init(void);
 
 /**
  * Lock the radio for cfs access.
@@ -148,129 +66,13 @@ static int16_t find_latest_sample(void);
 static bool write_file(char* filename, uint8_t *buffer, int length);
 
 /**
- * Save a sample.
- * @return STORE_PROCESS_FAIL on failure, the id of the sample on success.
- */
-static int16_t save_sample(Sample *sample);
-
-/**
- * Get a Sample from flash.
- * @return true on success, false otherwise (including if the file does not exist)
- */
-static bool get_sample(int16_t id, Sample *sample);
-
-/**
- * Get a Sample from flash, in the form a raw protocol buffer.
- * @return true on success, false otherwise (including if the file does not exist)
- */
-static bool get_raw_sample(int16_t id, uint8_t buffer[Sample_size]);
-
-/**
- * Delete a given sample. Will search backwards for the last known stored Sample
- * if sample is the latest Sample.
- * @return true on success, false otherwise.
- */
-static bool delete_sample(int16_t sample);
-
-/**
- * Actually save the configuration.
- * @return true on success, false otherwise.
- */
-static bool save_config(SensorConfig *config);
-
-/**
- * Actually get the configuration.
- * @return true on success, false otherwise.
- */
-static bool get_config(SensorConfig *config);
-
-/**
- * Actually get the configuration, in the form of a raw protocol buffer.
- * @return true on success, false otherwise.
- */
-static bool get_raw_config(uint8_t buffer[SensorConfig_size]);
-
-/**
  * Convert a sample id to a filename.
  * @return The pointer to filename(usefull for avoiding temp vars).
  */
 static char* id_to_file(int16_t id, char* filename);
 
-PROCESS_THREAD(store_process, ev, data) {
-    PROCESS_BEGIN();
 
-    DEBUG("Initializing...\n");
-
-    store_init();
-
-    printf("Store started. %d previous files found.\n", last_id);
-
-    while (true) {
-        PROCESS_WAIT_EVENT();
-
-        DEBUG("Got event %d\n", ev);
-
-        if (ev == STORE_EVENT_SAVE_SAMPLE) {
-            *((int16_t *) data) = save_sample((Sample *) data);
-
-        } else if (ev == STORE_EVENT_GET_SAMPLE) {
-            // Id is passed by value so that it doesn't change when something is written to the passed buffer
-            if (!get_sample(*((int16_t *) data), (Sample *) data)) {
-                *((int16_t *) data) = STORE_PROCESS_FAIL;
-            }
-
-        } else if (ev == STORE_EVENT_GET_RAW_SAMPLE) {
-            // Id is passed by value so that it doesn't change when something is written to the passed buffer
-            if (!get_raw_sample(*((int16_t *) data), (uint8_t *) data)) {
-                *((int16_t *) data) = STORE_PROCESS_FAIL;
-            }
-
-        } else if (ev == STORE_EVENT_GET_LATEST_SAMPLE) {
-            // Just get last_id. We keep our state clean (ie last_id always points to a valid Sample) so this isn't an issue.
-            if (!get_sample(last_id, (Sample *) data)) {
-                *((int16_t *) data) = STORE_PROCESS_FAIL;
-            }
-
-        } else if (ev == STORE_EVENT_GET_LATEST_RAW_SAMPLE) {
-            // Just get last_id. We keep our state clean (ie last_id always points to a valid Sample) so this isn't an issue.
-            if (!get_raw_sample(last_id, (uint8_t *) data)) {
-                *((int16_t *) data) = STORE_PROCESS_FAIL;
-            }
-
-        } else if (ev == STORE_EVENT_DELETE_SAMPLE) {
-            if (!delete_sample(*((int16_t *) data))) {
-                *((int16_t *) data) = STORE_PROCESS_FAIL;
-            }
-
-        } else if (ev == STORE_EVENT_SAVE_CONFIG) {
-            // Only overwrite the config if we failed
-            if (!save_config((SensorConfig *) data)) {
-                *((int16_t *) data) = STORE_PROCESS_FAIL;
-            }
-
-        } else if (ev == STORE_EVENT_GET_CONFIG) {
-            // If succesfull, just return the buffer.
-            // Otherwise set it to false
-            if (!get_config((SensorConfig *) data)) {
-                *((int16_t *) data) = STORE_PROCESS_FAIL;
-            }
-
-        } else if (ev == STORE_EVENT_GET_RAW_CONFIG) {
-            // If succesfull, just return the buffer.
-            // Otherwise set it to false
-            if (!get_raw_config((uint8_t *) data)) {
-                *((int16_t *) data) = STORE_PROCESS_FAIL;
-            }
-
-        } else {
-            DEBUG("Unknown Event %d!\n", ev);
-        }
-    }
-
-    PROCESS_END();
-}
-
-int16_t save_sample(Sample *sample) {
+int16_t store_save_sample(Sample *sample) {
     pb_ostream_t pb_ostream;
     uint8_t pb_buffer[Sample_size];
     char filename[FILENAME_LENGTH];
@@ -284,7 +86,7 @@ int16_t save_sample(Sample *sample) {
     pb_ostream = pb_ostream_from_buffer(pb_buffer, sizeof(pb_buffer));
     if (!pb_encode_delimited(&pb_ostream, Sample_fields, sample)) {
         last_id--;
-        return STORE_PROCESS_FAIL;
+        return STORE_FAIL;
     }
 
     radio_lock();
@@ -293,7 +95,7 @@ int16_t save_sample(Sample *sample) {
         DEBUG("Failed to save reading %d\n", last_id);
         last_id--;
         radio_release();
-        return STORE_PROCESS_FAIL;
+        return STORE_FAIL;
     }
 
     radio_release();
@@ -301,11 +103,19 @@ int16_t save_sample(Sample *sample) {
     return last_id;
 }
 
-bool get_sample(int16_t id, Sample *sample) {
+bool store_get_latest_sample(Sample *sample) {
+    return store_get_sample(last_id, sample);
+}
+
+bool store_get_latest_raw_sample(uint8_t buffer[Sample_size]) {
+    return store_get_raw_sample(last_id, buffer);
+}
+
+bool store_get_sample(int16_t id, Sample *sample) {
     pb_istream_t pb_istream;
     uint8_t pb_buffer[Sample_size];
 
-    if (get_raw_sample(id, pb_buffer)) {
+    if (store_get_raw_sample(id, pb_buffer)) {
         return false;
     }
 
@@ -317,7 +127,7 @@ bool get_sample(int16_t id, Sample *sample) {
     return true;
 }
 
-bool get_raw_sample(int16_t id, uint8_t buffer[Sample_size]) {
+bool store_get_raw_sample(int16_t id, uint8_t buffer[Sample_size]) {
     int fd;
     int bytes;
     char filename[FILENAME_LENGTH];
@@ -352,7 +162,7 @@ bool get_raw_sample(int16_t id, uint8_t buffer[Sample_size]) {
     return true;
 }
 
-bool delete_sample(int16_t sample) {
+bool store_delete_sample(int16_t sample) {
     int fd = 0;
     char filename[FILENAME_LENGTH];
 
@@ -398,7 +208,7 @@ bool delete_sample(int16_t sample) {
     return true;
 }
 
-bool save_config(SensorConfig *config) {
+bool store_save_config(SensorConfig *config) {
     pb_ostream_t pb_ostream;
     uint8_t pb_buffer[SensorConfig_size];
 
@@ -422,11 +232,11 @@ bool save_config(SensorConfig *config) {
     return true;
 }
 
-bool get_config(SensorConfig *config) {
+bool store_get_config(SensorConfig *config) {
     pb_istream_t pb_istream;
     uint8_t pb_buffer[SensorConfig_size];
 
-    if (!get_raw_config(pb_buffer)) {
+    if (!store_get_raw_config(pb_buffer)) {
         return false;
     }
 
@@ -435,7 +245,7 @@ bool get_config(SensorConfig *config) {
     return pb_decode_delimited(&pb_istream, SensorConfig_fields, config);
 }
 
-bool get_raw_config(uint8_t buffer[SensorConfig_size]) {
+bool store_get_raw_config(uint8_t buffer[SensorConfig_size]) {
     int fd;
     int bytes;
 
@@ -497,9 +307,11 @@ bool write_file(char* filename, uint8_t *buffer, int length) {
 }
 
 void store_init(void) {
+    DEBUG("Initializing...\n");
     radio_lock();
     last_id = find_latest_sample();
     radio_release();
+    printf("Store initialized. %d previous files found.\n", last_id);
 }
 
 void radio_lock(void) {
@@ -551,52 +363,3 @@ char* id_to_file(int16_t id, char* filename) {
     sprintf(filename, FILENAME_PREFIX "%d", id);
     return filename;
 }
-
-int16_t store_save_sample(Sample *sample) {
-    process_post_synch(&store_process, STORE_EVENT_SAVE_SAMPLE, sample);
-    // Return -1 on failure
-    return *((int16_t *) sample) == STORE_PROCESS_FAIL ? -1 : *((int16_t *) sample);
-}
-
-bool store_get_sample(int16_t id, Sample *sample) {
-    *((int16_t *) sample) = id;
-    process_post_synch(&store_process, STORE_EVENT_GET_SAMPLE, sample);
-    return *((int16_t *) sample) != STORE_PROCESS_FAIL;
-}
-
-bool store_get_raw_sample(int16_t id, uint8_t buffer[Sample_size]) {
-    *((int16_t *) buffer) = id;
-    process_post_synch(&store_process, STORE_EVENT_GET_RAW_SAMPLE, buffer);
-    return *((int16_t *) buffer) != STORE_PROCESS_FAIL;
-}
-
-bool store_get_latest_sample(Sample *sample) {
-    process_post_synch(&store_process, STORE_EVENT_GET_LATEST_SAMPLE, sample);
-    return *((int16_t *) sample) != STORE_PROCESS_FAIL;
-}
-
-bool store_get_latest_raw_sample(uint8_t buffer[Sample_size]) {
-    process_post_synch(&store_process, STORE_EVENT_GET_LATEST_RAW_SAMPLE, buffer);
-    return *((int16_t *) buffer) != STORE_PROCESS_FAIL;
-}
-
-bool store_delete_sample(int16_t *id) {
-    process_post_synch(&store_process, STORE_EVENT_DELETE_SAMPLE, id);
-    return *id != STORE_PROCESS_FAIL;
-}
-
-bool store_save_config(SensorConfig *config) {
-    process_post_synch(&store_process, STORE_EVENT_SAVE_CONFIG, config);
-    return *((int16_t *) config) != STORE_PROCESS_FAIL;
-}
-
-bool store_get_config(SensorConfig *config) {
-    process_post_synch(&store_process, STORE_EVENT_GET_CONFIG, config);
-    return *((int16_t *) config) != STORE_PROCESS_FAIL;
-}
-
-bool store_get_raw_config(uint8_t buffer[SensorConfig_size]) {
-    process_post_synch(&store_process, STORE_EVENT_GET_RAW_CONFIG, buffer);
-    return *((int16_t *) buffer) != STORE_PROCESS_FAIL;
-}
-

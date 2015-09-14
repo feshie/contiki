@@ -58,7 +58,9 @@ AUTOSTART_PROCESSES(&feshie_sense_process);
 PROCESS_THREAD(feshie_sense_process, ev, data) {
     PROCESS_BEGIN();
 
-    process_start(&store_process, NULL);
+    // Initialize the store before anything els
+    store_init();
+
     process_start(&sample_process, NULL);
     process_start(&er_server_process, NULL);
 

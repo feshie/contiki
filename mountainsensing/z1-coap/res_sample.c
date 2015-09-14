@@ -160,7 +160,7 @@ void res_delete_handler(void* request, void* response, uint8_t *buffer, uint16_t
 
     DEBUG("Delete request for: %d\n", sample_id);
 
-    if (!store_delete_sample(&sample_id)) {
+    if (!store_delete_sample(sample_id)) {
         DEBUG("Failed to delete sample\n");
         REST.set_response_status(response, REST.status.INTERNAL_SERVER_ERROR);
         return;
