@@ -107,10 +107,10 @@ PROCESS_THREAD(sample_process, ev, data) {
 
             id = store_save_sample(&sample);
 
-            if (id < 0) {
-                DEBUG("Failed to save sample!\n");
-            } else {
+            if (id) {
                 DEBUG("Sample saved with id %d\n", id);
+            } else {
+                DEBUG("Failed to save sample!\n");
             }
         }
     }
