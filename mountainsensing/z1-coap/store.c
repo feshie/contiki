@@ -31,6 +31,15 @@
 #define FILENAME_LENGTH 8
 
 /**
+ * Magic value we append to all files we write.
+ * This ensures trailing NULL bytes are not removed when the
+ * file is read from flash again (this only happens if
+ * the file isn't cached - ie on a fresh boot, or if it hasn't
+ * been openned in a while).
+ */
+static const uint8_t END_CANARY = 0xAF;
+
+/**
  * Identifier of the last sample.
  */
 static uint16_t last_id;
@@ -51,10 +60,18 @@ static void radio_release(void);
 static uint16_t find_latest_sample(void);
 
 /**
+ * Read a given file.
+ * @return The number of bytes read succesfully from filename, or false if the file could not be read.
+ * NOTE: This will strip the trailing canary byte appended by `write_file`.
+ */
+static uint8_t read_file(char *filename, uint8_t *buffer, uint8_t length);
+
+/**
  * Write to a given file.
  * @return true if length bytes have been successfully written to filename, false otherwise.
+ * NOTE: This will append a trailing canary byte that will be stripped by `read_file`.
  */
-static bool write_file(char* filename, uint8_t *buffer, int length);
+static bool write_file(char *filename, uint8_t *buffer, uint8_t length);
 
 /**
  * Convert a sample id to a filename.
@@ -118,33 +135,15 @@ bool store_get_sample(uint16_t id, Sample *sample) {
 }
 
 uint8_t store_get_raw_sample(uint16_t id, uint8_t buffer[Sample_size]) {
-    int fd;
-    int bytes;
     char filename[FILENAME_LENGTH];
+    uint8_t bytes;
 
     DEBUG("Attempting to get sample %d\n", id);
 
     radio_lock();
 
-    fd = cfs_open(id_to_file(id, filename), CFS_READ);
+    bytes = read_file(id_to_file(id, filename), buffer, Sample_size);
 
-    if (fd < 0) {
-        DEBUG("Failed to open file %d\n", last_id);
-        radio_release();
-        return false;
-    }
-
-    bytes = cfs_read(fd, buffer, Sample_size);
-
-    DEBUG("%d bytes read\n", bytes);
-
-    if (bytes < 0) {
-        cfs_close(fd);
-        radio_release();
-        return false;
-    }
-
-    cfs_close(fd);
     radio_release();
 
     return bytes;
@@ -239,40 +238,45 @@ bool store_get_config(SensorConfig *config) {
 }
 
 uint8_t store_get_raw_config(uint8_t buffer[SensorConfig_size]) {
-    int fd;
-    int bytes;
+    uint8_t bytes;
 
     DEBUG("Attempting to get config\n");
 
     radio_lock();
 
-    fd = cfs_open(CONFIG_FILENAME, CFS_READ);
+    bytes = read_file(CONFIG_FILENAME, buffer, SensorConfig_size);
 
-    if (fd < 0) {
-        DEBUG("Failed to read config file %s\n", CONFIG_FILENAME);
-
-        radio_release();
-
-        return false;
-    }
-
-    bytes = cfs_read(fd, buffer, SensorConfig_size);
-
-    DEBUG("%d bytes read\n", bytes);
-
-    if (bytes < 0) {
-        cfs_close(fd);
-        radio_release();
-        return false;
-    }
-
-    cfs_close(fd);
     radio_release();
 
     return bytes;
 }
 
-bool write_file(char* filename, uint8_t *buffer, int length) {
+uint8_t read_file(char *filename, uint8_t *buffer, uint8_t length) {
+    int fd = cfs_open(filename, CFS_READ);
+
+    if (fd < 0) {
+        DEBUG("Failed to open file %s\n", filename);
+        return false;
+    }
+
+    uint8_t bytes = cfs_read(fd, buffer, length);
+
+    cfs_close(fd);
+
+    if (bytes <= 0) {
+        DEBUG("Failed to read file %s\n", filename);
+        return false;
+    }
+
+    // Ignore the cancary value
+    bytes--;
+
+    DEBUG("%d bytes read\n", bytes);
+
+    return bytes;
+}
+
+bool write_file(char *filename, uint8_t *buffer, uint8_t length) {
     int fd;
     int bytes;
 
@@ -291,6 +295,12 @@ bool write_file(char* filename, uint8_t *buffer, int length) {
 
     if (bytes != length) {
         DEBUG("Failed to write file to %s, wrote %d bytes\n", filename, bytes);
+        return false;
+    }
+
+    // Write the trailing magic value
+    if (cfs_write(fd, &END_CANARY, 1) == -1) {
+        DEBUG("Failed to write trailing canary to file %s\n", filename);
         return false;
     }
 
