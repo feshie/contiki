@@ -210,6 +210,11 @@ bool store_save_config(SensorConfig *config) {
 
     radio_lock();
 
+    // Delete the old config first, avoids the need for micro-logs
+    if (cfs_remove(CONFIG_FILENAME) == -1) {
+        DEBUG("Error deleting old config\n");
+    }
+
     if (!write_file(CONFIG_FILENAME, pb_buffer, pb_ostream.bytes_written)) {
         radio_release();
         return false;
