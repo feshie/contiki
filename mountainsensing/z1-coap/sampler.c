@@ -32,10 +32,10 @@ PROCESS(sample_process, "Sample Process");
 #define SAMPLER_EVENT_EXTRA_PERFORMED 1
 
 /**
- * True if we should reload our config, false otherwise.
- * Intitially set to true to load our config on start.
+ * Event sent to the sampler when the configuration
+ * should be reloaded from Flash.
  */
-static bool should_refresh_config = true;
+#define SAMPLER_EVENT_RELOAD_CONFIG 2
 
 /**
  * The current sensor config being used.
@@ -56,26 +56,21 @@ static void print_sensor_config(SensorConfig *conf);
 PROCESS_THREAD(sample_process, ev, data) {
     static struct etimer sample_timer;
     static Sample sample;
-    static int16_t id;
+    int16_t id;
 
     PROCESS_BEGIN();
+
+    refresh_config();
 
     sampler_init();
 
     while(true) {
-        // Reload our config if we need to
-        if (should_refresh_config) {
-            refresh_config();
-            should_refresh_config = false;
-
-            DEBUG("Refreshed Sensor config to:\n");
-            print_sensor_config(&sensor_config);
-        }
 
         etimer_set(&sample_timer, CLOCK_SECOND * (sensor_config.interval - (sampler_get_time() % sensor_config.interval)));
-        PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&sample_timer));
+        PROCESS_WAIT_EVENT();
 
-        if (ev == PROCESS_EVENT_TIMER) {
+        // If it's time to sample
+        if (ev == PROCESS_EVENT_TIMER && etimer_expired(&sample_timer)) {
 
             DEBUG("Sampling\n");
 
@@ -102,9 +97,11 @@ PROCESS_THREAD(sample_process, ev, data) {
             // If get_extra requires some asynch things, wait until they're completed
             if(!sampler_get_extra(&sample, &sensor_config)) {
                 DEBUG("Yielding for sampling_sensors_extra\n");
-                PROCESS_WAIT_EVENT_UNTIL(ev == SAMPLER_EVENT_EXTRA_PERFORMED);
+            } else {
+                process_post(&sample_process, SAMPLER_EVENT_EXTRA_PERFORMED, NULL);
             }
 
+        } else if (ev == SAMPLER_EVENT_EXTRA_PERFORMED) {
             id = store_save_sample(&sample);
 
             if (id) {
@@ -112,6 +109,12 @@ PROCESS_THREAD(sample_process, ev, data) {
             } else {
                 DEBUG("Failed to save sample!\n");
             }
+
+        } else if (ev == SAMPLER_EVENT_RELOAD_CONFIG) {
+            refresh_config();
+
+            DEBUG("Refreshed Sensor config to:\n");
+            print_sensor_config(&sensor_config);
         }
     }
     PROCESS_END();
@@ -155,5 +158,5 @@ void sampler_extra_performed(void) {
 
 void sampler_refresh_config(void) {
     DEBUG("Config marked for refresh!\n");
-    should_refresh_config = true;
+    process_post(&sample_process, SAMPLER_EVENT_RELOAD_CONFIG, NULL);
 }

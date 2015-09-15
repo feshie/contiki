@@ -45,6 +45,10 @@ bool sampler_set_time(uint32_t seconds);
  * false if some operations are being completed asychronously (in this case
  * sampler_extra_performed() should be called to notify the sampler when
  * the processing is complete).
+ *
+ * NOTE: config may change once sampler_get_extra returns,
+ * the config should not be used in any asynchronous operations without
+ * first copying it somewhere safe.
  */
 bool sampler_get_extra(Sample *sample, SensorConfig *config);
 
