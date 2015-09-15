@@ -56,7 +56,7 @@ sector or bulk erasable (bits are erased from 0 to 1) but not page erasable
 
 /* Coffee configuration parameters. */
 #define COFFEE_SECTOR_SIZE		65536UL  
-#define COFFEE_PAGE_SIZE		256UL
+#define COFFEE_PAGE_SIZE		128UL
 #define COFFEE_START			COFFEE_SECTOR_SIZE*2
 #define COFFEE_SIZE			(COFFEE_XMEM_TOTAL_SIZE_KB * 1024UL - COFFEE_START)
 #define COFFEE_NAME_LENGTH		16
