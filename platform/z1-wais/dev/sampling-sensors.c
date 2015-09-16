@@ -5,7 +5,7 @@
 #include "i2cmaster.h"
 #include "adxl345.h"
 
-#define DEBUG_ON
+//#define DEBUG_ON
 #include "debug.h"
 
 /**

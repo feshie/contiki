@@ -12,7 +12,7 @@
 #include "dev/avr-handler.h"
 #include "sampler.h"
 
-#define DEBUG_ON
+//#define DEBUG_ON
 #include "debug.h"
 
 #define ADC_ACTIVATE_DELAY 10 //delay in ticks of the rtimer  PLATFORM DEPENDANT!
