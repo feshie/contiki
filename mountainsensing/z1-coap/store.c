@@ -268,8 +268,10 @@ uint8_t read_file(char *filename, uint8_t *buffer, uint8_t length) {
         return false;
     }
 
-    // Ignore the cancary value
-    bytes--;
+    // Ignore the end canary value if there is one (backwards compability for files that don't have a canary)
+    if (buffer[bytes-1] == END_CANARY) {
+        bytes--;
+    }
 
     DEBUG("%d bytes read\n", bytes);
 
