@@ -3,7 +3,6 @@
 #include "dev/ds3231-sensor.h" 	// Clock
 #include "dev/adc1-sensor.h" 	// ADC 1
 #include "dev/adc2-sensor.h" 	// ADC 2
-#include "dev/temperature-sensor.h" // Temp
 #include "dev/batv-sensor.h" // Batt
 #include "adxl345.h" 		// Accel
 #include "dev/event-sensor.h"	//event sensor (rain)
@@ -12,7 +11,7 @@
 #include "dev/avr-handler.h"
 #include "sampler.h"
 
-//#define DEBUG_ON
+#define DEBUG_ON
 #include "debug.h"
 
 #define ADC_ACTIVATE_DELAY 10 //delay in ticks of the rtimer  PLATFORM DEPENDANT!
@@ -88,11 +87,7 @@ void sampler_init(void) {
 }
 
 float sampler_get_temp(void) {
-    float temp;
-    SENSORS_ACTIVATE(temperature_sensor);
-    temp = (float)(((temperature_sensor.value(0)*2.500)/4096)-0.986)*282;
-    SENSORS_DEACTIVATE(temperature_sensor);
-    return temp;
+    return ((float) ds3231_temperature()) / 100;
 }
 
 float sampler_get_batt(void) {
