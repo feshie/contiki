@@ -352,8 +352,8 @@ uint16_t find_latest_sample(void) {
         while (cfs_readdir(&dir, &dirent) != -1) {
             if (strncmp(dirent.name, FILENAME_PREFIX, 1) == 0) {
                 file_num = atoi(dirent.name + 1);
-                DEBUG("Filename %d found\n", file_num);
-                DEBUG("\tMax: %d Filenum: %d\n", max_num, file_num);
+                //DEBUG("Filename %d found\n", file_num);
+                //DEBUG("\tMax: %d Filenum: %d\n", max_num, file_num);
                 if(file_num > max_num) {
                     max_num = file_num;
                 }
