@@ -23,7 +23,7 @@
 /**
  * Filename of the config file
  */
-#define CONFIG_FILENAME "sampleconfig"
+#define CONFIG_FILENAME "config"
 
 /**
  * Maximum length of a file name
