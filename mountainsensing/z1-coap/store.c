@@ -149,6 +149,10 @@ uint8_t store_get_raw_sample(uint16_t id, uint8_t buffer[Sample_size]) {
     return bytes;
 }
 
+uint16_t store_get_latest_sample_id(void) {
+    return last_id;
+}
+
 bool store_delete_sample(uint16_t sample) {
     int fd = 0;
     char filename[FILENAME_LENGTH];

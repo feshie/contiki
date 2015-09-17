@@ -68,6 +68,12 @@ bool store_get_latest_sample(Sample *sample);
 uint8_t store_get_latest_raw_sample(uint8_t buffer[Sample_size]);
 
 /**
+ * Get the identifer of the most recent sample stored.
+ * @return The identifier of the latest sample.
+ */
+uint16_t store_get_latest_sample_id(void);
+
+/**
  * Delete a given sample from the flash.
  * @param id The id of the sample to delete.
  * @return `true` on success, `false` otherwise.
