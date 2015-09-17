@@ -63,7 +63,7 @@ sector or bulk erasable (bits are erased from 0 to 1) but not page erasable
 #define COFFEE_MAX_OPEN_FILES		2
 #define COFFEE_FD_SET_SIZE		2
 #define COFFEE_LOG_TABLE_LIMIT		256
-#define COFFEE_DYN_SIZE			4*1024
+#define COFFEE_DYN_SIZE			120
 #define COFFEE_LOG_SIZE			1024
 
 #define COFFEE_MICRO_LOGS		0
