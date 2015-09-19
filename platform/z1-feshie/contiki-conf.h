@@ -151,10 +151,15 @@
 #define UIP_CONF_ROUTER                 1
 #define NETSTACK_CONF_WITH_IPV6_RPL               1
 
-/* Handle 10 neighbors */
+/**
+ * Feshie deployment max neighbors is 5 (Router1). 8 is a safe max.
+ */
 #define NBR_TABLE_CONF_MAX_NEIGHBORS     8
-/* Handle 10 routes    */
-#define UIP_CONF_MAX_ROUTES   15
+
+/**
+ * Feshie deployment has 8 nodes -> max 8 routes. 10 is a safe max.
+ */
+#define UIP_CONF_MAX_ROUTES   10
 
 #define UIP_CONF_ND6_SEND_RA		0
 #define UIP_CONF_ND6_REACHABLE_TIME     600000
