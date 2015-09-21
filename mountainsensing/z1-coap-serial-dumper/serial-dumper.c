@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include "contiki.h"
 #include "store.h"
+#include "net/ipv6/uip-ds6.h"
 #include "readings.pb.h"
 #include "settings.pb.h"
 
@@ -28,6 +29,12 @@ PROCESS_THREAD(serial_dumper_process, ev, data) {
 
     // Initialize the store before anything else
     store_init();
+
+    printf("+++SERIALDUMP+++NODEID+++\n");
+    {
+        uip_ds6_addr_t *lladdr = uip_ds6_get_link_local(-1);
+        printf("%02x%02x\n", lladdr->ipaddr.u8[14], lladdr->ipaddr.u8[15]);
+    }
 
     printf("+++SERIALDUMP+++SAMPLE+++START+++\n");
     {
