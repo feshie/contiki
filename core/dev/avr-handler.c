@@ -5,7 +5,7 @@
  * NOTE: A lot of debugging calls are disabled as interrupts are not rentrant,
  * and the debugging calls can cause us to miss interrupts.
  */
-//#define DEBUG_ON
+#define DEBUG_ON
 #ifdef DEBUG_ON
     #include <stdio.h>
     #define DEBUG(...) printf(__VA_ARGS__)
@@ -144,7 +144,7 @@ int avr_input_byte(uint8_t byte) {
 
     // If the buffer is full, just ignore whatever extra data comes in
     if (*incm_data->len >= incm_data->size) {
-        DEBUG("Incm Buffer full! Discarding data\n");
+        DEBUG("Incm Buffer full, len %d size %d! Discarding data\n", *incm_data->len, incm_data->size);
         return false;
     }
 
@@ -191,7 +191,6 @@ int avr_input_byte(uint8_t byte) {
 PROCESS_THREAD(avr_process, ev, data_ptr) {
     static struct etimer avr_timeout_timer;
     static uint8_t attempt;
-    static uint8_t id;
     static uint8_t request;
     static uint8_t num_requests;
     static bool request_isSuccess;
@@ -205,12 +204,11 @@ PROCESS_THREAD(avr_process, ev, data_ptr) {
 
         if (ev == AVR_EVENT_GET_DATA) {
 
-            id = *((uint8_t *) data_ptr);
             incm_data = data_ptr;
             num_requests = 1;
 
             // If it's a temp accel chain, it needs to be read twice to get valid data
-            if (id < 0x10) {
+            if (incm_data->id < 0x10) {
                 num_requests = 2;
             }
 
@@ -220,7 +218,7 @@ PROCESS_THREAD(avr_process, ev, data_ptr) {
 
                 // Keep doing requests to reach the required number as long as they're successful
                 for (request = 0; request < num_requests && request_isSuccess; request++) {
-                    DEBUG("Getting data from avr %x, attempt %d, request %d\n", id, attempt, request);
+                    DEBUG("Getting data from avr %x, attempt %d, request %d\n", incm_data->id, attempt, request);
 
                     // Reset the len of the payload
                     *incm_data->len = 0;
@@ -231,7 +229,7 @@ PROCESS_THREAD(avr_process, ev, data_ptr) {
                     isReceiving = true;
 
                     // Request data from the node
-                    send_message(id, AVR_OPCODE_GET_DATA, NULL, (int)NULL);
+                    send_message(incm_data->id, AVR_OPCODE_GET_DATA, NULL, (int)NULL);
 
                     // Wait for the data
                     PROCESS_WAIT_EVENT_UNTIL(ev == AVR_EVENT_GOT_DATA || etimer_expired(&avr_timeout_timer));
@@ -358,7 +356,7 @@ void avr_set_callback(void (*cb)(bool isSuccess)) {
     callback = cb;
 }
 
-bool avr_get_data(uint8_t id, struct avr_data *data) {
+bool avr_get_data(struct avr_data *data) {
     // If we don't have a callback set, we can't do anything
     if (callback == NULL) {
         DEBUG("Callback not set!\n");
@@ -371,8 +369,7 @@ bool avr_get_data(uint8_t id, struct avr_data *data) {
         return false;
     }
 
-    DEBUG("Sending event for avr %x\n", id);
-    *((uint8_t *) data) = id;
+    DEBUG("Sending event for avr %x, size %d\n", data->id, data->size);
 
     return process_post(&avr_process, AVR_EVENT_GET_DATA, data) == PROCESS_ERR_OK;
 }

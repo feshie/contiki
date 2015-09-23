@@ -13,6 +13,11 @@ PROCESS_NAME(avr_process);
 struct avr_data {
 
     /**
+     * The ID of the AVR to sample from.
+     */
+    uint8_t id;
+
+    /**
      * The size of data. (ie the bytes of memory allocated for data).
      */
     uint8_t size;
@@ -30,12 +35,11 @@ struct avr_data {
 
 /**
  * Get data from an AVR with a given ID
- * @param id The id of the AVR
  * @param data Pointer to a avr_data struct that will be filled with the data obtained from the AVR. It's size should be set to
  * the max_size of the buffer it points to.
  * @return True on success, false otherwise
  */
-bool avr_get_data(uint8_t id, struct avr_data *data);
+bool avr_get_data(struct avr_data *data);
 
 /**
  * Set the function to use to output data.

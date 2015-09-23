@@ -167,10 +167,6 @@ bool sampler_set_time(uint32_t seconds) {
 bool sampler_get_extra(Sample *sample, SensorConfig *config) {
     sample_extra = sample;
 
-    // Use the buffer in the sample directly
-    data.data = sample->AVR.bytes;
-    data.len = &sample->AVR.size;
-
     ms1_sense_on();
 
     if (config->hasADC1) {
@@ -199,8 +195,13 @@ bool sampler_get_extra(Sample *sample, SensorConfig *config) {
 
     uint8_t avr_id = (uint8_t) config->avrIDs[0];
 
+    // Use the buffer in the sample directly
+    data.data = sample->AVR.bytes;
+    data.len = &sample->AVR.size;
+    data.id = avr_id;
+
     DEBUG("Getting data from avr %x\n", avr_id);
-    if (avr_get_data(avr_id, &data)) {
+    if (avr_get_data(&data)) {
         return false;
     } else {
 #ifndef SENSE_ON
