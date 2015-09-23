@@ -5,7 +5,7 @@
  * NOTE: A lot of debugging calls are disabled as interrupts are not rentrant,
  * and the debugging calls can cause us to miss interrupts.
  */
-#define DEBUG_ON
+//#define DEBUG_ON
 #ifdef DEBUG_ON
     #include <stdio.h>
     #define DEBUG(...) printf(__VA_ARGS__)
@@ -191,9 +191,8 @@ int avr_input_byte(uint8_t byte) {
 PROCESS_THREAD(avr_process, ev, data_ptr) {
     static struct etimer avr_timeout_timer;
     static uint8_t attempt;
-    static uint8_t request;
-    static uint8_t num_requests;
-    static bool request_isSuccess;
+    static uint8_t num_required;
+    static uint8_t success_num;
 
     PROCESS_BEGIN();
 
@@ -205,60 +204,56 @@ PROCESS_THREAD(avr_process, ev, data_ptr) {
         if (ev == AVR_EVENT_GET_DATA) {
 
             incm_data = data_ptr;
-            num_requests = 1;
+            num_required = 1;
+
+            success_num = 0;
 
             // If it's a temp accel chain, it needs to be read twice to get valid data
             if (incm_data->id < 0x10) {
-                num_requests = 2;
+                num_required = 2;
             }
 
-            for (attempt = 0; attempt < AVR_RETRY; attempt++) {
+            for (attempt = 0; attempt < AVR_RETRY * num_required; attempt++) {
 
-                request_isSuccess = true;
+                DEBUG("Getting data from avr %x, attempt %d, success_num %d\n", incm_data->id, attempt, success_num);
 
-                // Keep doing requests to reach the required number as long as they're successful
-                for (request = 0; request < num_requests && request_isSuccess; request++) {
-                    DEBUG("Getting data from avr %x, attempt %d, request %d\n", incm_data->id, attempt, request);
+                // Reset the len of the payload
+                *incm_data->len = 0;
+                incm_num = 0;
 
-                    // Reset the len of the payload
-                    *incm_data->len = 0;
-                    incm_num = 0;
+                etimer_set(&avr_timeout_timer, CLOCK_SECOND * AVR_TIMEOUT);
 
-                    etimer_set(&avr_timeout_timer, CLOCK_SECOND * AVR_TIMEOUT);
+                isReceiving = true;
 
-                    isReceiving = true;
+                // Request data from the node
+                send_message(incm_data->id, AVR_OPCODE_GET_DATA, NULL, (int)NULL);
 
-                    // Request data from the node
-                    send_message(incm_data->id, AVR_OPCODE_GET_DATA, NULL, (int)NULL);
+                // Wait for the data
+                PROCESS_WAIT_EVENT_UNTIL(ev == AVR_EVENT_GOT_DATA || etimer_expired(&avr_timeout_timer));
+                etimer_stop(&avr_timeout_timer);
 
-                    // Wait for the data
-                    PROCESS_WAIT_EVENT_UNTIL(ev == AVR_EVENT_GOT_DATA || etimer_expired(&avr_timeout_timer));
-                    etimer_stop(&avr_timeout_timer);
+                isReceiving = false;
 
-                    isReceiving = false;
+                success_num += (ev == AVR_EVENT_GOT_DATA);
 
-                    request_isSuccess &= (ev == AVR_EVENT_GOT_DATA);
-
-                    DEBUG("Received %d bytes. Success %d ADDR %u TYPE %u CRC %u: ", incm_num, request_isSuccess, incm_dest, incm_type, *((uint16_t *) incm_crc));
+                DEBUG("Received %d bytes. Success_num %d ADDR %u TYPE %u CRC %u: ", incm_num, success_num, incm_dest, incm_type, *((uint16_t *) incm_crc));
 #ifdef DEBUG_ON
-                    int i;
-                    for (i = 0; i < *incm_data->len; i++) {
-                        printf("%02x,", incm_data->len[i]);
-                    }
-                    printf("\n");
-#endif
+                int i;
+                for (i = 0; i < *incm_data->len; i++) {
+                    printf("%02x,", incm_data->len[i]);
                 }
+                printf("\n");
+#endif
 
-                // If this batch of requests all worked, we're done
-                if (request_isSuccess) {
+                // If we got enough successful rpelies
+                if (success_num >= num_required) {
                     break;
                 }
             }
 
             DEBUG("Done after %d retries\n", attempt);
 
-            callback(request_isSuccess);
-
+            callback(success_num >= num_required);
         }
     }
 
