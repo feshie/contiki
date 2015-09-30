@@ -138,7 +138,7 @@ static void
 set_rime_addr(void)
 {
   linkaddr_t addr;
-  int i;
+  //int i;
 
   memset(&addr, 0, sizeof(linkaddr_t));
 #if NETSTACK_CONF_WITH_IPV6
@@ -154,11 +154,11 @@ set_rime_addr(void)
   }
 #endif
   linkaddr_set_node_addr(&addr);
-  printf("Rime started with address ");
+  /*printf("Rime started with address ");
   for(i = 0; i < sizeof(addr.u8) - 1; i++) {
     printf("%d.", addr.u8[i]);
   }
-  printf("%d\n", addr.u8[i]);
+  printf("%d\n", addr.u8[i]);*/
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -290,9 +290,9 @@ main(int argc, char **argv)
       linkaddr_node_addr.u8[1];
     memset(longaddr, 0, sizeof(longaddr));
     linkaddr_copy((linkaddr_t *)&longaddr, &linkaddr_node_addr);
-    printf("MAC %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x ",
-           longaddr[0], longaddr[1], longaddr[2], longaddr[3],
-           longaddr[4], longaddr[5], longaddr[6], longaddr[7]);
+    //printf("MAC %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x ",
+    //       longaddr[0], longaddr[1], longaddr[2], longaddr[3],
+    //       longaddr[4], longaddr[5], longaddr[6], longaddr[7]);
 
     cc2420_set_pan_addr(IEEE802154_PANID, shortaddr, longaddr);
   }
@@ -323,11 +323,12 @@ main(int argc, char **argv)
   NETSTACK_MAC.init();
   NETSTACK_NETWORK.init();
 
-  printf("%s %s, channel check rate %lu Hz, radio channel %u\n",
+  /*printf("%s %s, channel check rate %lu Hz, radio channel %u\n",
          NETSTACK_MAC.name, NETSTACK_RDC.name,
          CLOCK_SECOND / (NETSTACK_RDC.channel_check_interval() == 0 ? 1 :
                          NETSTACK_RDC.channel_check_interval()),
          CC2420_CONF_CHANNEL);
+  */
 
   process_start(&tcpip_process, NULL);
 
