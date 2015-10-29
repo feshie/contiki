@@ -1,0 +1,379 @@
+ARM GAS  /tmp/cceU8PGn.s 			page 1
+
+
+   1              		.cpu cortex-m0plus
+   2              		.fpu softvfp
+   3              		.eabi_attribute 20, 1	@ Tag_ABI_FP_denormal
+   4              		.eabi_attribute 21, 1	@ Tag_ABI_FP_exceptions
+   5              		.eabi_attribute 23, 3	@ Tag_ABI_FP_number_model
+   6              		.eabi_attribute 24, 1	@ Tag_ABI_align8_needed
+   7              		.eabi_attribute 25, 1	@ Tag_ABI_align8_preserved
+   8              		.eabi_attribute 26, 1	@ Tag_ABI_enum_size
+   9              		.eabi_attribute 30, 1	@ Tag_ABI_optimization_goals
+  10              		.eabi_attribute 34, 0	@ Tag_CPU_unaligned_access
+  11              		.eabi_attribute 18, 4	@ Tag_ABI_PCS_wchar_t
+  12              		.file	"__arm_end.c"
+  13              	@ GNU C (GNU Tools for ARM Embedded Processors) version 4.8.3 20131129 (release) [ARM/embedded-4_8-
+  14              	@	compiled by GNU C version 4.6.3, GMP version 4.3.2, MPFR version 2.4.2, MPC version 0.8.1
+  15              	@ GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+  16              	@ options passed:  -I . -I ../../cpu/arm/mkl25z
+  17              	@ -I ../../cpu/arm/mkl25z/loader -I ../../cpu/arm/mkl25z/dbg-io
+  18              	@ -I ../../dev -I ../../platform/frdm-kl25z-rf
+  19              	@ -I /home/glacsweb/arm-gcc/ARM_GCC_Support/ewl/EWL_C/include
+  20              	@ -I /home/glacsweb/arm-gcc/ARM_GCC_Support/ewl/EWL_Runtime/include
+  21              	@ -I /home/glacsweb/arm-gcc/lib/gcc/arm-none-eabi/4.8.3/include
+  22              	@ -I /home/glacsweb/arm-gcc/lib/gcc/arm-none-eabi/4.8.3/include-fixed
+  23              	@ -I /home/glacsweb/arm-gcc/arm-none-eabi/include -I ../../dev/cc1120 -I .
+  24              	@ -I ../../platform/frdm-kl25z-rf/. -I ../../platform/frdm-kl25z-rf/dev
+  25              	@ -I ../../platform/frdm-kl25z-rf/apps -I ../../platform/frdm-kl25z-rf/net
+  26              	@ -I ../../platform/frdm-kl25z-rf/../../dev/cc1120
+  27              	@ -I ../../platform/frdm-kl25z-rf/../../core/net -I ../../cpu/arm/mkl25z/.
+  28              	@ -I ../../cpu/arm/mkl25z/../common/dbg-io -I ../../cpu/arm/mkl25z/loader
+  29              	@ -I ../../core/dev -I ../../core/lib -I ../../core/net
+  30              	@ -I ../../core/net/mac -I ../../core/net/rime -I ../../core/net/rpl
+  31              	@ -I ../../core/sys -I ../../core/cfs -I ../../core/ctk
+  32              	@ -I ../../core/lib/ctk -I ../../core/loader -I ../../core/.
+  33              	@ -I ../../platform/frdm-kl25z-rf/ -imultilib armv6-m
+  34              	@ -iprefix /home/glacsweb/arm-gcc/bin/../lib/gcc/arm-none-eabi/4.8.3/
+  35              	@ -isysroot /home/glacsweb/arm-gcc/bin/../arm-none-eabi -D__USES_INITFINI__
+  36              	@ -D CONTIKI=1 -D CONTIKI_TARGET_FRDM_KL25Z_RF=1 -D WITH_UIP=1
+  37              	@ -D MCK=48000000 -D AUTOSTART_ENABLE -D CC11xx_CC1120=1 -D RUN_AS_SYSTEM
+  38              	@ -D ROM_RUN -D __SDCC
+  39              	@ -D CONTIKI_VERSION_STRING="Contiki-KL25Z-Port-18-g5a8e189"
+  40              	@ ../../cpu/arm/mkl25z/./__arm_end.c -mcpu=cortex-m0plus -mthumb
+  41              	@ -auxbase-strip obj_frdm-kl25z-rf/__arm_end.o -gdwarf-2 -g -O -Wall
+  42              	@ -Wstrict-prototypes -fomit-frame-pointer -fverbose-asm
+  43              	@ options enabled:  -faggressive-loop-optimizations -fauto-inc-dec
+  44              	@ -fbranch-count-reg -fcombine-stack-adjustments -fcommon -fcompare-elim
+  45              	@ -fcprop-registers -fdefer-pop -fdelete-null-pointer-checks
+  46              	@ -fdwarf2-cfi-asm -fearly-inlining -feliminate-unused-debug-types
+  47              	@ -fforward-propagate -ffunction-cse -fgcse-lm -fgnu-runtime
+  48              	@ -fguess-branch-probability -fident -fif-conversion -fif-conversion2
+  49              	@ -finline -finline-atomics -finline-functions-called-once -fipa-profile
+  50              	@ -fipa-pure-const -fipa-reference -fira-hoist-pressure
+  51              	@ -fira-share-save-slots -fira-share-spill-slots -fivopts
+  52              	@ -fkeep-static-consts -fleading-underscore -fmath-errno -fmerge-constants
+  53              	@ -fmerge-debug-strings -fmove-loop-invariants -fomit-frame-pointer
+  54              	@ -fpeephole -fprefetch-loop-arrays -freg-struct-return
+  55              	@ -fsched-critical-path-heuristic -fsched-dep-count-heuristic
+  56              	@ -fsched-group-heuristic -fsched-interblock -fsched-last-insn-heuristic
+  57              	@ -fsched-pressure -fsched-rank-heuristic -fsched-spec
+ARM GAS  /tmp/cceU8PGn.s 			page 2
+
+
+  58              	@ -fsched-spec-insn-heuristic -fsched-stalled-insns-dep -fsection-anchors
+  59              	@ -fshow-column -fshrink-wrap -fsigned-zeros -fsplit-ivs-in-unroller
+  60              	@ -fsplit-wide-types -fstrict-volatile-bitfields -fsync-libcalls
+  61              	@ -ftoplevel-reorder -ftrapping-math -ftree-bit-ccp -ftree-ccp -ftree-ch
+  62              	@ -ftree-coalesce-vars -ftree-copy-prop -ftree-copyrename -ftree-cselim
+  63              	@ -ftree-dce -ftree-dominator-opts -ftree-dse -ftree-forwprop -ftree-fre
+  64              	@ -ftree-loop-if-convert -ftree-loop-im -ftree-loop-ivcanon
+  65              	@ -ftree-loop-optimize -ftree-parallelize-loops= -ftree-phiprop -ftree-pta
+  66              	@ -ftree-reassoc -ftree-scev-cprop -ftree-sink -ftree-slp-vectorize
+  67              	@ -ftree-slsr -ftree-sra -ftree-ter -ftree-vect-loop-version
+  68              	@ -funit-at-a-time -fvar-tracking -fvar-tracking-assignments -fverbose-asm
+  69              	@ -fzero-initialized-in-bss -mlittle-endian -mpic-data-is-text-relative
+  70              	@ -msched-prolog -mthumb -mvectorize-with-neon-quad
+  71              	
+  72              		.text
+  73              	.Ltext0:
+  74              		.cfi_sections	.debug_frame
+  75              		.align	2
+  76              		.weak	_ExitProcess
+  77              		.code	16
+  78              		.thumb_func
+  79              		.type	_ExitProcess, %function
+  80              	_ExitProcess:
+  81              	.LFB0:
+  82              		.file 1 "../../cpu/arm/mkl25z/./__arm_end.c"
+   1:../../cpu/arm/mkl25z/./__arm_end.c **** /* CodeWarrior ARM Runtime Support Library 
+   2:../../cpu/arm/mkl25z/./__arm_end.c **** 
+   3:../../cpu/arm/mkl25z/./__arm_end.c ****  * Copyright © 2012 FReescale. All rights reserved. 
+   4:../../cpu/arm/mkl25z/./__arm_end.c **** 
+   5:../../cpu/arm/mkl25z/./__arm_end.c ****  * 
+   6:../../cpu/arm/mkl25z/./__arm_end.c **** 
+   7:../../cpu/arm/mkl25z/./__arm_end.c ****  * $Date: 2012/07/12 23:03:54 $ 
+   8:../../cpu/arm/mkl25z/./__arm_end.c **** 
+   9:../../cpu/arm/mkl25z/./__arm_end.c ****  * $Revision: 1.3 $ 
+  10:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  11:../../cpu/arm/mkl25z/./__arm_end.c ****  */ 
+  12:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  13:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  14:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  15:../../cpu/arm/mkl25z/./__arm_end.c **** /*
+  16:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  17:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  18:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  19:../../cpu/arm/mkl25z/./__arm_end.c **** FILE
+  20:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  21:../../cpu/arm/mkl25z/./__arm_end.c **** 	__arm_end.c
+  22:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  23:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  24:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  25:../../cpu/arm/mkl25z/./__arm_end.c **** DESCRIPTION
+  26:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  27:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  28:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  29:../../cpu/arm/mkl25z/./__arm_end.c **** 	Use this file for C.
+  30:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  31:../../cpu/arm/mkl25z/./__arm_end.c **** 	
+  32:../../cpu/arm/mkl25z/./__arm_end.c **** 
+ARM GAS  /tmp/cceU8PGn.s 			page 3
+
+
+  33:../../cpu/arm/mkl25z/./__arm_end.c **** 	Interface for board-level termination.
+  34:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  35:../../cpu/arm/mkl25z/./__arm_end.c **** 	
+  36:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  37:../../cpu/arm/mkl25z/./__arm_end.c **** */
+  38:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  39:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  40:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  41:../../cpu/arm/mkl25z/./__arm_end.c **** #include <ansi_parms.h>
+  42:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  43:../../cpu/arm/mkl25z/./__arm_end.c **** #include <CWCPlusLib.h>
+  44:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  45:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  46:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  47:../../cpu/arm/mkl25z/./__arm_end.c **** _EWL_BEGIN_EXTERN_C
+  48:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  49:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  50:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  51:../../cpu/arm/mkl25z/./__arm_end.c **** #if defined(__SEMIHOSTING)
+  52:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  53:../../cpu/arm/mkl25z/./__arm_end.c **** extern void sys_exit(int status);
+  54:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  55:../../cpu/arm/mkl25z/./__arm_end.c **** #endif
+  56:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  57:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  58:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  59:../../cpu/arm/mkl25z/./__arm_end.c **** /*
+  60:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  61:../../cpu/arm/mkl25z/./__arm_end.c ****  *	_ExitProcess
+  62:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  63:../../cpu/arm/mkl25z/./__arm_end.c ****  *
+  64:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  65:../../cpu/arm/mkl25z/./__arm_end.c ****  */
+  66:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  67:../../cpu/arm/mkl25z/./__arm_end.c **** extern void _ExitProcess(int status) _EWL_WEAK;
+  68:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  69:../../cpu/arm/mkl25z/./__arm_end.c **** extern void _ExitProcess(int status)
+  70:../../cpu/arm/mkl25z/./__arm_end.c **** 
+  71:../../cpu/arm/mkl25z/./__arm_end.c **** {
+  83              		.loc 1 71 0
+  84              		.cfi_startproc
+  85              	.LVL0:
+  86              	.L2:
+  87 0000 FEE7     		b	.L2	@
+  88              		.cfi_endproc
+  89              	.LFE0:
+  90              		.size	_ExitProcess, .-_ExitProcess
+  91              	.Letext0:
+  92 0002 C046     		.section	.debug_info,"",%progbits
+  93              	.Ldebug_info0:
+  94 0000 53000000 		.4byte	0x53
+  95 0004 0200     		.2byte	0x2
+  96 0006 00000000 		.4byte	.Ldebug_abbrev0
+  97 000a 04       		.byte	0x4
+  98 000b 01       		.uleb128 0x1
+  99 000c 72000000 		.4byte	.LASF1
+ 100 0010 01       		.byte	0x1
+ARM GAS  /tmp/cceU8PGn.s 			page 4
+
+
+ 101 0011 0D000000 		.4byte	.LASF2
+ 102 0015 3D000000 		.4byte	.LASF3
+ 103 0019 00000000 		.4byte	.Ltext0
+ 104 001d 02000000 		.4byte	.Letext0
+ 105 0021 00000000 		.4byte	.Ldebug_line0
+ 106 0025 02       		.uleb128 0x2
+ 107 0026 04       		.byte	0x4
+ 108 0027 07       		.byte	0x7
+ 109 0028 00000000 		.4byte	.LASF0
+ 110 002c 03       		.uleb128 0x3
+ 111 002d 04       		.byte	0x4
+ 112 002e 05       		.byte	0x5
+ 113 002f 696E7400 		.ascii	"int\000"
+ 114 0033 04       		.uleb128 0x4
+ 115 0034 01       		.byte	0x1
+ 116 0035 30000000 		.4byte	.LASF4
+ 117 0039 01       		.byte	0x1
+ 118 003a 45       		.byte	0x45
+ 119 003b 01       		.byte	0x1
+ 120 003c 00000000 		.4byte	.LFB0
+ 121 0040 02000000 		.4byte	.LFE0
+ 122 0044 02       		.byte	0x2
+ 123 0045 7D       		.byte	0x7d
+ 124 0046 00       		.sleb128 0
+ 125 0047 01       		.byte	0x1
+ 126 0048 05       		.uleb128 0x5
+ 127 0049 6B000000 		.4byte	.LASF5
+ 128 004d 01       		.byte	0x1
+ 129 004e 45       		.byte	0x45
+ 130 004f 2C000000 		.4byte	0x2c
+ 131 0053 01       		.byte	0x1
+ 132 0054 50       		.byte	0x50
+ 133 0055 00       		.byte	0
+ 134 0056 00       		.byte	0
+ 135              		.section	.debug_abbrev,"",%progbits
+ 136              	.Ldebug_abbrev0:
+ 137 0000 01       		.uleb128 0x1
+ 138 0001 11       		.uleb128 0x11
+ 139 0002 01       		.byte	0x1
+ 140 0003 25       		.uleb128 0x25
+ 141 0004 0E       		.uleb128 0xe
+ 142 0005 13       		.uleb128 0x13
+ 143 0006 0B       		.uleb128 0xb
+ 144 0007 03       		.uleb128 0x3
+ 145 0008 0E       		.uleb128 0xe
+ 146 0009 1B       		.uleb128 0x1b
+ 147 000a 0E       		.uleb128 0xe
+ 148 000b 11       		.uleb128 0x11
+ 149 000c 01       		.uleb128 0x1
+ 150 000d 12       		.uleb128 0x12
+ 151 000e 01       		.uleb128 0x1
+ 152 000f 10       		.uleb128 0x10
+ 153 0010 06       		.uleb128 0x6
+ 154 0011 00       		.byte	0
+ 155 0012 00       		.byte	0
+ 156 0013 02       		.uleb128 0x2
+ 157 0014 24       		.uleb128 0x24
+ARM GAS  /tmp/cceU8PGn.s 			page 5
+
+
+ 158 0015 00       		.byte	0
+ 159 0016 0B       		.uleb128 0xb
+ 160 0017 0B       		.uleb128 0xb
+ 161 0018 3E       		.uleb128 0x3e
+ 162 0019 0B       		.uleb128 0xb
+ 163 001a 03       		.uleb128 0x3
+ 164 001b 0E       		.uleb128 0xe
+ 165 001c 00       		.byte	0
+ 166 001d 00       		.byte	0
+ 167 001e 03       		.uleb128 0x3
+ 168 001f 24       		.uleb128 0x24
+ 169 0020 00       		.byte	0
+ 170 0021 0B       		.uleb128 0xb
+ 171 0022 0B       		.uleb128 0xb
+ 172 0023 3E       		.uleb128 0x3e
+ 173 0024 0B       		.uleb128 0xb
+ 174 0025 03       		.uleb128 0x3
+ 175 0026 08       		.uleb128 0x8
+ 176 0027 00       		.byte	0
+ 177 0028 00       		.byte	0
+ 178 0029 04       		.uleb128 0x4
+ 179 002a 2E       		.uleb128 0x2e
+ 180 002b 01       		.byte	0x1
+ 181 002c 3F       		.uleb128 0x3f
+ 182 002d 0C       		.uleb128 0xc
+ 183 002e 03       		.uleb128 0x3
+ 184 002f 0E       		.uleb128 0xe
+ 185 0030 3A       		.uleb128 0x3a
+ 186 0031 0B       		.uleb128 0xb
+ 187 0032 3B       		.uleb128 0x3b
+ 188 0033 0B       		.uleb128 0xb
+ 189 0034 27       		.uleb128 0x27
+ 190 0035 0C       		.uleb128 0xc
+ 191 0036 11       		.uleb128 0x11
+ 192 0037 01       		.uleb128 0x1
+ 193 0038 12       		.uleb128 0x12
+ 194 0039 01       		.uleb128 0x1
+ 195 003a 40       		.uleb128 0x40
+ 196 003b 0A       		.uleb128 0xa
+ 197 003c 9742     		.uleb128 0x2117
+ 198 003e 0C       		.uleb128 0xc
+ 199 003f 00       		.byte	0
+ 200 0040 00       		.byte	0
+ 201 0041 05       		.uleb128 0x5
+ 202 0042 05       		.uleb128 0x5
+ 203 0043 00       		.byte	0
+ 204 0044 03       		.uleb128 0x3
+ 205 0045 0E       		.uleb128 0xe
+ 206 0046 3A       		.uleb128 0x3a
+ 207 0047 0B       		.uleb128 0xb
+ 208 0048 3B       		.uleb128 0x3b
+ 209 0049 0B       		.uleb128 0xb
+ 210 004a 49       		.uleb128 0x49
+ 211 004b 13       		.uleb128 0x13
+ 212 004c 02       		.uleb128 0x2
+ 213 004d 0A       		.uleb128 0xa
+ 214 004e 00       		.byte	0
+ARM GAS  /tmp/cceU8PGn.s 			page 6
+
+
+ 215 004f 00       		.byte	0
+ 216 0050 00       		.byte	0
+ 217              		.section	.debug_aranges,"",%progbits
+ 218 0000 1C000000 		.4byte	0x1c
+ 219 0004 0200     		.2byte	0x2
+ 220 0006 00000000 		.4byte	.Ldebug_info0
+ 221 000a 04       		.byte	0x4
+ 222 000b 00       		.byte	0
+ 223 000c 0000     		.2byte	0
+ 224 000e 0000     		.2byte	0
+ 225 0010 00000000 		.4byte	.Ltext0
+ 226 0014 02000000 		.4byte	.Letext0-.Ltext0
+ 227 0018 00000000 		.4byte	0
+ 228 001c 00000000 		.4byte	0
+ 229              		.section	.debug_line,"",%progbits
+ 230              	.Ldebug_line0:
+ 231 0000 4F000000 		.section	.debug_str,"MS",%progbits,1
+ 231      02003900 
+ 231      00000201 
+ 231      FB0E0D00 
+ 231      01010101 
+ 232              	.LASF0:
+ 233 0000 756E7369 		.ascii	"unsigned int\000"
+ 233      676E6564 
+ 233      20696E74 
+ 233      00
+ 234              	.LASF2:
+ 235 000d 2E2E2F2E 		.ascii	"../../cpu/arm/mkl25z/./__arm_end.c\000"
+ 235      2E2F6370 
+ 235      752F6172 
+ 235      6D2F6D6B 
+ 235      6C32357A 
+ 236              	.LASF4:
+ 237 0030 5F457869 		.ascii	"_ExitProcess\000"
+ 237      7450726F 
+ 237      63657373 
+ 237      00
+ 238              	.LASF3:
+ 239 003d 2F686F6D 		.ascii	"/home/glacsweb/glacsweb/contiki/examples/rime\000"
+ 239      652F676C 
+ 239      61637377 
+ 239      65622F67 
+ 239      6C616373 
+ 240              	.LASF5:
+ 241 006b 73746174 		.ascii	"status\000"
+ 241      757300
+ 242              	.LASF1:
+ 243 0072 474E5520 		.ascii	"GNU C 4.8.3 20131129 (release) [ARM/embedded-4_8-br"
+ 243      4320342E 
+ 243      382E3320 
+ 243      32303133 
+ 243      31313239 
+ 244 00a5 616E6368 		.ascii	"anch revision 205641] -mcpu=cortex-m0plus -mthumb -"
+ 244      20726576 
+ 244      6973696F 
+ 244      6E203230 
+ 244      35363431 
+ARM GAS  /tmp/cceU8PGn.s 			page 7
+
+
+ 245 00d8 67647761 		.ascii	"gdwarf-2 -g -O -fomit-frame-pointer\000"
+ 245      72662D32 
+ 245      202D6720 
+ 245      2D4F202D 
+ 245      666F6D69 
+ 246              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 4.8.3 20131129 (release) [ARM/embedded-4_8-br
+ARM GAS  /tmp/cceU8PGn.s 			page 8
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 __arm_end.c
+     /tmp/cceU8PGn.s:75     .text:00000000 $t
+     /tmp/cceU8PGn.s:80     .text:00000000 _ExitProcess
+                     .debug_frame:00000010 $d
+
+NO UNDEFINED SYMBOLS

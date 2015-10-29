@@ -1,0 +1,44 @@
+
+  
+  
+  
+  #if WITH_UIP
+  process_start(&tcpip_process, NULL);
+  process_start(&uip_fw_process, NULL);	/* Start IP output */
+  process_start(&slip_process, NULL);
+
+  slip_set_input_callback(set_gateway);
+
+  {
+    uip_ipaddr_t hostaddr, netmask;
+
+    uip_init();
+
+    uip_ipaddr(&hostaddr, 172,16,
+	       rimeaddr_node_addr.u8[0],rimeaddr_node_addr.u8[1]);
+    uip_ipaddr(&netmask, 255,255,0,0);
+    uip_ipaddr_copy(&meshif.ipaddr, &hostaddr);
+
+    uip_sethostaddr(&hostaddr);
+    uip_setnetmask(&netmask);
+    uip_over_mesh_set_net(&hostaddr, &netmask);
+    /*    uip_fw_register(&slipif);*/
+    uip_over_mesh_set_gateway_netif(&slipif);
+    uip_fw_default(&meshif);
+    uip_over_mesh_init(UIP_OVER_MESH_CHANNEL);
+    printf("uIP started with IP address %d.%d.%d.%d\n",
+	   uip_ipaddr_to_quad(&hostaddr));
+  }
+#endif /* WITH_UIP */
+  
+  //cc11xx_arch_init();
+  autostart_start(autostart_processes);
+  printf("Processes running\n");
+  //while(1) {
+   // do {
+    //} while(process_run() > 0);
+    //idle_count++;
+    /* Idle! */
+    /* Stop processor clock */
+    /* asm("wfi"::); */ 
+  //}

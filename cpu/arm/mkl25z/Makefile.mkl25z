@@ -1,0 +1,216 @@
+# Adapted from Makefile.msp430
+
+GCC_PATH = /home/glacsweb/arm-gcc/bin/
+EWL_SUPPORT_PATH = /home/glacsweb/arm-gcc/ARM_GCC_Support/ewl/
+EABI_LIB = /home/glacsweb/arm-gcc/lib/gcc/arm-none-eabi/4.8.3/
+EABI_INCLUDE = /home/glacsweb/arm-gcc/arm-none-eabi/
+
+### Code common for all ARM CPUs
+
+CONTIKI_CPU_ARM=$(CONTIKI)/cpu/arm
+CONTIKI_CPU_ARM_COMMON=$(CONTIKI_CPU_ARM)/common
+
+### Define the CPU directory
+CONTIKI_CPU=$(CONTIKI_CPU_ARM)/mkl25z
+
+MCU = cortex-m0plus
+
+# List all user C define here, like -D_DEBUG=1
+UDEFS =
+
+# Define ASM defines here
+UADEFS =
+
+# List all default C defines here, like -D_DEBUG=1
+DDEFS =
+
+# List all default ASM defines here, like -D_DEBUG=1
+DADEFS =
+
+# List all default directories to look for include files here
+DINCDIR =
+
+# List the default directory to look for the libraries here
+DLIBDIR =
+
+# List all default libraries here
+DLIBS =
+
+
+### Define the source files we have in the mkl25z port
+
+CONTIKI_CPU_DIRS = . ../common/dbg-io loader
+
+
+
+MKL25Z     = __arm_start.c watchdog.c kinetis_sysinit.c clock.c debug-uart.c rtimer-arch.c serial.c spi.c nvic.c cpu.c clock.c __arm_end.c kinetis_sysinit.c
+
+# SYSAPPS = codeprop-otf.c
+# APPDIRS += $(CONTIKI)/cpu/at91sam7s/loader
+
+# ELFLOADER = elfloader-otf.c elfloader-arm.c symtab.c cfs-ram.c
+
+# include $(CONTIKI_CPU_ARM_COMMON)/usb/Makefile.usb
+
+# include $(CONTIKI_CPU_ARM_COMMON)/SD-card/Makefile.sdcard
+
+TARGETLIBS = random.c dbg-printf.c dbg-puts.c dbg-putchar.c dbg-sprintf.c dbg-snprintf.c strformat.c
+
+CONTIKI_TARGET_SOURCEFILES += $(MKL25Z) $(SYSAPPS) $(ELFLOADER) $(TARGETLIBS) $(UIPDRIVERS) $(USB) $(PLATFORM_SOURCEFILES)
+
+CONTIKI_SOURCEFILES        += $(CONTIKI_TARGET_SOURCEFILES)
+
+
+THREADS =
+
+### Compiler definitions
+### Compiler definitions
+CC       = $(GCC_PATH)arm-none-eabi-gcc
+CP       = $(GCC_PATH)arm-none-eabi-objcopy
+LD       = $(GCC_PATH)arm-none-eabi-ld
+AS       = $(GCC_PATH)arm-none-eabi-as
+AR       = $(GCC_PATH)arm-none-eabi-ar
+NM       = $(GCC_PATH)arm-none-eabi-nm
+OBJCOPY  = $(GCC_PATH)arm-none-eabi-objcopy
+STRIP    = $(GCC_PATH)arm-none-eabi-strip
+HEX      = $(CP) -O ihex
+BIN      = $(CP) -O binary -S
+S19      = $(CP) -O srec
+
+
+XSLTPROC=xsltproc
+
+PROJECT_OBJECTFILES += ${addprefix $(OBJECTDIR)/,$(CONTIKI_TARGET_MAIN:.c=.o)}
+PROJECT_OBJECTFILES += ${addprefix $(OBJECTDIR)/,$(CONTIKI_TARGET_SOURCEFILES:.c=.o)}
+#${addprefix -I ,$(PROJECT_OBJECTFILES)}
+
+LINKERSCRIPT = $(CONTIKI_CPU)/MKL25Z128_flash.ld
+
+STARTUP=${addprefix $(OBJECTDIR)/,__arm_start.o}
+
+# JTAG program upload
+OPENOCD	 = openocd
+OPENOCD_DIR = $(CONTIKI_CPU_ARM)/openocd/ 
+OPENOCD_CFG = kl25z.cfg
+OPENOCD_FLAGS = -c "interface cmsis-dap" 
+OPENOCD_FLAGS += -c init 
+OPENOCD_FLAGS += -c "reset halt;sleep 250;flash probe 0; sleep 500;flash write_bank 0 $< 0;reset halt;resume;sleep 500;exit"
+
+
+# Use OpenOCD by default
+PROG=openocd
+
+
+ARCH_FLAGS = -mthumb
+MCFLAGS = -mcpu=$(MCU)
+CPFLAGS = -gdwarf-2 -fomit-frame-pointer -Wall -Wstrict-prototypes -fverbose-asm 
+
+DEFS = $(DDEFS) $(UDEFS)
+ADEFS = $(DADEFS) $(UADEFS)
+OBJS = $(ASRC:.S=.o) $(SRC:.c=.o)
+
+CFLAGSNO = -I. -L$(EWL_SUPPORT_PATH)lib/armv6-m \
+			-L$(CONTIKI)/core -I$(CONTIKI_CPU) -I$(CONTIKI_CPU)/loader \
+			-I$(CONTIKI_CPU)/dbg-io -I$(CONTIKI)/dev \
+			-I$(CONTIKI)/platform/$(TARGET) -L$(CONTIKI)/core \
+			-I$(EWL_SUPPORT_PATH)EWL_C/include \
+			-I$(EWL_SUPPORT_PATH)EWL_Runtime/include \
+			-I$(EABI_LIB)include \
+			-I$(EABI_LIB)include-fixed \
+			-I$(EABI_INCLUDE)include ${addprefix -I,$(APPDIRS)} \
+            -DMCK=$(MCK) \
+           -g
+
+LDFLAGSNO = -L$(CONTIKI_CPU) -L$(EWL_SUPPORT_PATH)lib/armv6-m
+		   
+ 
+ASFLAGS = $(MCFLAGS) $(ARCH_FLAGS) -g -gdwarf-2 -Wa,-amhls=$(<:.S=.lst) $(ADEFS)		   
+CFLAGS  += $(MCFLAGS) $(OPT) $(CPFLAGS) $(ARCH_FLAGS) $(CFLAGSNO) $(CPLATFLAGS) -O -DRUN_AS_SYSTEM -DROM_RUN -D__SDCC -Wa,-ahlms=$(<:.c=.lst) $(DEFS)
+LDFLAGS += $(MCFLAGS) $(ARCH_FLAGS) $(LDFLAGSNO) -nostartfiles -T $(LINKERSCRIPT) -Xlinker --gc-sections -Wl,-Map=$(FULL_PRJ).map,-cref,-no-warn-mismatch -n -specs=ewl_c.specs -Xlinker --undefined=__pformatter_ -Xlinker --defsym=__pformatter=__pformatter_ -Xlinker --undefined=__sformatter -Xlinker --defsym=__sformatter=__sformatter -mcpu=cortex-m0 -mthumb -mfloat-abi=soft -g3 -gdwarf-2 -gstrict-dwarf
+
+CDEPFLAGS = $(CFLAGS) -D __MAKING_DEPS__
+
+# Generate dependency information
+#CPFLAGS += -MD -MP -MF #.dep/$(@F).d
+
+
+### Setup directory search path for source files
+
+CUSTOM_RULE_C_TO_OBJECTDIR_O=yes
+CUSTOM_RULE_C_TO_O=yes
+
+ifdef CORE
+.PHONY: symbols.c symbols.h
+symbols.c symbols.h:
+	$(NM) -C $(CORE) | grep -v @ | grep -v dll_crt0 | awk -f $(CONTIKI)/tools/mknmlist > symbols.c
+else
+symbols.c symbols.h:
+	cp ${CONTIKI}/tools/empty-symbols.c symbols.c
+	cp ${CONTIKI}/tools/empty-symbols.h symbols.h
+endif
+
+%.o: %.c
+	@echo $(UIP_CONF_IPV6)
+	@echo "&&&&&&&&&&&&&&&&&&&&&&&&&&&&"
+#	@read
+	$(CC) $(CFLAGS) $< -c
+
+$(OBJECTDIR)/%.o: %.c | $(OBJECTDIR)
+	@echo "UIP_CONF_IPV6 =  $(UIP_CONF_IPV6)"
+	@echo "&&&&&&&&&&&&&&&&&&&&&&&&&&&&"
+	@echo "CONTIKI_SOURCEFILES = $(CONTIKI_SOURCEFILES)"
+	@echo "&&&&&&&&&&&&&&&&&&&&&&&&&&&&"
+	@echo "RIME_CHAMELEON = $(RIME_CHAMELEON)"
+	@echo "&&&&&&&&&&&&&&&&&&&&&&&&&&&&"
+	@echo "RIME_TEMP = $(RIME_TEMP)"
+	@echo "RIME_TEMP2 = $(RIME_TEMP2)"
+#	@read
+	$(CC) $(CFLAGS) -c $< -o $@
+
+
+CUSTOM_RULE_S_TO_OBJECTDIR_O = yes
+%.o: %.S
+	$(CC) $(CFLAGS) $< -c
+
+$(OBJECTDIR)/%.o: %.S | $(OBJECTDIR)
+	$(CC) $(CFLAGS) $< -c  -o $@
+
+	
+CUSTOM_RULE_C_TO_CO=yes
+
+%.co: %.c
+	$(CC) $(CFLAGS) $< -c -o $@
+	
+CUSTOM_RULE_C_TO_CE=yes
+
+%.ce: %.o
+	$(LD) $(LDFLAGS) --relocatable $< -o $@
+	$(STRIP) -K _init -K _fini --strip-unneeded -g -x $@
+
+
+CUSTOM_RULE_LINK=yes
+
+%.$(TARGET): %.co $(PROJECT_OBJECTFILES) contiki-$(TARGET).a $(STARTUP) # $(OBJECTDIR)/empty-symbols.o
+	#cp ${CONTIKI}/tools/empty-symbols.c symbols.c
+	#cp ${CONTIKI}/tools/empty-symbols.h symbols.h
+	$(CC) $(LDFLAGS) $(CFLAGS) -nostartfiles -o $@ $(filter-out %.a,$^) $(filter %.a,$^) -lc $(filter %.a,$^)
+	$(CC) $(LDFLAGS) $(CFLAGS) -nostartfiles -o contiki-$(TARGET).elf $(filter-out %.a,$^) $(filter %.a,$^) -lc $(filter %.a,$^)
+	$(S19) contiki-$(TARGET).elf contiki-$(TARGET).srec
+	$(HEX) contiki-$(TARGET).elf contiki-$(TARGET).hex
+
+ 
+.PHONY: symbols.c
+%.$(TARGET): %.co $(PROJECT_OBJECTFILES) $(INTERRUPT_OBJECTFILES) contiki-$(TARGET).a $(OBJECTDIR)/symbols.o
+	$(CC) $(LDFLAGS) $(CFLAGS) -o $@ $(filter-out %.a,$^) $(filter %.a,$^) $(filter %.a,$^)
+	$(CC) $(LDFLAGS) $(CFLAGS) -o $@ $(filter-out %.a,$^) $(filter %.a,$^) $(filter %.a,$^)
+
+
+clean: clean_cpu
+
+.PHONY: mkl25z_clean
+
+clean_cpu:
+	-rm -rf $(BUILTSRCDIR)
+	-rm -rf $(CONTIKI_PROJECT)-nosyms.$(TARGET) $(CONTIKI_PROJECT).$(TARGET) contiki-$(TARGET).elf contiki-$(TARGET).srec contiki-$(TARGET).hex
+
+.PRECIOUS: %.$(TARGET)

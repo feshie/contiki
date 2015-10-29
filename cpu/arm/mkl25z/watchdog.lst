@@ -1,0 +1,405 @@
+ARM GAS  /tmp/ccnoTpXo.s 			page 1
+
+
+   1              		.cpu cortex-m0plus
+   2              		.fpu softvfp
+   3              		.eabi_attribute 20, 1	@ Tag_ABI_FP_denormal
+   4              		.eabi_attribute 21, 1	@ Tag_ABI_FP_exceptions
+   5              		.eabi_attribute 23, 3	@ Tag_ABI_FP_number_model
+   6              		.eabi_attribute 24, 1	@ Tag_ABI_align8_needed
+   7              		.eabi_attribute 25, 1	@ Tag_ABI_align8_preserved
+   8              		.eabi_attribute 26, 1	@ Tag_ABI_enum_size
+   9              		.eabi_attribute 30, 1	@ Tag_ABI_optimization_goals
+  10              		.eabi_attribute 34, 0	@ Tag_CPU_unaligned_access
+  11              		.eabi_attribute 18, 4	@ Tag_ABI_PCS_wchar_t
+  12              		.file	"watchdog.c"
+  13              	@ GNU C (GNU Tools for ARM Embedded Processors) version 4.8.3 20131129 (release) [ARM/embedded-4_8-
+  14              	@	compiled by GNU C version 4.6.3, GMP version 4.3.2, MPFR version 2.4.2, MPC version 0.8.1
+  15              	@ GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+  16              	@ options passed:  -I . -I ../../cpu/arm/mkl25z
+  17              	@ -I ../../cpu/arm/mkl25z/loader -I ../../cpu/arm/mkl25z/dbg-io
+  18              	@ -I ../../dev -I ../../platform/frdm-kl25z-rf
+  19              	@ -I /home/glacsweb/arm-gcc/ARM_GCC_Support/ewl/EWL_C/include
+  20              	@ -I /home/glacsweb/arm-gcc/ARM_GCC_Support/ewl/EWL_Runtime/include
+  21              	@ -I /home/glacsweb/arm-gcc/lib/gcc/arm-none-eabi/4.8.3/include
+  22              	@ -I /home/glacsweb/arm-gcc/lib/gcc/arm-none-eabi/4.8.3/include-fixed
+  23              	@ -I /home/glacsweb/arm-gcc/arm-none-eabi/include -I ../../dev/cc1120 -I .
+  24              	@ -I ../../platform/frdm-kl25z-rf/. -I ../../platform/frdm-kl25z-rf/dev
+  25              	@ -I ../../platform/frdm-kl25z-rf/apps -I ../../platform/frdm-kl25z-rf/net
+  26              	@ -I ../../platform/frdm-kl25z-rf/../../dev/cc1120
+  27              	@ -I ../../platform/frdm-kl25z-rf/../../core/net -I ../../cpu/arm/mkl25z/.
+  28              	@ -I ../../cpu/arm/mkl25z/../common/dbg-io -I ../../cpu/arm/mkl25z/loader
+  29              	@ -I ../../core/dev -I ../../core/lib -I ../../core/net
+  30              	@ -I ../../core/net/mac -I ../../core/net/rime -I ../../core/net/rpl
+  31              	@ -I ../../core/sys -I ../../core/cfs -I ../../core/ctk
+  32              	@ -I ../../core/lib/ctk -I ../../core/loader -I ../../core/.
+  33              	@ -I ../../platform/frdm-kl25z-rf/ -imultilib armv6-m
+  34              	@ -iprefix /home/glacsweb/arm-gcc/bin/../lib/gcc/arm-none-eabi/4.8.3/
+  35              	@ -isysroot /home/glacsweb/arm-gcc/bin/../arm-none-eabi -D__USES_INITFINI__
+  36              	@ -D CONTIKI=1 -D CONTIKI_TARGET_FRDM_KL25Z_RF=1 -D WITH_UIP=1
+  37              	@ -D MCK=48000000 -D AUTOSTART_ENABLE -D CC11xx_CC1120=1 -D RUN_AS_SYSTEM
+  38              	@ -D ROM_RUN -D __SDCC
+  39              	@ -D CONTIKI_VERSION_STRING="Contiki-KL25Z-Port-18-g5a8e189"
+  40              	@ ../../cpu/arm/mkl25z/./watchdog.c -mcpu=cortex-m0plus -mthumb
+  41              	@ -auxbase-strip obj_frdm-kl25z-rf/watchdog.o -gdwarf-2 -g -O -Wall
+  42              	@ -Wstrict-prototypes -fomit-frame-pointer -fverbose-asm
+  43              	@ options enabled:  -faggressive-loop-optimizations -fauto-inc-dec
+  44              	@ -fbranch-count-reg -fcombine-stack-adjustments -fcommon -fcompare-elim
+  45              	@ -fcprop-registers -fdefer-pop -fdelete-null-pointer-checks
+  46              	@ -fdwarf2-cfi-asm -fearly-inlining -feliminate-unused-debug-types
+  47              	@ -fforward-propagate -ffunction-cse -fgcse-lm -fgnu-runtime
+  48              	@ -fguess-branch-probability -fident -fif-conversion -fif-conversion2
+  49              	@ -finline -finline-atomics -finline-functions-called-once -fipa-profile
+  50              	@ -fipa-pure-const -fipa-reference -fira-hoist-pressure
+  51              	@ -fira-share-save-slots -fira-share-spill-slots -fivopts
+  52              	@ -fkeep-static-consts -fleading-underscore -fmath-errno -fmerge-constants
+  53              	@ -fmerge-debug-strings -fmove-loop-invariants -fomit-frame-pointer
+  54              	@ -fpeephole -fprefetch-loop-arrays -freg-struct-return
+  55              	@ -fsched-critical-path-heuristic -fsched-dep-count-heuristic
+  56              	@ -fsched-group-heuristic -fsched-interblock -fsched-last-insn-heuristic
+  57              	@ -fsched-pressure -fsched-rank-heuristic -fsched-spec
+ARM GAS  /tmp/ccnoTpXo.s 			page 2
+
+
+  58              	@ -fsched-spec-insn-heuristic -fsched-stalled-insns-dep -fsection-anchors
+  59              	@ -fshow-column -fshrink-wrap -fsigned-zeros -fsplit-ivs-in-unroller
+  60              	@ -fsplit-wide-types -fstrict-volatile-bitfields -fsync-libcalls
+  61              	@ -ftoplevel-reorder -ftrapping-math -ftree-bit-ccp -ftree-ccp -ftree-ch
+  62              	@ -ftree-coalesce-vars -ftree-copy-prop -ftree-copyrename -ftree-cselim
+  63              	@ -ftree-dce -ftree-dominator-opts -ftree-dse -ftree-forwprop -ftree-fre
+  64              	@ -ftree-loop-if-convert -ftree-loop-im -ftree-loop-ivcanon
+  65              	@ -ftree-loop-optimize -ftree-parallelize-loops= -ftree-phiprop -ftree-pta
+  66              	@ -ftree-reassoc -ftree-scev-cprop -ftree-sink -ftree-slp-vectorize
+  67              	@ -ftree-slsr -ftree-sra -ftree-ter -ftree-vect-loop-version
+  68              	@ -funit-at-a-time -fvar-tracking -fvar-tracking-assignments -fverbose-asm
+  69              	@ -fzero-initialized-in-bss -mlittle-endian -mpic-data-is-text-relative
+  70              	@ -msched-prolog -mthumb -mvectorize-with-neon-quad
+  71              	
+  72              		.text
+  73              	.Ltext0:
+  74              		.cfi_sections	.debug_frame
+  75              		.align	2
+  76              		.global	watchdog_init
+  77              		.code	16
+  78              		.thumb_func
+  79              		.type	watchdog_init, %function
+  80              	watchdog_init:
+  81              	.LFB0:
+  82              		.file 1 "../../cpu/arm/mkl25z/./watchdog.c"
+   1:../../cpu/arm/mkl25z/./watchdog.c **** #include "dev/watchdog.h"
+   2:../../cpu/arm/mkl25z/./watchdog.c **** 
+   3:../../cpu/arm/mkl25z/./watchdog.c **** void watchdog_init(void) {
+  83              		.loc 1 3 0
+  84              		.cfi_startproc
+   4:../../cpu/arm/mkl25z/./watchdog.c **** 
+   5:../../cpu/arm/mkl25z/./watchdog.c **** }
+  85              		.loc 1 5 0
+  86              		@ sp needed	@
+  87 0000 7047     		bx	lr
+  88              		.cfi_endproc
+  89              	.LFE0:
+  90              		.size	watchdog_init, .-watchdog_init
+  91 0002 C046     		.align	2
+  92              		.global	watchdog_start
+  93              		.code	16
+  94              		.thumb_func
+  95              		.type	watchdog_start, %function
+  96              	watchdog_start:
+  97              	.LFB1:
+   6:../../cpu/arm/mkl25z/./watchdog.c **** 
+   7:../../cpu/arm/mkl25z/./watchdog.c **** void watchdog_start(void) {
+  98              		.loc 1 7 0
+  99              		.cfi_startproc
+   8:../../cpu/arm/mkl25z/./watchdog.c **** 	/* We setup the watchdog to reset the device after 2.048 seconds,
+   9:../../cpu/arm/mkl25z/./watchdog.c **** 	   unless watchdog_periodic() is called. */
+  10:../../cpu/arm/mkl25z/./watchdog.c **** 	//halInternalEnableWatchDog();
+  11:../../cpu/arm/mkl25z/./watchdog.c **** }
+ 100              		.loc 1 11 0
+ 101              		@ sp needed	@
+ 102 0004 7047     		bx	lr
+ 103              		.cfi_endproc
+ARM GAS  /tmp/ccnoTpXo.s 			page 3
+
+
+ 104              	.LFE1:
+ 105              		.size	watchdog_start, .-watchdog_start
+ 106 0006 C046     		.align	2
+ 107              		.global	watchdog_periodic
+ 108              		.code	16
+ 109              		.thumb_func
+ 110              		.type	watchdog_periodic, %function
+ 111              	watchdog_periodic:
+ 112              	.LFB2:
+  12:../../cpu/arm/mkl25z/./watchdog.c **** 
+  13:../../cpu/arm/mkl25z/./watchdog.c **** void watchdog_periodic(void) {
+ 113              		.loc 1 13 0
+ 114              		.cfi_startproc
+  14:../../cpu/arm/mkl25z/./watchdog.c **** 	/* This function is called periodically to restart the watchdog
+  15:../../cpu/arm/mkl25z/./watchdog.c **** 	   timer. */
+  16:../../cpu/arm/mkl25z/./watchdog.c **** 	//halResetWatchdog();
+  17:../../cpu/arm/mkl25z/./watchdog.c **** }
+ 115              		.loc 1 17 0
+ 116              		@ sp needed	@
+ 117 0008 7047     		bx	lr
+ 118              		.cfi_endproc
+ 119              	.LFE2:
+ 120              		.size	watchdog_periodic, .-watchdog_periodic
+ 121 000a C046     		.align	2
+ 122              		.global	watchdog_stop
+ 123              		.code	16
+ 124              		.thumb_func
+ 125              		.type	watchdog_stop, %function
+ 126              	watchdog_stop:
+ 127              	.LFB3:
+  18:../../cpu/arm/mkl25z/./watchdog.c **** 
+  19:../../cpu/arm/mkl25z/./watchdog.c **** void watchdog_stop(void) {
+ 128              		.loc 1 19 0
+ 129              		.cfi_startproc
+  20:../../cpu/arm/mkl25z/./watchdog.c **** 	//halInternalDisableWatchDog(MICRO_DISABLE_WATCH_DOG_KEY);
+  21:../../cpu/arm/mkl25z/./watchdog.c **** }
+ 130              		.loc 1 21 0
+ 131              		@ sp needed	@
+ 132 000c 7047     		bx	lr
+ 133              		.cfi_endproc
+ 134              	.LFE3:
+ 135              		.size	watchdog_stop, .-watchdog_stop
+ 136 000e C046     		.align	2
+ 137              		.global	watchdog_reboot
+ 138              		.code	16
+ 139              		.thumb_func
+ 140              		.type	watchdog_reboot, %function
+ 141              	watchdog_reboot:
+ 142              	.LFB4:
+  22:../../cpu/arm/mkl25z/./watchdog.c **** 
+  23:../../cpu/arm/mkl25z/./watchdog.c **** void watchdog_reboot(void) {
+ 143              		.loc 1 23 0
+ 144              		.cfi_startproc
+  24:../../cpu/arm/mkl25z/./watchdog.c **** 	//halReboot();
+  25:../../cpu/arm/mkl25z/./watchdog.c **** }
+ 145              		.loc 1 25 0
+ 146              		@ sp needed	@
+ARM GAS  /tmp/ccnoTpXo.s 			page 4
+
+
+ 147 0010 7047     		bx	lr
+ 148              		.cfi_endproc
+ 149              	.LFE4:
+ 150              		.size	watchdog_reboot, .-watchdog_reboot
+ 151              	.Letext0:
+ 152 0012 C046     		.section	.debug_info,"",%progbits
+ 153              	.Ldebug_info0:
+ 154 0000 8B000000 		.4byte	0x8b
+ 155 0004 0200     		.2byte	0x2
+ 156 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 157 000a 04       		.byte	0x4
+ 158 000b 01       		.uleb128 0x1
+ 159 000c 4D000000 		.4byte	.LASF5
+ 160 0010 01       		.byte	0x1
+ 161 0011 D7000000 		.4byte	.LASF6
+ 162 0015 F9000000 		.4byte	.LASF7
+ 163 0019 00000000 		.4byte	.Ltext0
+ 164 001d 12000000 		.4byte	.Letext0
+ 165 0021 00000000 		.4byte	.Ldebug_line0
+ 166 0025 02       		.uleb128 0x2
+ 167 0026 01       		.byte	0x1
+ 168 0027 2F000000 		.4byte	.LASF0
+ 169 002b 01       		.byte	0x1
+ 170 002c 03       		.byte	0x3
+ 171 002d 01       		.byte	0x1
+ 172 002e 00000000 		.4byte	.LFB0
+ 173 0032 02000000 		.4byte	.LFE0
+ 174 0036 02       		.byte	0x2
+ 175 0037 7D       		.byte	0x7d
+ 176 0038 00       		.sleb128 0
+ 177 0039 01       		.byte	0x1
+ 178 003a 02       		.uleb128 0x2
+ 179 003b 01       		.byte	0x1
+ 180 003c 00000000 		.4byte	.LASF1
+ 181 0040 01       		.byte	0x1
+ 182 0041 07       		.byte	0x7
+ 183 0042 01       		.byte	0x1
+ 184 0043 04000000 		.4byte	.LFB1
+ 185 0047 06000000 		.4byte	.LFE1
+ 186 004b 02       		.byte	0x2
+ 187 004c 7D       		.byte	0x7d
+ 188 004d 00       		.sleb128 0
+ 189 004e 01       		.byte	0x1
+ 190 004f 02       		.uleb128 0x2
+ 191 0050 01       		.byte	0x1
+ 192 0051 1D000000 		.4byte	.LASF2
+ 193 0055 01       		.byte	0x1
+ 194 0056 0D       		.byte	0xd
+ 195 0057 01       		.byte	0x1
+ 196 0058 08000000 		.4byte	.LFB2
+ 197 005c 0A000000 		.4byte	.LFE2
+ 198 0060 02       		.byte	0x2
+ 199 0061 7D       		.byte	0x7d
+ 200 0062 00       		.sleb128 0
+ 201 0063 01       		.byte	0x1
+ 202 0064 02       		.uleb128 0x2
+ 203 0065 01       		.byte	0x1
+ARM GAS  /tmp/ccnoTpXo.s 			page 5
+
+
+ 204 0066 0F000000 		.4byte	.LASF3
+ 205 006a 01       		.byte	0x1
+ 206 006b 13       		.byte	0x13
+ 207 006c 01       		.byte	0x1
+ 208 006d 0C000000 		.4byte	.LFB3
+ 209 0071 0E000000 		.4byte	.LFE3
+ 210 0075 02       		.byte	0x2
+ 211 0076 7D       		.byte	0x7d
+ 212 0077 00       		.sleb128 0
+ 213 0078 01       		.byte	0x1
+ 214 0079 02       		.uleb128 0x2
+ 215 007a 01       		.byte	0x1
+ 216 007b 3D000000 		.4byte	.LASF4
+ 217 007f 01       		.byte	0x1
+ 218 0080 17       		.byte	0x17
+ 219 0081 01       		.byte	0x1
+ 220 0082 10000000 		.4byte	.LFB4
+ 221 0086 12000000 		.4byte	.LFE4
+ 222 008a 02       		.byte	0x2
+ 223 008b 7D       		.byte	0x7d
+ 224 008c 00       		.sleb128 0
+ 225 008d 01       		.byte	0x1
+ 226 008e 00       		.byte	0
+ 227              		.section	.debug_abbrev,"",%progbits
+ 228              	.Ldebug_abbrev0:
+ 229 0000 01       		.uleb128 0x1
+ 230 0001 11       		.uleb128 0x11
+ 231 0002 01       		.byte	0x1
+ 232 0003 25       		.uleb128 0x25
+ 233 0004 0E       		.uleb128 0xe
+ 234 0005 13       		.uleb128 0x13
+ 235 0006 0B       		.uleb128 0xb
+ 236 0007 03       		.uleb128 0x3
+ 237 0008 0E       		.uleb128 0xe
+ 238 0009 1B       		.uleb128 0x1b
+ 239 000a 0E       		.uleb128 0xe
+ 240 000b 11       		.uleb128 0x11
+ 241 000c 01       		.uleb128 0x1
+ 242 000d 12       		.uleb128 0x12
+ 243 000e 01       		.uleb128 0x1
+ 244 000f 10       		.uleb128 0x10
+ 245 0010 06       		.uleb128 0x6
+ 246 0011 00       		.byte	0
+ 247 0012 00       		.byte	0
+ 248 0013 02       		.uleb128 0x2
+ 249 0014 2E       		.uleb128 0x2e
+ 250 0015 00       		.byte	0
+ 251 0016 3F       		.uleb128 0x3f
+ 252 0017 0C       		.uleb128 0xc
+ 253 0018 03       		.uleb128 0x3
+ 254 0019 0E       		.uleb128 0xe
+ 255 001a 3A       		.uleb128 0x3a
+ 256 001b 0B       		.uleb128 0xb
+ 257 001c 3B       		.uleb128 0x3b
+ 258 001d 0B       		.uleb128 0xb
+ 259 001e 27       		.uleb128 0x27
+ 260 001f 0C       		.uleb128 0xc
+ARM GAS  /tmp/ccnoTpXo.s 			page 6
+
+
+ 261 0020 11       		.uleb128 0x11
+ 262 0021 01       		.uleb128 0x1
+ 263 0022 12       		.uleb128 0x12
+ 264 0023 01       		.uleb128 0x1
+ 265 0024 40       		.uleb128 0x40
+ 266 0025 0A       		.uleb128 0xa
+ 267 0026 9742     		.uleb128 0x2117
+ 268 0028 0C       		.uleb128 0xc
+ 269 0029 00       		.byte	0
+ 270 002a 00       		.byte	0
+ 271 002b 00       		.byte	0
+ 272              		.section	.debug_aranges,"",%progbits
+ 273 0000 1C000000 		.4byte	0x1c
+ 274 0004 0200     		.2byte	0x2
+ 275 0006 00000000 		.4byte	.Ldebug_info0
+ 276 000a 04       		.byte	0x4
+ 277 000b 00       		.byte	0
+ 278 000c 0000     		.2byte	0
+ 279 000e 0000     		.2byte	0
+ 280 0010 00000000 		.4byte	.Ltext0
+ 281 0014 12000000 		.4byte	.Letext0-.Ltext0
+ 282 0018 00000000 		.4byte	0
+ 283 001c 00000000 		.4byte	0
+ 284              		.section	.debug_line,"",%progbits
+ 285              	.Ldebug_line0:
+ 286 0000 54000000 		.section	.debug_str,"MS",%progbits,1
+ 286      02003800 
+ 286      00000201 
+ 286      FB0E0D00 
+ 286      01010101 
+ 287              	.LASF1:
+ 288 0000 77617463 		.ascii	"watchdog_start\000"
+ 288      68646F67 
+ 288      5F737461 
+ 288      727400
+ 289              	.LASF3:
+ 290 000f 77617463 		.ascii	"watchdog_stop\000"
+ 290      68646F67 
+ 290      5F73746F 
+ 290      7000
+ 291              	.LASF2:
+ 292 001d 77617463 		.ascii	"watchdog_periodic\000"
+ 292      68646F67 
+ 292      5F706572 
+ 292      696F6469 
+ 292      6300
+ 293              	.LASF0:
+ 294 002f 77617463 		.ascii	"watchdog_init\000"
+ 294      68646F67 
+ 294      5F696E69 
+ 294      7400
+ 295              	.LASF4:
+ 296 003d 77617463 		.ascii	"watchdog_reboot\000"
+ 296      68646F67 
+ 296      5F726562 
+ 296      6F6F7400 
+ 297              	.LASF5:
+ARM GAS  /tmp/ccnoTpXo.s 			page 7
+
+
+ 298 004d 474E5520 		.ascii	"GNU C 4.8.3 20131129 (release) [ARM/embedded-4_8-br"
+ 298      4320342E 
+ 298      382E3320 
+ 298      32303133 
+ 298      31313239 
+ 299 0080 616E6368 		.ascii	"anch revision 205641] -mcpu=cortex-m0plus -mthumb -"
+ 299      20726576 
+ 299      6973696F 
+ 299      6E203230 
+ 299      35363431 
+ 300 00b3 67647761 		.ascii	"gdwarf-2 -g -O -fomit-frame-pointer\000"
+ 300      72662D32 
+ 300      202D6720 
+ 300      2D4F202D 
+ 300      666F6D69 
+ 301              	.LASF6:
+ 302 00d7 2E2E2F2E 		.ascii	"../../cpu/arm/mkl25z/./watchdog.c\000"
+ 302      2E2F6370 
+ 302      752F6172 
+ 302      6D2F6D6B 
+ 302      6C32357A 
+ 303              	.LASF7:
+ 304 00f9 2F686F6D 		.ascii	"/home/glacsweb/glacsweb/contiki/examples/rime\000"
+ 304      652F676C 
+ 304      61637377 
+ 304      65622F67 
+ 304      6C616373 
+ 305              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 4.8.3 20131129 (release) [ARM/embedded-4_8-br
+ARM GAS  /tmp/ccnoTpXo.s 			page 8
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 watchdog.c
+     /tmp/ccnoTpXo.s:75     .text:00000000 $t
+     /tmp/ccnoTpXo.s:80     .text:00000000 watchdog_init
+     /tmp/ccnoTpXo.s:96     .text:00000004 watchdog_start
+     /tmp/ccnoTpXo.s:111    .text:00000008 watchdog_periodic
+     /tmp/ccnoTpXo.s:126    .text:0000000c watchdog_stop
+     /tmp/ccnoTpXo.s:141    .text:00000010 watchdog_reboot
+                     .debug_frame:00000010 $d
+
+NO UNDEFINED SYMBOLS

@@ -1,0 +1,2021 @@
+ARM GAS  /tmp/ccjLOM07.s 			page 1
+
+
+   1              		.cpu cortex-m0plus
+   2              		.fpu softvfp
+   3              		.eabi_attribute 20, 1	@ Tag_ABI_FP_denormal
+   4              		.eabi_attribute 21, 1	@ Tag_ABI_FP_exceptions
+   5              		.eabi_attribute 23, 3	@ Tag_ABI_FP_number_model
+   6              		.eabi_attribute 24, 1	@ Tag_ABI_align8_needed
+   7              		.eabi_attribute 25, 1	@ Tag_ABI_align8_preserved
+   8              		.eabi_attribute 26, 1	@ Tag_ABI_enum_size
+   9              		.eabi_attribute 30, 1	@ Tag_ABI_optimization_goals
+  10              		.eabi_attribute 34, 0	@ Tag_CPU_unaligned_access
+  11              		.eabi_attribute 18, 4	@ Tag_ABI_PCS_wchar_t
+  12              		.file	"nvic.c"
+  13              	@ GNU C (GNU Tools for ARM Embedded Processors) version 4.8.3 20131129 (release) [ARM/embedded-4_8-
+  14              	@	compiled by GNU C version 4.6.3, GMP version 4.3.2, MPFR version 2.4.2, MPC version 0.8.1
+  15              	@ GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+  16              	@ options passed:  -I . -I ../../cpu/arm/mkl25z
+  17              	@ -I ../../cpu/arm/mkl25z/loader -I ../../cpu/arm/mkl25z/dbg-io
+  18              	@ -I ../../dev -I ../../platform/frdm-kl25z-rf
+  19              	@ -I /home/glacsweb/arm-gcc/ARM_GCC_Support/ewl/EWL_C/include
+  20              	@ -I /home/glacsweb/arm-gcc/ARM_GCC_Support/ewl/EWL_Runtime/include
+  21              	@ -I /home/glacsweb/arm-gcc/lib/gcc/arm-none-eabi/4.8.3/include
+  22              	@ -I /home/glacsweb/arm-gcc/lib/gcc/arm-none-eabi/4.8.3/include-fixed
+  23              	@ -I /home/glacsweb/arm-gcc/arm-none-eabi/include -I ../../dev/cc1120 -I .
+  24              	@ -I ../../platform/frdm-kl25z-rf/. -I ../../platform/frdm-kl25z-rf/dev
+  25              	@ -I ../../platform/frdm-kl25z-rf/apps -I ../../platform/frdm-kl25z-rf/net
+  26              	@ -I ../../platform/frdm-kl25z-rf/../../dev/cc1120
+  27              	@ -I ../../platform/frdm-kl25z-rf/../../core/net -I ../../cpu/arm/mkl25z/.
+  28              	@ -I ../../cpu/arm/mkl25z/../common/dbg-io -I ../../cpu/arm/mkl25z/loader
+  29              	@ -I ../../core/dev -I ../../core/lib -I ../../core/net
+  30              	@ -I ../../core/net/mac -I ../../core/net/rime -I ../../core/net/rpl
+  31              	@ -I ../../core/sys -I ../../core/cfs -I ../../core/ctk
+  32              	@ -I ../../core/lib/ctk -I ../../core/loader -I ../../core/.
+  33              	@ -I ../../platform/frdm-kl25z-rf/ -imultilib armv6-m
+  34              	@ -iprefix /home/glacsweb/arm-gcc/bin/../lib/gcc/arm-none-eabi/4.8.3/
+  35              	@ -isysroot /home/glacsweb/arm-gcc/bin/../arm-none-eabi -D__USES_INITFINI__
+  36              	@ -D CONTIKI=1 -D CONTIKI_TARGET_FRDM_KL25Z_RF=1 -D WITH_UIP=1
+  37              	@ -D MCK=48000000 -D AUTOSTART_ENABLE -D CC11xx_CC1120=1 -D RUN_AS_SYSTEM
+  38              	@ -D ROM_RUN -D __SDCC
+  39              	@ -D CONTIKI_VERSION_STRING="Contiki-KL25Z-Port-18-g5a8e189"
+  40              	@ ../../cpu/arm/mkl25z/./nvic.c -mcpu=cortex-m0plus -mthumb
+  41              	@ -auxbase-strip obj_frdm-kl25z-rf/nvic.o -gdwarf-2 -g -O -Wall
+  42              	@ -Wstrict-prototypes -fomit-frame-pointer -fverbose-asm
+  43              	@ options enabled:  -faggressive-loop-optimizations -fauto-inc-dec
+  44              	@ -fbranch-count-reg -fcombine-stack-adjustments -fcommon -fcompare-elim
+  45              	@ -fcprop-registers -fdefer-pop -fdelete-null-pointer-checks
+  46              	@ -fdwarf2-cfi-asm -fearly-inlining -feliminate-unused-debug-types
+  47              	@ -fforward-propagate -ffunction-cse -fgcse-lm -fgnu-runtime
+  48              	@ -fguess-branch-probability -fident -fif-conversion -fif-conversion2
+  49              	@ -finline -finline-atomics -finline-functions-called-once -fipa-profile
+  50              	@ -fipa-pure-const -fipa-reference -fira-hoist-pressure
+  51              	@ -fira-share-save-slots -fira-share-spill-slots -fivopts
+  52              	@ -fkeep-static-consts -fleading-underscore -fmath-errno -fmerge-constants
+  53              	@ -fmerge-debug-strings -fmove-loop-invariants -fomit-frame-pointer
+  54              	@ -fpeephole -fprefetch-loop-arrays -freg-struct-return
+  55              	@ -fsched-critical-path-heuristic -fsched-dep-count-heuristic
+  56              	@ -fsched-group-heuristic -fsched-interblock -fsched-last-insn-heuristic
+  57              	@ -fsched-pressure -fsched-rank-heuristic -fsched-spec
+ARM GAS  /tmp/ccjLOM07.s 			page 2
+
+
+  58              	@ -fsched-spec-insn-heuristic -fsched-stalled-insns-dep -fsection-anchors
+  59              	@ -fshow-column -fshrink-wrap -fsigned-zeros -fsplit-ivs-in-unroller
+  60              	@ -fsplit-wide-types -fstrict-volatile-bitfields -fsync-libcalls
+  61              	@ -ftoplevel-reorder -ftrapping-math -ftree-bit-ccp -ftree-ccp -ftree-ch
+  62              	@ -ftree-coalesce-vars -ftree-copy-prop -ftree-copyrename -ftree-cselim
+  63              	@ -ftree-dce -ftree-dominator-opts -ftree-dse -ftree-forwprop -ftree-fre
+  64              	@ -ftree-loop-if-convert -ftree-loop-im -ftree-loop-ivcanon
+  65              	@ -ftree-loop-optimize -ftree-parallelize-loops= -ftree-phiprop -ftree-pta
+  66              	@ -ftree-reassoc -ftree-scev-cprop -ftree-sink -ftree-slp-vectorize
+  67              	@ -ftree-slsr -ftree-sra -ftree-ter -ftree-vect-loop-version
+  68              	@ -funit-at-a-time -fvar-tracking -fvar-tracking-assignments -fverbose-asm
+  69              	@ -fzero-initialized-in-bss -mlittle-endian -mpic-data-is-text-relative
+  70              	@ -msched-prolog -mthumb -mvectorize-with-neon-quad
+  71              	
+  72              		.text
+  73              	.Ltext0:
+  74              		.cfi_sections	.debug_frame
+  75              		.align	2
+  76              		.global	NVIC_ENABLE_INT
+  77              		.code	16
+  78              		.thumb_func
+  79              		.type	NVIC_ENABLE_INT, %function
+  80              	NVIC_ENABLE_INT:
+  81              	.LFB0:
+  82              		.file 1 "../../cpu/arm/mkl25z/./nvic.c"
+   1:../../cpu/arm/mkl25z/./nvic.c **** /*-------------------------------------------------------------------------------------------------
+   2:../../cpu/arm/mkl25z/./nvic.c **** /*	nvic.c	
+   3:../../cpu/arm/mkl25z/./nvic.c ****  *	
+   4:../../cpu/arm/mkl25z/./nvic.c ****  *	NVIC commands & definitions for the Freescale FRDM-KL25z Freedom Board
+   5:../../cpu/arm/mkl25z/./nvic.c ****  *	
+   6:../../cpu/arm/mkl25z/./nvic.c ****  *	Author: Graeme Bragg
+   7:../../cpu/arm/mkl25z/./nvic.c ****  * 			ARM-ECS / Pervasive Systems Centre
+   8:../../cpu/arm/mkl25z/./nvic.c ****  * 			School of Electronics & Computer Science
+   9:../../cpu/arm/mkl25z/./nvic.c ****  * 			University of Southampton
+  10:../../cpu/arm/mkl25z/./nvic.c ****  * 
+  11:../../cpu/arm/mkl25z/./nvic.c ****  * 
+  12:../../cpu/arm/mkl25z/./nvic.c ****  *	11/2/2014	Rev.01		Includes functions for enabling & disabling
+  13:../../cpu/arm/mkl25z/./nvic.c ****  *							interrupts, setting priorities and clearing 
+  14:../../cpu/arm/mkl25z/./nvic.c ****  *							& setting pending flags.  Also includes the
+  15:../../cpu/arm/mkl25z/./nvic.c ****  *							ability to set priority for normal IRQ
+  16:../../cpu/arm/mkl25z/./nvic.c ****  *							interrupts and Systick.
+  17:../../cpu/arm/mkl25z/./nvic.c ****  *
+  18:../../cpu/arm/mkl25z/./nvic.c ****  *	Page references relate to the KL25 Sub-Family Reference Manual, Document 
+  19:../../cpu/arm/mkl25z/./nvic.c ****  *	No. KL25P80M48SF0RM, Rev. 3 September 2012. Available on 25/02/2013 from: 
+  20:../../cpu/arm/mkl25z/./nvic.c ****  *	http://cache.freescale.com/files/32bit/doc/ref_manual/KL25P80M48SF0RM.pdf?fr=gdc
+  21:../../cpu/arm/mkl25z/./nvic.c ****  *	
+  22:../../cpu/arm/mkl25z/./nvic.c ****  *	Page references to "M0 Book" refer to "The Definitive Guide to the 
+  23:../../cpu/arm/mkl25z/./nvic.c ****  *	ARM Cortex-M0" by Joseph Yiu, ISBN 978-0-12-385477-3.
+  24:../../cpu/arm/mkl25z/./nvic.c ****  *	
+  25:../../cpu/arm/mkl25z/./nvic.c ****  *
+  26:../../cpu/arm/mkl25z/./nvic.c ****  * Copyright (c) 2014, University of Southampton, Electronics and Computer Science
+  27:../../cpu/arm/mkl25z/./nvic.c ****  * All rights reserved.
+  28:../../cpu/arm/mkl25z/./nvic.c ****  *
+  29:../../cpu/arm/mkl25z/./nvic.c ****  * Redistribution and use in source and binary forms, with or without
+  30:../../cpu/arm/mkl25z/./nvic.c ****  * modification, are permitted provided that the following conditions
+  31:../../cpu/arm/mkl25z/./nvic.c ****  * are met:
+  32:../../cpu/arm/mkl25z/./nvic.c ****  * 1. Redistributions of source code must retain the above copyright
+ARM GAS  /tmp/ccjLOM07.s 			page 3
+
+
+  33:../../cpu/arm/mkl25z/./nvic.c ****  * notice, this list of conditions and the following disclaimer.
+  34:../../cpu/arm/mkl25z/./nvic.c ****  * 2. Redistributions in binary form must reproduce the above copyright
+  35:../../cpu/arm/mkl25z/./nvic.c ****  * notice, this list of conditions and the following disclaimer in the
+  36:../../cpu/arm/mkl25z/./nvic.c ****  * documentation and/or other materials provided with the distribution.
+  37:../../cpu/arm/mkl25z/./nvic.c ****  * 3. Neither the name of the Institute nor the names of its contributors
+  38:../../cpu/arm/mkl25z/./nvic.c ****  * may be used to endorse or promote products derived from this software
+  39:../../cpu/arm/mkl25z/./nvic.c ****  * without specific prior written permission.
+  40:../../cpu/arm/mkl25z/./nvic.c ****  *
+  41:../../cpu/arm/mkl25z/./nvic.c ****  * THIS SOFTWARE IS PROVIDED BY THE INSTITUTE AND CONTRIBUTORS ``AS IS'' AND
+  42:../../cpu/arm/mkl25z/./nvic.c ****  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  43:../../cpu/arm/mkl25z/./nvic.c ****  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  44:../../cpu/arm/mkl25z/./nvic.c ****  * ARE DISCLAIMED. IN NO EVENT SHALL THE INSTITUTE OR CONTRIBUTORS BE LIABLE
+  45:../../cpu/arm/mkl25z/./nvic.c ****  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+  46:../../cpu/arm/mkl25z/./nvic.c ****  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+  47:../../cpu/arm/mkl25z/./nvic.c ****  * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+  48:../../cpu/arm/mkl25z/./nvic.c ****  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+  49:../../cpu/arm/mkl25z/./nvic.c ****  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+  50:../../cpu/arm/mkl25z/./nvic.c ****  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+  51:../../cpu/arm/mkl25z/./nvic.c ****  * SUCH DAMAGE.
+  52:../../cpu/arm/mkl25z/./nvic.c ****  *
+  53:../../cpu/arm/mkl25z/./nvic.c ****  */				
+  54:../../cpu/arm/mkl25z/./nvic.c **** /*-------------------------------------------------------------------------------------------------
+  55:../../cpu/arm/mkl25z/./nvic.c **** 
+  56:../../cpu/arm/mkl25z/./nvic.c **** 
+  57:../../cpu/arm/mkl25z/./nvic.c **** /**
+  58:../../cpu/arm/mkl25z/./nvic.c **** * \file
+  59:../../cpu/arm/mkl25z/./nvic.c **** * MKL25Z NVIC functions.
+  60:../../cpu/arm/mkl25z/./nvic.c **** *
+  61:../../cpu/arm/mkl25z/./nvic.c **** * \author
+  62:../../cpu/arm/mkl25z/./nvic.c **** * Graeme Bragg - <g.bragg@ecs.soton.ac.uk>
+  63:../../cpu/arm/mkl25z/./nvic.c **** */
+  64:../../cpu/arm/mkl25z/./nvic.c **** 
+  65:../../cpu/arm/mkl25z/./nvic.c **** 
+  66:../../cpu/arm/mkl25z/./nvic.c **** 
+  67:../../cpu/arm/mkl25z/./nvic.c **** #include "nvic.h"
+  68:../../cpu/arm/mkl25z/./nvic.c **** 
+  69:../../cpu/arm/mkl25z/./nvic.c **** /*---------------------------------------------------------------------------*/
+  70:../../cpu/arm/mkl25z/./nvic.c **** /**
+  71:../../cpu/arm/mkl25z/./nvic.c **** * \brief 			Enable specified interrupt in the ARM NVIC.
+  72:../../cpu/arm/mkl25z/./nvic.c **** * \param IRQ 		IRQ of relevant interrupt as specified in Table 3-7. on Page 52 of the KL25 Sub-Fami
+  73:../../cpu/arm/mkl25z/./nvic.c **** * \return 			Nil.
+  74:../../cpu/arm/mkl25z/./nvic.c **** *
+  75:../../cpu/arm/mkl25z/./nvic.c **** * Enable the specified interrupt in the Nested Vector
+  76:../../cpu/arm/mkl25z/./nvic.c **** * Interrupt Controller (NVIC) after clearing any 
+  77:../../cpu/arm/mkl25z/./nvic.c **** * pending interrupts.
+  78:../../cpu/arm/mkl25z/./nvic.c **** */
+  79:../../cpu/arm/mkl25z/./nvic.c **** void 
+  80:../../cpu/arm/mkl25z/./nvic.c **** NVIC_ENABLE_INT(uint32_t IRQ)
+  81:../../cpu/arm/mkl25z/./nvic.c **** {
+  83              		.loc 1 81 0
+  84              		.cfi_startproc
+  85              	.LVL0:
+  82:../../cpu/arm/mkl25z/./nvic.c **** 	NVIC_ICPR != (1 << IRQ);		/* Clear any pending interrupts. */
+  86              		.loc 1 82 0
+  87 0000 054B     		ldr	r3, .L2	@ tmp117,
+  88 0002 C022     		mov	r2, #192	@ tmp123,
+  89 0004 5200     		lsl	r2, r2, #1	@ tmp118, tmp123,
+ARM GAS  /tmp/ccjLOM07.s 			page 4
+
+
+  90 0006 9A58     		ldr	r2, [r3, r2]	@ D.4754, MEM[(volatile struct NVIC_MemMap *)3758153984B].ICPR
+  83:../../cpu/arm/mkl25z/./nvic.c **** 	NVIC_ISER |= (1 << IRQ);		/* Enable the specified interrupt in the NVIC. */
+  91              		.loc 1 83 0
+  92 0008 1A68     		ldr	r2, [r3]	@ D.4754, MEM[(volatile struct NVIC_MemMap *)3758153984B].ISER
+  93 000a 0121     		mov	r1, #1	@ tmp121,
+  94 000c 8140     		lsl	r1, r1, r0	@ tmp121, tmp121, IRQ
+  95 000e 081C     		mov	r0, r1	@ D.4755, tmp121
+  96              	.LVL1:
+  97 0010 1043     		orr	r0, r2	@ D.4754, D.4754
+  98 0012 1860     		str	r0, [r3]	@ D.4754, MEM[(volatile struct NVIC_MemMap *)3758153984B].ISER
+  84:../../cpu/arm/mkl25z/./nvic.c **** }
+  99              		.loc 1 84 0
+ 100              		@ sp needed	@
+ 101 0014 7047     		bx	lr
+ 102              	.L3:
+ 103 0016 C046     		.align	2
+ 104              	.L2:
+ 105 0018 00E100E0 		.word	-536813312
+ 106              		.cfi_endproc
+ 107              	.LFE0:
+ 108              		.size	NVIC_ENABLE_INT, .-NVIC_ENABLE_INT
+ 109              		.align	2
+ 110              		.global	NVIC_DISABLE_INT
+ 111              		.code	16
+ 112              		.thumb_func
+ 113              		.type	NVIC_DISABLE_INT, %function
+ 114              	NVIC_DISABLE_INT:
+ 115              	.LFB1:
+  85:../../cpu/arm/mkl25z/./nvic.c **** 
+  86:../../cpu/arm/mkl25z/./nvic.c **** /*---------------------------------------------------------------------------*/
+  87:../../cpu/arm/mkl25z/./nvic.c **** /**
+  88:../../cpu/arm/mkl25z/./nvic.c **** * \brief 			Disable specified interrupt in the ARM NVIC.
+  89:../../cpu/arm/mkl25z/./nvic.c **** * \param IRQ 		IRQ of relevant interrupt as specified in Table 3-7. on Page 52 of the KL25 Sub-Fami
+  90:../../cpu/arm/mkl25z/./nvic.c **** * \return 			Nil.
+  91:../../cpu/arm/mkl25z/./nvic.c **** *
+  92:../../cpu/arm/mkl25z/./nvic.c **** * Disable the specified interrupt in the Nested Vector
+  93:../../cpu/arm/mkl25z/./nvic.c **** * Interrupt Controller (NVIC).
+  94:../../cpu/arm/mkl25z/./nvic.c **** */
+  95:../../cpu/arm/mkl25z/./nvic.c **** void NVIC_DISABLE_INT(uint32_t IRQ)
+  96:../../cpu/arm/mkl25z/./nvic.c **** {
+ 116              		.loc 1 96 0
+ 117              		.cfi_startproc
+ 118              	.LVL2:
+ 119 001c 10B5     		push	{r4, lr}	@
+ 120              	.LCFI0:
+ 121              		.cfi_def_cfa_offset 8
+ 122              		.cfi_offset 4, -8
+ 123              		.cfi_offset 14, -4
+  97:../../cpu/arm/mkl25z/./nvic.c **** 	NVIC_ICER |= (1 << IRQ);		/* Disable the specified interrupt in the NVIC. */
+ 124              		.loc 1 97 0
+ 125 001e 044A     		ldr	r2, .L5	@ tmp116,
+ 126 0020 8023     		mov	r3, #128	@ tmp117,
+ 127 0022 D158     		ldr	r1, [r2, r3]	@ D.4757, MEM[(volatile struct NVIC_MemMap *)3758153984B].ICER
+ 128 0024 0124     		mov	r4, #1	@ tmp119,
+ 129 0026 8440     		lsl	r4, r4, r0	@ tmp119, tmp119, IRQ
+ 130 0028 201C     		mov	r0, r4	@ D.4758, tmp119
+ 131              	.LVL3:
+ARM GAS  /tmp/ccjLOM07.s 			page 5
+
+
+ 132 002a 0843     		orr	r0, r1	@ D.4757, D.4757
+ 133 002c D050     		str	r0, [r2, r3]	@ D.4757, MEM[(volatile struct NVIC_MemMap *)3758153984B].ICER
+  98:../../cpu/arm/mkl25z/./nvic.c **** 	//NVIC_ISER &= ~(1 << IRQ);
+  99:../../cpu/arm/mkl25z/./nvic.c **** }
+ 134              		.loc 1 99 0
+ 135              		@ sp needed	@
+ 136 002e 10BD     		pop	{r4, pc}
+ 137              	.L6:
+ 138              		.align	2
+ 139              	.L5:
+ 140 0030 00E100E0 		.word	-536813312
+ 141              		.cfi_endproc
+ 142              	.LFE1:
+ 143              		.size	NVIC_DISABLE_INT, .-NVIC_DISABLE_INT
+ 144              		.align	2
+ 145              		.global	NVIC_SET_PENDING
+ 146              		.code	16
+ 147              		.thumb_func
+ 148              		.type	NVIC_SET_PENDING, %function
+ 149              	NVIC_SET_PENDING:
+ 150              	.LFB2:
+ 100:../../cpu/arm/mkl25z/./nvic.c **** 
+ 101:../../cpu/arm/mkl25z/./nvic.c **** /*---------------------------------------------------------------------------*/
+ 102:../../cpu/arm/mkl25z/./nvic.c **** /**
+ 103:../../cpu/arm/mkl25z/./nvic.c **** * \brief 			Set a pending interrupt for the specified interrupt in the ARM NVIC.
+ 104:../../cpu/arm/mkl25z/./nvic.c **** * \param IRQ 		IRQ of relevant interrupt as specified in Table 3-7. on Page 52 of the KL25 Sub-Fami
+ 105:../../cpu/arm/mkl25z/./nvic.c **** * \return 			Nil.
+ 106:../../cpu/arm/mkl25z/./nvic.c **** *
+ 107:../../cpu/arm/mkl25z/./nvic.c **** * Set a pending interrupt for the specified interrupt in the Nested Vector
+ 108:../../cpu/arm/mkl25z/./nvic.c **** * Interrupt Controller (NVIC).
+ 109:../../cpu/arm/mkl25z/./nvic.c **** */
+ 110:../../cpu/arm/mkl25z/./nvic.c **** void NVIC_SET_PENDING(uint32_t IRQ)
+ 111:../../cpu/arm/mkl25z/./nvic.c **** {
+ 151              		.loc 1 111 0
+ 152              		.cfi_startproc
+ 153              	.LVL4:
+ 154 0034 10B5     		push	{r4, lr}	@
+ 155              	.LCFI1:
+ 156              		.cfi_def_cfa_offset 8
+ 157              		.cfi_offset 4, -8
+ 158              		.cfi_offset 14, -4
+ 112:../../cpu/arm/mkl25z/./nvic.c **** 	NVIC_ISPR |= (1 << IRQ);		/* Set pending interrupt in the NVIC. */
+ 159              		.loc 1 112 0
+ 160 0036 054A     		ldr	r2, .L8	@ tmp116,
+ 161 0038 8023     		mov	r3, #128	@ tmp122,
+ 162 003a 5B00     		lsl	r3, r3, #1	@ tmp117, tmp122,
+ 163 003c D158     		ldr	r1, [r2, r3]	@ D.4760, MEM[(volatile struct NVIC_MemMap *)3758153984B].ISPR
+ 164 003e 0124     		mov	r4, #1	@ tmp119,
+ 165 0040 8440     		lsl	r4, r4, r0	@ tmp119, tmp119, IRQ
+ 166 0042 201C     		mov	r0, r4	@ D.4761, tmp119
+ 167              	.LVL5:
+ 168 0044 0843     		orr	r0, r1	@ D.4760, D.4760
+ 169 0046 D050     		str	r0, [r2, r3]	@ D.4760, MEM[(volatile struct NVIC_MemMap *)3758153984B].ISPR
+ 113:../../cpu/arm/mkl25z/./nvic.c **** }
+ 170              		.loc 1 113 0
+ 171              		@ sp needed	@
+ 172 0048 10BD     		pop	{r4, pc}
+ARM GAS  /tmp/ccjLOM07.s 			page 6
+
+
+ 173              	.L9:
+ 174 004a C046     		.align	2
+ 175              	.L8:
+ 176 004c 00E100E0 		.word	-536813312
+ 177              		.cfi_endproc
+ 178              	.LFE2:
+ 179              		.size	NVIC_SET_PENDING, .-NVIC_SET_PENDING
+ 180              		.align	2
+ 181              		.global	NVIC_CLEAR_PENDING
+ 182              		.code	16
+ 183              		.thumb_func
+ 184              		.type	NVIC_CLEAR_PENDING, %function
+ 185              	NVIC_CLEAR_PENDING:
+ 186              	.LFB3:
+ 114:../../cpu/arm/mkl25z/./nvic.c **** 
+ 115:../../cpu/arm/mkl25z/./nvic.c **** /*---------------------------------------------------------------------------*/
+ 116:../../cpu/arm/mkl25z/./nvic.c **** /**
+ 117:../../cpu/arm/mkl25z/./nvic.c **** * \brief 			Clear a pending interrupt for the specified interrupt in the ARM NVIC.
+ 118:../../cpu/arm/mkl25z/./nvic.c **** * \param IRQ 		IRQ of relevant interrupt as specified in Table 3-7. on Page 52 of the KL25 Sub-Fami
+ 119:../../cpu/arm/mkl25z/./nvic.c **** * \return 			Nil.
+ 120:../../cpu/arm/mkl25z/./nvic.c **** *
+ 121:../../cpu/arm/mkl25z/./nvic.c **** * Clear a pending interrupt for the specified interrupt in the Nested Vector
+ 122:../../cpu/arm/mkl25z/./nvic.c **** * Interrupt Controller (NVIC).
+ 123:../../cpu/arm/mkl25z/./nvic.c **** */
+ 124:../../cpu/arm/mkl25z/./nvic.c **** void NVIC_CLEAR_PENDING(uint32_t IRQ)
+ 125:../../cpu/arm/mkl25z/./nvic.c **** {
+ 187              		.loc 1 125 0
+ 188              		.cfi_startproc
+ 189              	.LVL6:
+ 190 0050 10B5     		push	{r4, lr}	@
+ 191              	.LCFI2:
+ 192              		.cfi_def_cfa_offset 8
+ 193              		.cfi_offset 4, -8
+ 194              		.cfi_offset 14, -4
+ 126:../../cpu/arm/mkl25z/./nvic.c **** 	NVIC_ICPR |= (1 << IRQ);		/* Clear pending interrupt in the NVIC. */
+ 195              		.loc 1 126 0
+ 196 0052 054A     		ldr	r2, .L11	@ tmp116,
+ 197 0054 C023     		mov	r3, #192	@ tmp122,
+ 198 0056 5B00     		lsl	r3, r3, #1	@ tmp117, tmp122,
+ 199 0058 D158     		ldr	r1, [r2, r3]	@ D.4763, MEM[(volatile struct NVIC_MemMap *)3758153984B].ICPR
+ 200 005a 0124     		mov	r4, #1	@ tmp119,
+ 201 005c 8440     		lsl	r4, r4, r0	@ tmp119, tmp119, IRQ
+ 202 005e 201C     		mov	r0, r4	@ D.4764, tmp119
+ 203              	.LVL7:
+ 204 0060 0843     		orr	r0, r1	@ D.4763, D.4763
+ 205 0062 D050     		str	r0, [r2, r3]	@ D.4763, MEM[(volatile struct NVIC_MemMap *)3758153984B].ICPR
+ 127:../../cpu/arm/mkl25z/./nvic.c **** }
+ 206              		.loc 1 127 0
+ 207              		@ sp needed	@
+ 208 0064 10BD     		pop	{r4, pc}
+ 209              	.L12:
+ 210 0066 C046     		.align	2
+ 211              	.L11:
+ 212 0068 00E100E0 		.word	-536813312
+ 213              		.cfi_endproc
+ 214              	.LFE3:
+ 215              		.size	NVIC_CLEAR_PENDING, .-NVIC_CLEAR_PENDING
+ARM GAS  /tmp/ccjLOM07.s 			page 7
+
+
+ 216              		.align	2
+ 217              		.global	NVIC_Set_Priority
+ 218              		.code	16
+ 219              		.thumb_func
+ 220              		.type	NVIC_Set_Priority, %function
+ 221              	NVIC_Set_Priority:
+ 222              	.LFB4:
+ 128:../../cpu/arm/mkl25z/./nvic.c **** 
+ 129:../../cpu/arm/mkl25z/./nvic.c **** /*---------------------------------------------------------------------------*/
+ 130:../../cpu/arm/mkl25z/./nvic.c **** /**
+ 131:../../cpu/arm/mkl25z/./nvic.c **** * \brief 			Set the priority of the specified interrupt in the ARM NVIC.
+ 132:../../cpu/arm/mkl25z/./nvic.c **** * \param IRQ 		IRQ of relevant interrupt as specified in Table 3-7. on Page 52 of the KL25 Sub-Fami
+ 133:../../cpu/arm/mkl25z/./nvic.c **** * \param priority	Priority of the interrupt. Value between 0 and 3.
+ 134:../../cpu/arm/mkl25z/./nvic.c **** * \return 			Nil.
+ 135:../../cpu/arm/mkl25z/./nvic.c **** *
+ 136:../../cpu/arm/mkl25z/./nvic.c **** * Set the priority of the specified interrupt in the Nested Vector
+ 137:../../cpu/arm/mkl25z/./nvic.c **** * Interrupt Controller (NVIC).  The priority is a two-bit value with 
+ 138:../../cpu/arm/mkl25z/./nvic.c **** * 0 being the highest priority.
+ 139:../../cpu/arm/mkl25z/./nvic.c **** *
+ 140:../../cpu/arm/mkl25z/./nvic.c **** * Either a priority of 0 to 3 or 128
+ 141:../../cpu/arm/mkl25z/./nvic.c **** */
+ 142:../../cpu/arm/mkl25z/./nvic.c **** void NVIC_Set_Priority(uint32_t IRQ, uint8_t priority)
+ 143:../../cpu/arm/mkl25z/./nvic.c **** {
+ 223              		.loc 1 143 0
+ 224              		.cfi_startproc
+ 225              	.LVL8:
+ 226 006c 30B5     		push	{r4, r5, lr}	@
+ 227              	.LCFI3:
+ 228              		.cfi_def_cfa_offset 12
+ 229              		.cfi_offset 4, -12
+ 230              		.cfi_offset 5, -8
+ 231              		.cfi_offset 14, -4
+ 144:../../cpu/arm/mkl25z/./nvic.c **** 	/* If priority has been set as 0-3, convert it. */
+ 145:../../cpu/arm/mkl25z/./nvic.c **** 	if(priority < 4) {
+ 232              		.loc 1 145 0
+ 233 006e 0329     		cmp	r1, #3	@ priority,
+ 234 0070 01D8     		bhi	.L14	@,
+ 146:../../cpu/arm/mkl25z/./nvic.c **** 		priority = (priority & 3) << 6;
+ 235              		.loc 1 146 0
+ 236 0072 8901     		lsl	r1, r1, #6	@ D.4767, priority,
+ 237              	.LVL9:
+ 238 0074 C9B2     		uxtb	r1, r1	@ priority, D.4767
+ 239              	.LVL10:
+ 240              	.L14:
+ 147:../../cpu/arm/mkl25z/./nvic.c **** 	}
+ 148:../../cpu/arm/mkl25z/./nvic.c **** 	
+ 149:../../cpu/arm/mkl25z/./nvic.c **** 	/* Set priority for specified interrupt after clearing any existing priority. */
+ 150:../../cpu/arm/mkl25z/./nvic.c **** 	switch (IRQ/4){
+ 241              		.loc 1 150 0
+ 242 0076 8308     		lsr	r3, r0, #2	@ D.4768, IRQ,
+ 243 0078 072B     		cmp	r3, #7	@ D.4768,
+ 244 007a 00D9     		bls	.LCB150	@
+ 245 007c 9AE0     		b	.L13	@long jump	@
+ 246              	.LCB150:
+ 247 007e 9B00     		lsl	r3, r3, #2	@ tmp230, D.4768,
+ 248 0080 4D4A     		ldr	r2, .L25	@ tmp232,
+ 249 0082 D358     		ldr	r3, [r2, r3]	@ tmp233,
+ARM GAS  /tmp/ccjLOM07.s 			page 8
+
+
+ 250 0084 9F46     		mov	pc, r3	@ tmp233
+ 251              		.section	.rodata
+ 252              		.align	2
+ 253              	.L17:
+ 254 0000 86000000 		.word	.L16
+ 255 0004 AC000000 		.word	.L18
+ 256 0008 D2000000 		.word	.L19
+ 257 000c F8000000 		.word	.L20
+ 258 0010 1E010000 		.word	.L21
+ 259 0014 44010000 		.word	.L22
+ 260 0018 6A010000 		.word	.L23
+ 261 001c 90010000 		.word	.L24
+ 262              		.text
+ 263              	.L16:
+ 151:../../cpu/arm/mkl25z/./nvic.c **** 			case 0:	NVIC_IPR0 &= ~(0xC0 << ((IRQ & 3) * 8));
+ 264              		.loc 1 151 0
+ 265 0086 4D4A     		ldr	r2, .L25+4	@ tmp234,
+ 266 0088 C023     		mov	r3, #192	@ tmp380,
+ 267 008a 9B00     		lsl	r3, r3, #2	@ tmp235, tmp380,
+ 268 008c D458     		ldr	r4, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ 269 008e 0325     		mov	r5, #3	@ tmp236,
+ 270 0090 2840     		and	r0, r5	@ D.4768, tmp236
+ 271              	.LVL11:
+ 272 0092 C000     		lsl	r0, r0, #3	@ D.4767, D.4768,
+ 273 0094 C025     		mov	r5, #192	@ tmp239,
+ 274 0096 8540     		lsl	r5, r5, r0	@ D.4767, tmp239, D.4767
+ 275 0098 AC43     		bic	r4, r5	@ D.4768, D.4767
+ 276 009a D450     		str	r4, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ 152:../../cpu/arm/mkl25z/./nvic.c **** 					NVIC_IPR0 |= (priority & 0xC0) << ((IRQ & 3) * 8);
+ 277              		.loc 1 152 0
+ 278 009c D458     		ldr	r4, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ 279 009e 3F25     		mov	r5, #63	@ tmp246,
+ 280 00a0 A943     		bic	r1, r5	@ D.4767, tmp246
+ 281              	.LVL12:
+ 282 00a2 8140     		lsl	r1, r1, r0	@ D.4767, D.4767, D.4767
+ 283 00a4 081C     		mov	r0, r1	@ D.4767, D.4767
+ 284 00a6 2043     		orr	r0, r4	@ D.4768, D.4768
+ 285 00a8 D050     		str	r0, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ 153:../../cpu/arm/mkl25z/./nvic.c **** 					break;
+ 286              		.loc 1 153 0
+ 287 00aa 83E0     		b	.L13	@
+ 288              	.LVL13:
+ 289              	.L18:
+ 154:../../cpu/arm/mkl25z/./nvic.c **** 			case 1:	NVIC_IPR1 &= ~(0xC0 << ((IRQ & 3) * 8));
+ 290              		.loc 1 154 0
+ 291 00ac 434A     		ldr	r2, .L25+4	@ tmp251,
+ 292 00ae C123     		mov	r3, #193	@ tmp379,
+ 293 00b0 9B00     		lsl	r3, r3, #2	@ tmp252, tmp379,
+ 294 00b2 D458     		ldr	r4, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ 295 00b4 0325     		mov	r5, #3	@ tmp253,
+ 296 00b6 2840     		and	r0, r5	@ D.4768, tmp253
+ 297              	.LVL14:
+ 298 00b8 C000     		lsl	r0, r0, #3	@ D.4767, D.4768,
+ 299 00ba C025     		mov	r5, #192	@ tmp256,
+ 300 00bc 8540     		lsl	r5, r5, r0	@ D.4767, tmp256, D.4767
+ 301 00be AC43     		bic	r4, r5	@ D.4768, D.4767
+ 302 00c0 D450     		str	r4, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ARM GAS  /tmp/ccjLOM07.s 			page 9
+
+
+ 155:../../cpu/arm/mkl25z/./nvic.c **** 					NVIC_IPR1 |= (priority & 0xC0) << ((IRQ & 3) * 8);
+ 303              		.loc 1 155 0
+ 304 00c2 D458     		ldr	r4, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ 305 00c4 3F25     		mov	r5, #63	@ tmp263,
+ 306 00c6 A943     		bic	r1, r5	@ D.4767, tmp263
+ 307              	.LVL15:
+ 308 00c8 8140     		lsl	r1, r1, r0	@ D.4767, D.4767, D.4767
+ 309 00ca 081C     		mov	r0, r1	@ D.4767, D.4767
+ 310 00cc 2043     		orr	r0, r4	@ D.4768, D.4768
+ 311 00ce D050     		str	r0, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ 156:../../cpu/arm/mkl25z/./nvic.c **** 					break;
+ 312              		.loc 1 156 0
+ 313 00d0 70E0     		b	.L13	@
+ 314              	.LVL16:
+ 315              	.L19:
+ 157:../../cpu/arm/mkl25z/./nvic.c **** 			case 2:	NVIC_IPR2 &= ~(0xC0 << ((IRQ & 3) * 8));
+ 316              		.loc 1 157 0
+ 317 00d2 3A4A     		ldr	r2, .L25+4	@ tmp268,
+ 318 00d4 C223     		mov	r3, #194	@ tmp378,
+ 319 00d6 9B00     		lsl	r3, r3, #2	@ tmp269, tmp378,
+ 320 00d8 D458     		ldr	r4, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ 321 00da 0325     		mov	r5, #3	@ tmp270,
+ 322 00dc 2840     		and	r0, r5	@ D.4768, tmp270
+ 323              	.LVL17:
+ 324 00de C000     		lsl	r0, r0, #3	@ D.4767, D.4768,
+ 325 00e0 C025     		mov	r5, #192	@ tmp273,
+ 326 00e2 8540     		lsl	r5, r5, r0	@ D.4767, tmp273, D.4767
+ 327 00e4 AC43     		bic	r4, r5	@ D.4768, D.4767
+ 328 00e6 D450     		str	r4, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ 158:../../cpu/arm/mkl25z/./nvic.c **** 					NVIC_IPR2 |= (priority & 0xC0) << ((IRQ & 3) * 8);
+ 329              		.loc 1 158 0
+ 330 00e8 D458     		ldr	r4, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ 331 00ea 3F25     		mov	r5, #63	@ tmp280,
+ 332 00ec A943     		bic	r1, r5	@ D.4767, tmp280
+ 333              	.LVL18:
+ 334 00ee 8140     		lsl	r1, r1, r0	@ D.4767, D.4767, D.4767
+ 335 00f0 081C     		mov	r0, r1	@ D.4767, D.4767
+ 336 00f2 2043     		orr	r0, r4	@ D.4768, D.4768
+ 337 00f4 D050     		str	r0, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ 159:../../cpu/arm/mkl25z/./nvic.c **** 					break;
+ 338              		.loc 1 159 0
+ 339 00f6 5DE0     		b	.L13	@
+ 340              	.LVL19:
+ 341              	.L20:
+ 160:../../cpu/arm/mkl25z/./nvic.c **** 			case 3:	NVIC_IPR3 &= ~(0xC0 << ((IRQ & 3) * 8));
+ 342              		.loc 1 160 0
+ 343 00f8 304A     		ldr	r2, .L25+4	@ tmp285,
+ 344 00fa C323     		mov	r3, #195	@ tmp377,
+ 345 00fc 9B00     		lsl	r3, r3, #2	@ tmp286, tmp377,
+ 346 00fe D458     		ldr	r4, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ 347 0100 0325     		mov	r5, #3	@ tmp287,
+ 348 0102 2840     		and	r0, r5	@ D.4768, tmp287
+ 349              	.LVL20:
+ 350 0104 C000     		lsl	r0, r0, #3	@ D.4767, D.4768,
+ 351 0106 C025     		mov	r5, #192	@ tmp290,
+ 352 0108 8540     		lsl	r5, r5, r0	@ D.4767, tmp290, D.4767
+ 353 010a AC43     		bic	r4, r5	@ D.4768, D.4767
+ARM GAS  /tmp/ccjLOM07.s 			page 10
+
+
+ 354 010c D450     		str	r4, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ 161:../../cpu/arm/mkl25z/./nvic.c **** 					NVIC_IPR3 |= (priority & 0xC0) << ((IRQ & 3) * 8);
+ 355              		.loc 1 161 0
+ 356 010e D458     		ldr	r4, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ 357 0110 3F25     		mov	r5, #63	@ tmp297,
+ 358 0112 A943     		bic	r1, r5	@ D.4767, tmp297
+ 359              	.LVL21:
+ 360 0114 8140     		lsl	r1, r1, r0	@ D.4767, D.4767, D.4767
+ 361 0116 081C     		mov	r0, r1	@ D.4767, D.4767
+ 362 0118 2043     		orr	r0, r4	@ D.4768, D.4768
+ 363 011a D050     		str	r0, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ 162:../../cpu/arm/mkl25z/./nvic.c **** 					break;
+ 364              		.loc 1 162 0
+ 365 011c 4AE0     		b	.L13	@
+ 366              	.LVL22:
+ 367              	.L21:
+ 163:../../cpu/arm/mkl25z/./nvic.c **** 			case 4:	NVIC_IPR4 &= ~(0xC0 << ((IRQ & 3) * 8));
+ 368              		.loc 1 163 0
+ 369 011e 274A     		ldr	r2, .L25+4	@ tmp302,
+ 370 0120 C423     		mov	r3, #196	@ tmp376,
+ 371 0122 9B00     		lsl	r3, r3, #2	@ tmp303, tmp376,
+ 372 0124 D458     		ldr	r4, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ 373 0126 0325     		mov	r5, #3	@ tmp304,
+ 374 0128 2840     		and	r0, r5	@ D.4768, tmp304
+ 375              	.LVL23:
+ 376 012a C000     		lsl	r0, r0, #3	@ D.4767, D.4768,
+ 377 012c C025     		mov	r5, #192	@ tmp307,
+ 378 012e 8540     		lsl	r5, r5, r0	@ D.4767, tmp307, D.4767
+ 379 0130 AC43     		bic	r4, r5	@ D.4768, D.4767
+ 380 0132 D450     		str	r4, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ 164:../../cpu/arm/mkl25z/./nvic.c **** 					NVIC_IPR4 |= (priority & 0xC0) << ((IRQ & 3) * 8);
+ 381              		.loc 1 164 0
+ 382 0134 D458     		ldr	r4, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ 383 0136 3F25     		mov	r5, #63	@ tmp314,
+ 384 0138 A943     		bic	r1, r5	@ D.4767, tmp314
+ 385              	.LVL24:
+ 386 013a 8140     		lsl	r1, r1, r0	@ D.4767, D.4767, D.4767
+ 387 013c 081C     		mov	r0, r1	@ D.4767, D.4767
+ 388 013e 2043     		orr	r0, r4	@ D.4768, D.4768
+ 389 0140 D050     		str	r0, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ 165:../../cpu/arm/mkl25z/./nvic.c **** 					break;
+ 390              		.loc 1 165 0
+ 391 0142 37E0     		b	.L13	@
+ 392              	.LVL25:
+ 393              	.L22:
+ 166:../../cpu/arm/mkl25z/./nvic.c **** 			case 5:	NVIC_IPR5 &= ~(0xC0 << ((IRQ & 3) * 8));
+ 394              		.loc 1 166 0
+ 395 0144 1D4A     		ldr	r2, .L25+4	@ tmp319,
+ 396 0146 C523     		mov	r3, #197	@ tmp375,
+ 397 0148 9B00     		lsl	r3, r3, #2	@ tmp320, tmp375,
+ 398 014a D458     		ldr	r4, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ 399 014c 0325     		mov	r5, #3	@ tmp321,
+ 400 014e 2840     		and	r0, r5	@ D.4768, tmp321
+ 401              	.LVL26:
+ 402 0150 C000     		lsl	r0, r0, #3	@ D.4767, D.4768,
+ 403 0152 C025     		mov	r5, #192	@ tmp324,
+ 404 0154 8540     		lsl	r5, r5, r0	@ D.4767, tmp324, D.4767
+ARM GAS  /tmp/ccjLOM07.s 			page 11
+
+
+ 405 0156 AC43     		bic	r4, r5	@ D.4768, D.4767
+ 406 0158 D450     		str	r4, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ 167:../../cpu/arm/mkl25z/./nvic.c **** 					NVIC_IPR5 |= (priority & 0xC0) << ((IRQ & 3) * 8);
+ 407              		.loc 1 167 0
+ 408 015a D458     		ldr	r4, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ 409 015c 3F25     		mov	r5, #63	@ tmp331,
+ 410 015e A943     		bic	r1, r5	@ D.4767, tmp331
+ 411              	.LVL27:
+ 412 0160 8140     		lsl	r1, r1, r0	@ D.4767, D.4767, D.4767
+ 413 0162 081C     		mov	r0, r1	@ D.4767, D.4767
+ 414 0164 2043     		orr	r0, r4	@ D.4768, D.4768
+ 415 0166 D050     		str	r0, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ 168:../../cpu/arm/mkl25z/./nvic.c **** 					break;
+ 416              		.loc 1 168 0
+ 417 0168 24E0     		b	.L13	@
+ 418              	.LVL28:
+ 419              	.L23:
+ 169:../../cpu/arm/mkl25z/./nvic.c **** 			case 6:	NVIC_IPR6 &= ~(0xC0 << ((IRQ & 3) * 8));
+ 420              		.loc 1 169 0
+ 421 016a 144A     		ldr	r2, .L25+4	@ tmp336,
+ 422 016c C623     		mov	r3, #198	@ tmp374,
+ 423 016e 9B00     		lsl	r3, r3, #2	@ tmp337, tmp374,
+ 424 0170 D458     		ldr	r4, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ 425 0172 0325     		mov	r5, #3	@ tmp338,
+ 426 0174 2840     		and	r0, r5	@ D.4768, tmp338
+ 427              	.LVL29:
+ 428 0176 C000     		lsl	r0, r0, #3	@ D.4767, D.4768,
+ 429 0178 C025     		mov	r5, #192	@ tmp341,
+ 430 017a 8540     		lsl	r5, r5, r0	@ D.4767, tmp341, D.4767
+ 431 017c AC43     		bic	r4, r5	@ D.4768, D.4767
+ 432 017e D450     		str	r4, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ 170:../../cpu/arm/mkl25z/./nvic.c **** 					NVIC_IPR6 |= (priority & 0xC0) << ((IRQ & 3) * 8);
+ 433              		.loc 1 170 0
+ 434 0180 D458     		ldr	r4, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ 435 0182 3F25     		mov	r5, #63	@ tmp348,
+ 436 0184 A943     		bic	r1, r5	@ D.4767, tmp348
+ 437              	.LVL30:
+ 438 0186 8140     		lsl	r1, r1, r0	@ D.4767, D.4767, D.4767
+ 439 0188 081C     		mov	r0, r1	@ D.4767, D.4767
+ 440 018a 2043     		orr	r0, r4	@ D.4768, D.4768
+ 441 018c D050     		str	r0, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ 171:../../cpu/arm/mkl25z/./nvic.c **** 					break;
+ 442              		.loc 1 171 0
+ 443 018e 11E0     		b	.L13	@
+ 444              	.LVL31:
+ 445              	.L24:
+ 172:../../cpu/arm/mkl25z/./nvic.c **** 			case 7:	NVIC_IPR7 &= ~(0xC0 << ((IRQ & 3) * 8));
+ 446              		.loc 1 172 0
+ 447 0190 0A4A     		ldr	r2, .L25+4	@ tmp353,
+ 448 0192 C723     		mov	r3, #199	@ tmp373,
+ 449 0194 9B00     		lsl	r3, r3, #2	@ tmp354, tmp373,
+ 450 0196 D458     		ldr	r4, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ 451 0198 0325     		mov	r5, #3	@ tmp355,
+ 452 019a 2840     		and	r0, r5	@ D.4768, tmp355
+ 453              	.LVL32:
+ 454 019c C000     		lsl	r0, r0, #3	@ D.4768, D.4768,
+ 455 019e C025     		mov	r5, #192	@ tmp358,
+ARM GAS  /tmp/ccjLOM07.s 			page 12
+
+
+ 456 01a0 8540     		lsl	r5, r5, r0	@ D.4767, tmp358, D.4768
+ 457 01a2 AC43     		bic	r4, r5	@ D.4768, D.4767
+ 458 01a4 D450     		str	r4, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ 173:../../cpu/arm/mkl25z/./nvic.c **** 					NVIC_IPR7 |= (priority & 3) << (((IRQ & 3) * 8) + 6);
+ 459              		.loc 1 173 0
+ 460 01a6 D458     		ldr	r4, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ 461 01a8 0325     		mov	r5, #3	@ tmp367,
+ 462 01aa 2940     		and	r1, r5	@ D.4767, tmp367
+ 463              	.LVL33:
+ 464 01ac 0630     		add	r0, r0, #6	@ D.4768,
+ 465 01ae 8140     		lsl	r1, r1, r0	@ D.4767, D.4767, D.4768
+ 466 01b0 2143     		orr	r1, r4	@ D.4768, D.4768
+ 467 01b2 D150     		str	r1, [r2, r3]	@ D.4768, MEM[(volatile struct NVIC_MemMap *)3758153984B].IP
+ 468              	.L13:
+ 174:../../cpu/arm/mkl25z/./nvic.c **** 					break;
+ 175:../../cpu/arm/mkl25z/./nvic.c **** 			default:
+ 176:../../cpu/arm/mkl25z/./nvic.c **** 					break;
+ 177:../../cpu/arm/mkl25z/./nvic.c **** 	}
+ 178:../../cpu/arm/mkl25z/./nvic.c **** }
+ 469              		.loc 1 178 0
+ 470              		@ sp needed	@
+ 471 01b4 30BD     		pop	{r4, r5, pc}
+ 472              	.L26:
+ 473 01b6 C046     		.align	2
+ 474              	.L25:
+ 475 01b8 00000000 		.word	.L17
+ 476 01bc 00E100E0 		.word	-536813312
+ 477              		.cfi_endproc
+ 478              	.LFE4:
+ 479              		.size	NVIC_Set_Priority, .-NVIC_Set_Priority
+ 480              		.align	2
+ 481              		.global	NVIC_SET_SYSTICK_PRI
+ 482              		.code	16
+ 483              		.thumb_func
+ 484              		.type	NVIC_SET_SYSTICK_PRI, %function
+ 485              	NVIC_SET_SYSTICK_PRI:
+ 486              	.LFB5:
+ 179:../../cpu/arm/mkl25z/./nvic.c **** 
+ 180:../../cpu/arm/mkl25z/./nvic.c **** /*---------------------------------------------------------------------------*/
+ 181:../../cpu/arm/mkl25z/./nvic.c **** /**
+ 182:../../cpu/arm/mkl25z/./nvic.c **** * \brief 			Set the priority of the SYSTICK interrupt.
+ 183:../../cpu/arm/mkl25z/./nvic.c **** * \param priority	Priority of the interrupt.
+ 184:../../cpu/arm/mkl25z/./nvic.c **** * \return 			Nil.
+ 185:../../cpu/arm/mkl25z/./nvic.c **** *
+ 186:../../cpu/arm/mkl25z/./nvic.c **** * Set the priority of the SYSTICK interrupt. 
+ 187:../../cpu/arm/mkl25z/./nvic.c **** */
+ 188:../../cpu/arm/mkl25z/./nvic.c **** void NVIC_SET_SYSTICK_PRI(uint8_t priority)
+ 189:../../cpu/arm/mkl25z/./nvic.c **** {
+ 487              		.loc 1 189 0
+ 488              		.cfi_startproc
+ 489              	.LVL34:
+ 190:../../cpu/arm/mkl25z/./nvic.c **** 	/* Set SysTick priority after clearing any existing priority. */
+ 191:../../cpu/arm/mkl25z/./nvic.c **** 	SCB_SHPR2 &= ~(0xff << 24);
+ 490              		.loc 1 191 0
+ 491 01c0 054A     		ldr	r2, .L28	@ tmp118,
+ 492 01c2 064B     		ldr	r3, .L28+4	@ tmp119,
+ 493 01c4 D158     		ldr	r1, [r2, r3]	@ D.4772, MEM[(volatile struct SCB_MemMap *)3758153728B].SHPR2
+ARM GAS  /tmp/ccjLOM07.s 			page 13
+
+
+ 494 01c6 0902     		lsl	r1, r1, #8	@ tmp120, D.4772,
+ 495 01c8 090A     		lsr	r1, r1, #8	@ D.4772, tmp120,
+ 496 01ca D150     		str	r1, [r2, r3]	@ D.4772, MEM[(volatile struct SCB_MemMap *)3758153728B].SHPR2
+ 192:../../cpu/arm/mkl25z/./nvic.c **** 	SCB_SHPR2 |= priority << 24;
+ 497              		.loc 1 192 0
+ 498 01cc D158     		ldr	r1, [r2, r3]	@ D.4772, MEM[(volatile struct SCB_MemMap *)3758153728B].SHPR2
+ 499 01ce 0006     		lsl	r0, r0, #24	@ D.4773, priority,
+ 500              	.LVL35:
+ 501 01d0 0843     		orr	r0, r1	@ D.4772, D.4772
+ 502 01d2 D050     		str	r0, [r2, r3]	@ D.4772, MEM[(volatile struct SCB_MemMap *)3758153728B].SHPR2
+ 193:../../cpu/arm/mkl25z/./nvic.c **** }...
+ 503              		.loc 1 193 0
+ 504              		@ sp needed	@
+ 505 01d4 7047     		bx	lr
+ 506              	.L29:
+ 507 01d6 C046     		.align	2
+ 508              	.L28:
+ 509 01d8 00E000E0 		.word	-536813568
+ 510 01dc 1C0D0000 		.word	3356
+ 511              		.cfi_endproc
+ 512              	.LFE5:
+ 513              		.size	NVIC_SET_SYSTICK_PRI, .-NVIC_SET_SYSTICK_PRI
+ 514              	.Letext0:
+ 515              		.file 2 "/home/glacsweb/arm-gcc/ARM_GCC_Support/ewl/EWL_C/include/cstdint"
+ 516              		.file 3 "../../cpu/arm/mkl25z/MKL25Z4.h"
+ 517              		.section	.debug_info,"",%progbits
+ 518              	.Ldebug_info0:
+ 519 0000 AB030000 		.4byte	0x3ab
+ 520 0004 0200     		.2byte	0x2
+ 521 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 522 000a 04       		.byte	0x4
+ 523 000b 01       		.uleb128 0x1
+ 524 000c 1C000000 		.4byte	.LASF38
+ 525 0010 01       		.byte	0x1
+ 526 0011 E7010000 		.4byte	.LASF39
+ 527 0015 05020000 		.4byte	.LASF40
+ 528 0019 00000000 		.4byte	.Ltext0
+ 529 001d E0010000 		.4byte	.Letext0
+ 530 0021 00000000 		.4byte	.Ldebug_line0
+ 531 0025 02       		.uleb128 0x2
+ 532 0026 04       		.byte	0x4
+ 533 0027 05       		.byte	0x5
+ 534 0028 696E7400 		.ascii	"int\000"
+ 535 002c 03       		.uleb128 0x3
+ 536 002d 01       		.byte	0x1
+ 537 002e 06       		.byte	0x6
+ 538 002f 33020000 		.4byte	.LASF0
+ 539 0033 03       		.uleb128 0x3
+ 540 0034 02       		.byte	0x2
+ 541 0035 05       		.byte	0x5
+ 542 0036 A4010000 		.4byte	.LASF1
+ 543 003a 03       		.uleb128 0x3
+ 544 003b 04       		.byte	0x4
+ 545 003c 05       		.byte	0x5
+ 546 003d A6000000 		.4byte	.LASF2
+ 547 0041 03       		.uleb128 0x3
+ 548 0042 08       		.byte	0x8
+ARM GAS  /tmp/ccjLOM07.s 			page 14
+
+
+ 549 0043 05       		.byte	0x5
+ 550 0044 80010000 		.4byte	.LASF3
+ 551 0048 04       		.uleb128 0x4
+ 552 0049 4C010000 		.4byte	.LASF6
+ 553 004d 02       		.byte	0x2
+ 554 004e 2A       		.byte	0x2a
+ 555 004f 53000000 		.4byte	0x53
+ 556 0053 03       		.uleb128 0x3
+ 557 0054 01       		.byte	0x1
+ 558 0055 08       		.byte	0x8
+ 559 0056 D0000000 		.4byte	.LASF4
+ 560 005a 03       		.uleb128 0x3
+ 561 005b 02       		.byte	0x2
+ 562 005c 07       		.byte	0x7
+ 563 005d F0000000 		.4byte	.LASF5
+ 564 0061 04       		.uleb128 0x4
+ 565 0062 DE010000 		.4byte	.LASF7
+ 566 0066 02       		.byte	0x2
+ 567 0067 2C       		.byte	0x2c
+ 568 0068 6C000000 		.4byte	0x6c
+ 569 006c 03       		.uleb128 0x3
+ 570 006d 04       		.byte	0x4
+ 571 006e 07       		.byte	0x7
+ 572 006f DE000000 		.4byte	.LASF8
+ 573 0073 03       		.uleb128 0x3
+ 574 0074 08       		.byte	0x8
+ 575 0075 07       		.byte	0x7
+ 576 0076 35010000 		.4byte	.LASF9
+ 577 007a 03       		.uleb128 0x3
+ 578 007b 04       		.byte	0x4
+ 579 007c 07       		.byte	0x7
+ 580 007d 65010000 		.4byte	.LASF10
+ 581 0081 05       		.uleb128 0x5
+ 582 0082 48000000 		.4byte	0x48
+ 583 0086 91000000 		.4byte	0x91
+ 584 008a 06       		.uleb128 0x6
+ 585 008b 7A000000 		.4byte	0x7a
+ 586 008f 03       		.byte	0x3
+ 587 0090 00       		.byte	0
+ 588 0091 05       		.uleb128 0x5
+ 589 0092 48000000 		.4byte	0x48
+ 590 0096 A1000000 		.4byte	0xa1
+ 591 009a 06       		.uleb128 0x6
+ 592 009b 7A000000 		.4byte	0x7a
+ 593 009f 07       		.byte	0x7
+ 594 00a0 00       		.byte	0
+ 595 00a1 05       		.uleb128 0x5
+ 596 00a2 61000000 		.4byte	0x61
+ 597 00a6 B1000000 		.4byte	0xb1
+ 598 00aa 06       		.uleb128 0x6
+ 599 00ab 7A000000 		.4byte	0x7a
+ 600 00af 07       		.byte	0x7
+ 601 00b0 00       		.byte	0
+ 602 00b1 07       		.uleb128 0x7
+ 603 00b2 BF000000 		.4byte	.LASF20
+ 604 00b6 2003     		.2byte	0x320
+ 605 00b8 03       		.byte	0x3
+ARM GAS  /tmp/ccjLOM07.s 			page 15
+
+
+ 606 00b9 570D     		.2byte	0xd57
+ 607 00bb 4D010000 		.4byte	0x14d
+ 608 00bf 08       		.uleb128 0x8
+ 609 00c0 9F010000 		.4byte	.LASF11
+ 610 00c4 03       		.byte	0x3
+ 611 00c5 580D     		.2byte	0xd58
+ 612 00c7 61000000 		.4byte	0x61
+ 613 00cb 02       		.byte	0x2
+ 614 00cc 23       		.byte	0x23
+ 615 00cd 00       		.uleb128 0
+ 616 00ce 08       		.uleb128 0x8
+ 617 00cf 3F020000 		.4byte	.LASF12
+ 618 00d3 03       		.byte	0x3
+ 619 00d4 590D     		.2byte	0xd59
+ 620 00d6 4D010000 		.4byte	0x14d
+ 621 00da 02       		.byte	0x2
+ 622 00db 23       		.byte	0x23
+ 623 00dc 04       		.uleb128 0x4
+ 624 00dd 08       		.uleb128 0x8
+ 625 00de CB000000 		.4byte	.LASF13
+ 626 00e2 03       		.byte	0x3
+ 627 00e3 5A0D     		.2byte	0xd5a
+ 628 00e5 61000000 		.4byte	0x61
+ 629 00e9 03       		.byte	0x3
+ 630 00ea 23       		.byte	0x23
+ 631 00eb 8001     		.uleb128 0x80
+ 632 00ed 08       		.uleb128 0x8
+ 633 00ee 03010000 		.4byte	.LASF14
+ 634 00f2 03       		.byte	0x3
+ 635 00f3 5B0D     		.2byte	0xd5b
+ 636 00f5 4D010000 		.4byte	0x14d
+ 637 00f9 03       		.byte	0x3
+ 638 00fa 23       		.byte	0x23
+ 639 00fb 8401     		.uleb128 0x84
+ 640 00fd 08       		.uleb128 0x8
+ 641 00fe 1C010000 		.4byte	.LASF15
+ 642 0102 03       		.byte	0x3
+ 643 0103 5C0D     		.2byte	0xd5c
+ 644 0105 61000000 		.4byte	0x61
+ 645 0109 03       		.byte	0x3
+ 646 010a 23       		.byte	0x23
+ 647 010b 8002     		.uleb128 0x100
+ 648 010d 08       		.uleb128 0x8
+ 649 010e 5F020000 		.4byte	.LASF16
+ 650 0112 03       		.byte	0x3
+ 651 0113 5D0D     		.2byte	0xd5d
+ 652 0115 4D010000 		.4byte	0x14d
+ 653 0119 03       		.byte	0x3
+ 654 011a 23       		.byte	0x23
+ 655 011b 8402     		.uleb128 0x104
+ 656 011d 08       		.uleb128 0x8
+ 657 011e 00000000 		.4byte	.LASF17
+ 658 0122 03       		.byte	0x3
+ 659 0123 5E0D     		.2byte	0xd5e
+ 660 0125 61000000 		.4byte	0x61
+ 661 0129 03       		.byte	0x3
+ 662 012a 23       		.byte	0x23
+ARM GAS  /tmp/ccjLOM07.s 			page 16
+
+
+ 663 012b 8003     		.uleb128 0x180
+ 664 012d 08       		.uleb128 0x8
+ 665 012e 6A020000 		.4byte	.LASF18
+ 666 0132 03       		.byte	0x3
+ 667 0133 5F0D     		.2byte	0xd5f
+ 668 0135 5D010000 		.4byte	0x15d
+ 669 0139 03       		.byte	0x3
+ 670 013a 23       		.byte	0x23
+ 671 013b 8403     		.uleb128 0x184
+ 672 013d 09       		.uleb128 0x9
+ 673 013e 495000   		.ascii	"IP\000"
+ 674 0141 03       		.byte	0x3
+ 675 0142 600D     		.2byte	0xd60
+ 676 0144 A1000000 		.4byte	0xa1
+ 677 0148 03       		.byte	0x3
+ 678 0149 23       		.byte	0x23
+ 679 014a 8006     		.uleb128 0x300
+ 680 014c 00       		.byte	0
+ 681 014d 05       		.uleb128 0x5
+ 682 014e 48000000 		.4byte	0x48
+ 683 0152 5D010000 		.4byte	0x15d
+ 684 0156 06       		.uleb128 0x6
+ 685 0157 7A000000 		.4byte	0x7a
+ 686 015b 7B       		.byte	0x7b
+ 687 015c 00       		.byte	0
+ 688 015d 05       		.uleb128 0x5
+ 689 015e 48000000 		.4byte	0x48
+ 690 0162 6E010000 		.4byte	0x16e
+ 691 0166 0A       		.uleb128 0xa
+ 692 0167 7A000000 		.4byte	0x7a
+ 693 016b 7B01     		.2byte	0x17b
+ 694 016d 00       		.byte	0
+ 695 016e 0B       		.uleb128 0xb
+ 696 016f 21010000 		.4byte	.LASF19
+ 697 0173 03       		.byte	0x3
+ 698 0174 610D     		.2byte	0xd61
+ 699 0176 7A010000 		.4byte	0x17a
+ 700 017a 0C       		.uleb128 0xc
+ 701 017b 04       		.byte	0x4
+ 702 017c 80010000 		.4byte	0x180
+ 703 0180 0D       		.uleb128 0xd
+ 704 0181 B1000000 		.4byte	0xb1
+ 705 0185 07       		.uleb128 0x7
+ 706 0186 94010000 		.4byte	.LASF21
+ 707 018a 340D     		.2byte	0xd34
+ 708 018c 03       		.byte	0x3
+ 709 018d 8F12     		.2byte	0x128f
+ 710 018f 81020000 		.4byte	0x281
+ 711 0193 08       		.uleb128 0x8
+ 712 0194 3F020000 		.4byte	.LASF12
+ 713 0198 03       		.byte	0x3
+ 714 0199 9012     		.2byte	0x1290
+ 715 019b 91000000 		.4byte	0x91
+ 716 019f 02       		.byte	0x2
+ 717 01a0 23       		.byte	0x23
+ 718 01a1 00       		.uleb128 0
+ 719 01a2 08       		.uleb128 0x8
+ARM GAS  /tmp/ccjLOM07.s 			page 17
+
+
+ 720 01a3 B4010000 		.4byte	.LASF22
+ 721 01a7 03       		.byte	0x3
+ 722 01a8 9112     		.2byte	0x1291
+ 723 01aa 61000000 		.4byte	0x61
+ 724 01ae 02       		.byte	0x2
+ 725 01af 23       		.byte	0x23
+ 726 01b0 08       		.uleb128 0x8
+ 727 01b1 08       		.uleb128 0x8
+ 728 01b2 03010000 		.4byte	.LASF14
+ 729 01b6 03       		.byte	0x3
+ 730 01b7 9212     		.2byte	0x1292
+ 731 01b9 81020000 		.4byte	0x281
+ 732 01bd 02       		.byte	0x2
+ 733 01be 23       		.byte	0x23
+ 734 01bf 0C       		.uleb128 0xc
+ 735 01c0 08       		.uleb128 0x8
+ 736 01c1 8E010000 		.4byte	.LASF23
+ 737 01c5 03       		.byte	0x3
+ 738 01c6 9312     		.2byte	0x1293
+ 739 01c8 61000000 		.4byte	0x61
+ 740 01cc 03       		.byte	0x3
+ 741 01cd 23       		.byte	0x23
+ 742 01ce 801A     		.uleb128 0xd00
+ 743 01d0 08       		.uleb128 0x8
+ 744 01d1 54010000 		.4byte	.LASF24
+ 745 01d5 03       		.byte	0x3
+ 746 01d6 9412     		.2byte	0x1294
+ 747 01d8 61000000 		.4byte	0x61
+ 748 01dc 03       		.byte	0x3
+ 749 01dd 23       		.byte	0x23
+ 750 01de 841A     		.uleb128 0xd04
+ 751 01e0 08       		.uleb128 0x8
+ 752 01e1 17010000 		.4byte	.LASF25
+ 753 01e5 03       		.byte	0x3
+ 754 01e6 9512     		.2byte	0x1295
+ 755 01e8 61000000 		.4byte	0x61
+ 756 01ec 03       		.byte	0x3
+ 757 01ed 23       		.byte	0x23
+ 758 01ee 881A     		.uleb128 0xd08
+ 759 01f0 08       		.uleb128 0x8
+ 760 01f1 5F010000 		.4byte	.LASF26
+ 761 01f5 03       		.byte	0x3
+ 762 01f6 9612     		.2byte	0x1296
+ 763 01f8 61000000 		.4byte	0x61
+ 764 01fc 03       		.byte	0x3
+ 765 01fd 23       		.byte	0x23
+ 766 01fe 8C1A     		.uleb128 0xd0c
+ 767 0200 09       		.uleb128 0x9
+ 768 0201 53435200 		.ascii	"SCR\000"
+ 769 0205 03       		.byte	0x3
+ 770 0206 9712     		.2byte	0x1297
+ 771 0208 61000000 		.4byte	0x61
+ 772 020c 03       		.byte	0x3
+ 773 020d 23       		.byte	0x23
+ 774 020e 901A     		.uleb128 0xd10
+ 775 0210 09       		.uleb128 0x9
+ 776 0211 43435200 		.ascii	"CCR\000"
+ARM GAS  /tmp/ccjLOM07.s 			page 18
+
+
+ 777 0215 03       		.byte	0x3
+ 778 0216 9812     		.2byte	0x1298
+ 779 0218 61000000 		.4byte	0x61
+ 780 021c 03       		.byte	0x3
+ 781 021d 23       		.byte	0x23
+ 782 021e 941A     		.uleb128 0xd14
+ 783 0220 08       		.uleb128 0x8
+ 784 0221 5F020000 		.4byte	.LASF16
+ 785 0225 03       		.byte	0x3
+ 786 0226 9912     		.2byte	0x1299
+ 787 0228 81000000 		.4byte	0x81
+ 788 022c 03       		.byte	0x3
+ 789 022d 23       		.byte	0x23
+ 790 022e 981A     		.uleb128 0xd18
+ 791 0230 08       		.uleb128 0x8
+ 792 0231 59010000 		.4byte	.LASF27
+ 793 0235 03       		.byte	0x3
+ 794 0236 9A12     		.2byte	0x129a
+ 795 0238 61000000 		.4byte	0x61
+ 796 023c 03       		.byte	0x3
+ 797 023d 23       		.byte	0x23
+ 798 023e 9C1A     		.uleb128 0xd1c
+ 799 0240 08       		.uleb128 0x8
+ 800 0241 AE010000 		.4byte	.LASF28
+ 801 0245 03       		.byte	0x3
+ 802 0246 9B12     		.2byte	0x129b
+ 803 0248 61000000 		.4byte	0x61
+ 804 024c 03       		.byte	0x3
+ 805 024d 23       		.byte	0x23
+ 806 024e A01A     		.uleb128 0xd20
+ 807 0250 08       		.uleb128 0x8
+ 808 0251 16000000 		.4byte	.LASF29
+ 809 0255 03       		.byte	0x3
+ 810 0256 9C12     		.2byte	0x129c
+ 811 0258 61000000 		.4byte	0x61
+ 812 025c 03       		.byte	0x3
+ 813 025d 23       		.byte	0x23
+ 814 025e A41A     		.uleb128 0xd24
+ 815 0260 08       		.uleb128 0x8
+ 816 0261 6A020000 		.4byte	.LASF18
+ 817 0265 03       		.byte	0x3
+ 818 0266 9D12     		.2byte	0x129d
+ 819 0268 91000000 		.4byte	0x91
+ 820 026c 03       		.byte	0x3
+ 821 026d 23       		.byte	0x23
+ 822 026e A81A     		.uleb128 0xd28
+ 823 0270 08       		.uleb128 0x8
+ 824 0271 30010000 		.4byte	.LASF30
+ 825 0275 03       		.byte	0x3
+ 826 0276 9E12     		.2byte	0x129e
+ 827 0278 61000000 		.4byte	0x61
+ 828 027c 03       		.byte	0x3
+ 829 027d 23       		.byte	0x23
+ 830 027e B01A     		.uleb128 0xd30
+ 831 0280 00       		.byte	0
+ 832 0281 05       		.uleb128 0x5
+ 833 0282 48000000 		.4byte	0x48
+ARM GAS  /tmp/ccjLOM07.s 			page 19
+
+
+ 834 0286 92020000 		.4byte	0x292
+ 835 028a 0A       		.uleb128 0xa
+ 836 028b 7A000000 		.4byte	0x7a
+ 837 028f F30C     		.2byte	0xcf3
+ 838 0291 00       		.byte	0
+ 839 0292 0B       		.uleb128 0xb
+ 840 0293 75020000 		.4byte	.LASF31
+ 841 0297 03       		.byte	0x3
+ 842 0298 9F12     		.2byte	0x129f
+ 843 029a 9E020000 		.4byte	0x29e
+ 844 029e 0C       		.uleb128 0xc
+ 845 029f 04       		.byte	0x4
+ 846 02a0 A4020000 		.4byte	0x2a4
+ 847 02a4 0D       		.uleb128 0xd
+ 848 02a5 85010000 		.4byte	0x185
+ 849 02a9 0E       		.uleb128 0xe
+ 850 02aa 01       		.byte	0x1
+ 851 02ab AF000000 		.4byte	.LASF32
+ 852 02af 01       		.byte	0x1
+ 853 02b0 50       		.byte	0x50
+ 854 02b1 01       		.byte	0x1
+ 855 02b2 00000000 		.4byte	.LFB0
+ 856 02b6 1C000000 		.4byte	.LFE0
+ 857 02ba 02       		.byte	0x2
+ 858 02bb 7D       		.byte	0x7d
+ 859 02bc 00       		.sleb128 0
+ 860 02bd 01       		.byte	0x1
+ 861 02be D2020000 		.4byte	0x2d2
+ 862 02c2 0F       		.uleb128 0xf
+ 863 02c3 49525100 		.ascii	"IRQ\000"
+ 864 02c7 01       		.byte	0x1
+ 865 02c8 50       		.byte	0x50
+ 866 02c9 61000000 		.4byte	0x61
+ 867 02cd 00000000 		.4byte	.LLST0
+ 868 02d1 00       		.byte	0
+ 869 02d2 10       		.uleb128 0x10
+ 870 02d3 01       		.byte	0x1
+ 871 02d4 05000000 		.4byte	.LASF33
+ 872 02d8 01       		.byte	0x1
+ 873 02d9 5F       		.byte	0x5f
+ 874 02da 01       		.byte	0x1
+ 875 02db 1C000000 		.4byte	.LFB1
+ 876 02df 34000000 		.4byte	.LFE1
+ 877 02e3 21000000 		.4byte	.LLST1
+ 878 02e7 01       		.byte	0x1
+ 879 02e8 FC020000 		.4byte	0x2fc
+ 880 02ec 0F       		.uleb128 0xf
+ 881 02ed 49525100 		.ascii	"IRQ\000"
+ 882 02f1 01       		.byte	0x1
+ 883 02f2 5F       		.byte	0x5f
+ 884 02f3 61000000 		.4byte	0x61
+ 885 02f7 41000000 		.4byte	.LLST2
+ 886 02fb 00       		.byte	0
+ 887 02fc 10       		.uleb128 0x10
+ 888 02fd 01       		.byte	0x1
+ 889 02fe BA010000 		.4byte	.LASF34
+ 890 0302 01       		.byte	0x1
+ARM GAS  /tmp/ccjLOM07.s 			page 20
+
+
+ 891 0303 6E       		.byte	0x6e
+ 892 0304 01       		.byte	0x1
+ 893 0305 34000000 		.4byte	.LFB2
+ 894 0309 50000000 		.4byte	.LFE2
+ 895 030d 62000000 		.4byte	.LLST3
+ 896 0311 01       		.byte	0x1
+ 897 0312 26030000 		.4byte	0x326
+ 898 0316 0F       		.uleb128 0xf
+ 899 0317 49525100 		.ascii	"IRQ\000"
+ 900 031b 01       		.byte	0x1
+ 901 031c 6E       		.byte	0x6e
+ 902 031d 61000000 		.4byte	0x61
+ 903 0321 82000000 		.4byte	.LLST4
+ 904 0325 00       		.byte	0
+ 905 0326 10       		.uleb128 0x10
+ 906 0327 01       		.byte	0x1
+ 907 0328 CB010000 		.4byte	.LASF35
+ 908 032c 01       		.byte	0x1
+ 909 032d 7C       		.byte	0x7c
+ 910 032e 01       		.byte	0x1
+ 911 032f 50000000 		.4byte	.LFB3
+ 912 0333 6C000000 		.4byte	.LFE3
+ 913 0337 A3000000 		.4byte	.LLST5
+ 914 033b 01       		.byte	0x1
+ 915 033c 50030000 		.4byte	0x350
+ 916 0340 0F       		.uleb128 0xf
+ 917 0341 49525100 		.ascii	"IRQ\000"
+ 918 0345 01       		.byte	0x1
+ 919 0346 7C       		.byte	0x7c
+ 920 0347 61000000 		.4byte	0x61
+ 921 034b C3000000 		.4byte	.LLST6
+ 922 034f 00       		.byte	0
+ 923 0350 10       		.uleb128 0x10
+ 924 0351 01       		.byte	0x1
+ 925 0352 6E010000 		.4byte	.LASF36
+ 926 0356 01       		.byte	0x1
+ 927 0357 8E       		.byte	0x8e
+ 928 0358 01       		.byte	0x1
+ 929 0359 6C000000 		.4byte	.LFB4
+ 930 035d C0010000 		.4byte	.LFE4
+ 931 0361 E4000000 		.4byte	.LLST7
+ 932 0365 01       		.byte	0x1
+ 933 0366 89030000 		.4byte	0x389
+ 934 036a 0F       		.uleb128 0xf
+ 935 036b 49525100 		.ascii	"IRQ\000"
+ 936 036f 01       		.byte	0x1
+ 937 0370 8E       		.byte	0x8e
+ 938 0371 61000000 		.4byte	0x61
+ 939 0375 04010000 		.4byte	.LLST8
+ 940 0379 11       		.uleb128 0x11
+ 941 037a 0E010000 		.4byte	.LASF37
+ 942 037e 01       		.byte	0x1
+ 943 037f 8E       		.byte	0x8e
+ 944 0380 48000000 		.4byte	0x48
+ 945 0384 D4010000 		.4byte	.LLST9
+ 946 0388 00       		.byte	0
+ 947 0389 12       		.uleb128 0x12
+ARM GAS  /tmp/ccjLOM07.s 			page 21
+
+
+ 948 038a 01       		.byte	0x1
+ 949 038b 4A020000 		.4byte	.LASF41
+ 950 038f 01       		.byte	0x1
+ 951 0390 BC       		.byte	0xbc
+ 952 0391 01       		.byte	0x1
+ 953 0392 C0010000 		.4byte	.LFB5
+ 954 0396 E0010000 		.4byte	.LFE5
+ 955 039a 02       		.byte	0x2
+ 956 039b 7D       		.byte	0x7d
+ 957 039c 00       		.sleb128 0
+ 958 039d 01       		.byte	0x1
+ 959 039e 11       		.uleb128 0x11
+ 960 039f 0E010000 		.4byte	.LASF37
+ 961 03a3 01       		.byte	0x1
+ 962 03a4 BC       		.byte	0xbc
+ 963 03a5 48000000 		.4byte	0x48
+ 964 03a9 4D020000 		.4byte	.LLST10
+ 965 03ad 00       		.byte	0
+ 966 03ae 00       		.byte	0
+ 967              		.section	.debug_abbrev,"",%progbits
+ 968              	.Ldebug_abbrev0:
+ 969 0000 01       		.uleb128 0x1
+ 970 0001 11       		.uleb128 0x11
+ 971 0002 01       		.byte	0x1
+ 972 0003 25       		.uleb128 0x25
+ 973 0004 0E       		.uleb128 0xe
+ 974 0005 13       		.uleb128 0x13
+ 975 0006 0B       		.uleb128 0xb
+ 976 0007 03       		.uleb128 0x3
+ 977 0008 0E       		.uleb128 0xe
+ 978 0009 1B       		.uleb128 0x1b
+ 979 000a 0E       		.uleb128 0xe
+ 980 000b 11       		.uleb128 0x11
+ 981 000c 01       		.uleb128 0x1
+ 982 000d 12       		.uleb128 0x12
+ 983 000e 01       		.uleb128 0x1
+ 984 000f 10       		.uleb128 0x10
+ 985 0010 06       		.uleb128 0x6
+ 986 0011 00       		.byte	0
+ 987 0012 00       		.byte	0
+ 988 0013 02       		.uleb128 0x2
+ 989 0014 24       		.uleb128 0x24
+ 990 0015 00       		.byte	0
+ 991 0016 0B       		.uleb128 0xb
+ 992 0017 0B       		.uleb128 0xb
+ 993 0018 3E       		.uleb128 0x3e
+ 994 0019 0B       		.uleb128 0xb
+ 995 001a 03       		.uleb128 0x3
+ 996 001b 08       		.uleb128 0x8
+ 997 001c 00       		.byte	0
+ 998 001d 00       		.byte	0
+ 999 001e 03       		.uleb128 0x3
+ 1000 001f 24       		.uleb128 0x24
+ 1001 0020 00       		.byte	0
+ 1002 0021 0B       		.uleb128 0xb
+ 1003 0022 0B       		.uleb128 0xb
+ 1004 0023 3E       		.uleb128 0x3e
+ARM GAS  /tmp/ccjLOM07.s 			page 22
+
+
+ 1005 0024 0B       		.uleb128 0xb
+ 1006 0025 03       		.uleb128 0x3
+ 1007 0026 0E       		.uleb128 0xe
+ 1008 0027 00       		.byte	0
+ 1009 0028 00       		.byte	0
+ 1010 0029 04       		.uleb128 0x4
+ 1011 002a 16       		.uleb128 0x16
+ 1012 002b 00       		.byte	0
+ 1013 002c 03       		.uleb128 0x3
+ 1014 002d 0E       		.uleb128 0xe
+ 1015 002e 3A       		.uleb128 0x3a
+ 1016 002f 0B       		.uleb128 0xb
+ 1017 0030 3B       		.uleb128 0x3b
+ 1018 0031 0B       		.uleb128 0xb
+ 1019 0032 49       		.uleb128 0x49
+ 1020 0033 13       		.uleb128 0x13
+ 1021 0034 00       		.byte	0
+ 1022 0035 00       		.byte	0
+ 1023 0036 05       		.uleb128 0x5
+ 1024 0037 01       		.uleb128 0x1
+ 1025 0038 01       		.byte	0x1
+ 1026 0039 49       		.uleb128 0x49
+ 1027 003a 13       		.uleb128 0x13
+ 1028 003b 01       		.uleb128 0x1
+ 1029 003c 13       		.uleb128 0x13
+ 1030 003d 00       		.byte	0
+ 1031 003e 00       		.byte	0
+ 1032 003f 06       		.uleb128 0x6
+ 1033 0040 21       		.uleb128 0x21
+ 1034 0041 00       		.byte	0
+ 1035 0042 49       		.uleb128 0x49
+ 1036 0043 13       		.uleb128 0x13
+ 1037 0044 2F       		.uleb128 0x2f
+ 1038 0045 0B       		.uleb128 0xb
+ 1039 0046 00       		.byte	0
+ 1040 0047 00       		.byte	0
+ 1041 0048 07       		.uleb128 0x7
+ 1042 0049 13       		.uleb128 0x13
+ 1043 004a 01       		.byte	0x1
+ 1044 004b 03       		.uleb128 0x3
+ 1045 004c 0E       		.uleb128 0xe
+ 1046 004d 0B       		.uleb128 0xb
+ 1047 004e 05       		.uleb128 0x5
+ 1048 004f 3A       		.uleb128 0x3a
+ 1049 0050 0B       		.uleb128 0xb
+ 1050 0051 3B       		.uleb128 0x3b
+ 1051 0052 05       		.uleb128 0x5
+ 1052 0053 01       		.uleb128 0x1
+ 1053 0054 13       		.uleb128 0x13
+ 1054 0055 00       		.byte	0
+ 1055 0056 00       		.byte	0
+ 1056 0057 08       		.uleb128 0x8
+ 1057 0058 0D       		.uleb128 0xd
+ 1058 0059 00       		.byte	0
+ 1059 005a 03       		.uleb128 0x3
+ 1060 005b 0E       		.uleb128 0xe
+ 1061 005c 3A       		.uleb128 0x3a
+ARM GAS  /tmp/ccjLOM07.s 			page 23
+
+
+ 1062 005d 0B       		.uleb128 0xb
+ 1063 005e 3B       		.uleb128 0x3b
+ 1064 005f 05       		.uleb128 0x5
+ 1065 0060 49       		.uleb128 0x49
+ 1066 0061 13       		.uleb128 0x13
+ 1067 0062 38       		.uleb128 0x38
+ 1068 0063 0A       		.uleb128 0xa
+ 1069 0064 00       		.byte	0
+ 1070 0065 00       		.byte	0
+ 1071 0066 09       		.uleb128 0x9
+ 1072 0067 0D       		.uleb128 0xd
+ 1073 0068 00       		.byte	0
+ 1074 0069 03       		.uleb128 0x3
+ 1075 006a 08       		.uleb128 0x8
+ 1076 006b 3A       		.uleb128 0x3a
+ 1077 006c 0B       		.uleb128 0xb
+ 1078 006d 3B       		.uleb128 0x3b
+ 1079 006e 05       		.uleb128 0x5
+ 1080 006f 49       		.uleb128 0x49
+ 1081 0070 13       		.uleb128 0x13
+ 1082 0071 38       		.uleb128 0x38
+ 1083 0072 0A       		.uleb128 0xa
+ 1084 0073 00       		.byte	0
+ 1085 0074 00       		.byte	0
+ 1086 0075 0A       		.uleb128 0xa
+ 1087 0076 21       		.uleb128 0x21
+ 1088 0077 00       		.byte	0
+ 1089 0078 49       		.uleb128 0x49
+ 1090 0079 13       		.uleb128 0x13
+ 1091 007a 2F       		.uleb128 0x2f
+ 1092 007b 05       		.uleb128 0x5
+ 1093 007c 00       		.byte	0
+ 1094 007d 00       		.byte	0
+ 1095 007e 0B       		.uleb128 0xb
+ 1096 007f 16       		.uleb128 0x16
+ 1097 0080 00       		.byte	0
+ 1098 0081 03       		.uleb128 0x3
+ 1099 0082 0E       		.uleb128 0xe
+ 1100 0083 3A       		.uleb128 0x3a
+ 1101 0084 0B       		.uleb128 0xb
+ 1102 0085 3B       		.uleb128 0x3b
+ 1103 0086 05       		.uleb128 0x5
+ 1104 0087 49       		.uleb128 0x49
+ 1105 0088 13       		.uleb128 0x13
+ 1106 0089 00       		.byte	0
+ 1107 008a 00       		.byte	0
+ 1108 008b 0C       		.uleb128 0xc
+ 1109 008c 0F       		.uleb128 0xf
+ 1110 008d 00       		.byte	0
+ 1111 008e 0B       		.uleb128 0xb
+ 1112 008f 0B       		.uleb128 0xb
+ 1113 0090 49       		.uleb128 0x49
+ 1114 0091 13       		.uleb128 0x13
+ 1115 0092 00       		.byte	0
+ 1116 0093 00       		.byte	0
+ 1117 0094 0D       		.uleb128 0xd
+ 1118 0095 35       		.uleb128 0x35
+ARM GAS  /tmp/ccjLOM07.s 			page 24
+
+
+ 1119 0096 00       		.byte	0
+ 1120 0097 49       		.uleb128 0x49
+ 1121 0098 13       		.uleb128 0x13
+ 1122 0099 00       		.byte	0
+ 1123 009a 00       		.byte	0
+ 1124 009b 0E       		.uleb128 0xe
+ 1125 009c 2E       		.uleb128 0x2e
+ 1126 009d 01       		.byte	0x1
+ 1127 009e 3F       		.uleb128 0x3f
+ 1128 009f 0C       		.uleb128 0xc
+ 1129 00a0 03       		.uleb128 0x3
+ 1130 00a1 0E       		.uleb128 0xe
+ 1131 00a2 3A       		.uleb128 0x3a
+ 1132 00a3 0B       		.uleb128 0xb
+ 1133 00a4 3B       		.uleb128 0x3b
+ 1134 00a5 0B       		.uleb128 0xb
+ 1135 00a6 27       		.uleb128 0x27
+ 1136 00a7 0C       		.uleb128 0xc
+ 1137 00a8 11       		.uleb128 0x11
+ 1138 00a9 01       		.uleb128 0x1
+ 1139 00aa 12       		.uleb128 0x12
+ 1140 00ab 01       		.uleb128 0x1
+ 1141 00ac 40       		.uleb128 0x40
+ 1142 00ad 0A       		.uleb128 0xa
+ 1143 00ae 9742     		.uleb128 0x2117
+ 1144 00b0 0C       		.uleb128 0xc
+ 1145 00b1 01       		.uleb128 0x1
+ 1146 00b2 13       		.uleb128 0x13
+ 1147 00b3 00       		.byte	0
+ 1148 00b4 00       		.byte	0
+ 1149 00b5 0F       		.uleb128 0xf
+ 1150 00b6 05       		.uleb128 0x5
+ 1151 00b7 00       		.byte	0
+ 1152 00b8 03       		.uleb128 0x3
+ 1153 00b9 08       		.uleb128 0x8
+ 1154 00ba 3A       		.uleb128 0x3a
+ 1155 00bb 0B       		.uleb128 0xb
+ 1156 00bc 3B       		.uleb128 0x3b
+ 1157 00bd 0B       		.uleb128 0xb
+ 1158 00be 49       		.uleb128 0x49
+ 1159 00bf 13       		.uleb128 0x13
+ 1160 00c0 02       		.uleb128 0x2
+ 1161 00c1 06       		.uleb128 0x6
+ 1162 00c2 00       		.byte	0
+ 1163 00c3 00       		.byte	0
+ 1164 00c4 10       		.uleb128 0x10
+ 1165 00c5 2E       		.uleb128 0x2e
+ 1166 00c6 01       		.byte	0x1
+ 1167 00c7 3F       		.uleb128 0x3f
+ 1168 00c8 0C       		.uleb128 0xc
+ 1169 00c9 03       		.uleb128 0x3
+ 1170 00ca 0E       		.uleb128 0xe
+ 1171 00cb 3A       		.uleb128 0x3a
+ 1172 00cc 0B       		.uleb128 0xb
+ 1173 00cd 3B       		.uleb128 0x3b
+ 1174 00ce 0B       		.uleb128 0xb
+ 1175 00cf 27       		.uleb128 0x27
+ARM GAS  /tmp/ccjLOM07.s 			page 25
+
+
+ 1176 00d0 0C       		.uleb128 0xc
+ 1177 00d1 11       		.uleb128 0x11
+ 1178 00d2 01       		.uleb128 0x1
+ 1179 00d3 12       		.uleb128 0x12
+ 1180 00d4 01       		.uleb128 0x1
+ 1181 00d5 40       		.uleb128 0x40
+ 1182 00d6 06       		.uleb128 0x6
+ 1183 00d7 9742     		.uleb128 0x2117
+ 1184 00d9 0C       		.uleb128 0xc
+ 1185 00da 01       		.uleb128 0x1
+ 1186 00db 13       		.uleb128 0x13
+ 1187 00dc 00       		.byte	0
+ 1188 00dd 00       		.byte	0
+ 1189 00de 11       		.uleb128 0x11
+ 1190 00df 05       		.uleb128 0x5
+ 1191 00e0 00       		.byte	0
+ 1192 00e1 03       		.uleb128 0x3
+ 1193 00e2 0E       		.uleb128 0xe
+ 1194 00e3 3A       		.uleb128 0x3a
+ 1195 00e4 0B       		.uleb128 0xb
+ 1196 00e5 3B       		.uleb128 0x3b
+ 1197 00e6 0B       		.uleb128 0xb
+ 1198 00e7 49       		.uleb128 0x49
+ 1199 00e8 13       		.uleb128 0x13
+ 1200 00e9 02       		.uleb128 0x2
+ 1201 00ea 06       		.uleb128 0x6
+ 1202 00eb 00       		.byte	0
+ 1203 00ec 00       		.byte	0
+ 1204 00ed 12       		.uleb128 0x12
+ 1205 00ee 2E       		.uleb128 0x2e
+ 1206 00ef 01       		.byte	0x1
+ 1207 00f0 3F       		.uleb128 0x3f
+ 1208 00f1 0C       		.uleb128 0xc
+ 1209 00f2 03       		.uleb128 0x3
+ 1210 00f3 0E       		.uleb128 0xe
+ 1211 00f4 3A       		.uleb128 0x3a
+ 1212 00f5 0B       		.uleb128 0xb
+ 1213 00f6 3B       		.uleb128 0x3b
+ 1214 00f7 0B       		.uleb128 0xb
+ 1215 00f8 27       		.uleb128 0x27
+ 1216 00f9 0C       		.uleb128 0xc
+ 1217 00fa 11       		.uleb128 0x11
+ 1218 00fb 01       		.uleb128 0x1
+ 1219 00fc 12       		.uleb128 0x12
+ 1220 00fd 01       		.uleb128 0x1
+ 1221 00fe 40       		.uleb128 0x40
+ 1222 00ff 0A       		.uleb128 0xa
+ 1223 0100 9742     		.uleb128 0x2117
+ 1224 0102 0C       		.uleb128 0xc
+ 1225 0103 00       		.byte	0
+ 1226 0104 00       		.byte	0
+ 1227 0105 00       		.byte	0
+ 1228              		.section	.debug_loc,"",%progbits
+ 1229              	.Ldebug_loc0:
+ 1230              	.LLST0:
+ 1231 0000 00000000 		.4byte	.LVL0-.Ltext0
+ 1232 0004 10000000 		.4byte	.LVL1-.Ltext0
+ARM GAS  /tmp/ccjLOM07.s 			page 26
+
+
+ 1233 0008 0100     		.2byte	0x1
+ 1234 000a 50       		.byte	0x50
+ 1235 000b 10000000 		.4byte	.LVL1-.Ltext0
+ 1236 000f 1C000000 		.4byte	.LFE0-.Ltext0
+ 1237 0013 0400     		.2byte	0x4
+ 1238 0015 F3       		.byte	0xf3
+ 1239 0016 01       		.uleb128 0x1
+ 1240 0017 50       		.byte	0x50
+ 1241 0018 9F       		.byte	0x9f
+ 1242 0019 00000000 		.4byte	0
+ 1243 001d 00000000 		.4byte	0
+ 1244              	.LLST1:
+ 1245 0021 1C000000 		.4byte	.LFB1-.Ltext0
+ 1246 0025 1E000000 		.4byte	.LCFI0-.Ltext0
+ 1247 0029 0200     		.2byte	0x2
+ 1248 002b 7D       		.byte	0x7d
+ 1249 002c 00       		.sleb128 0
+ 1250 002d 1E000000 		.4byte	.LCFI0-.Ltext0
+ 1251 0031 34000000 		.4byte	.LFE1-.Ltext0
+ 1252 0035 0200     		.2byte	0x2
+ 1253 0037 7D       		.byte	0x7d
+ 1254 0038 08       		.sleb128 8
+ 1255 0039 00000000 		.4byte	0
+ 1256 003d 00000000 		.4byte	0
+ 1257              	.LLST2:
+ 1258 0041 1C000000 		.4byte	.LVL2-.Ltext0
+ 1259 0045 2A000000 		.4byte	.LVL3-.Ltext0
+ 1260 0049 0100     		.2byte	0x1
+ 1261 004b 50       		.byte	0x50
+ 1262 004c 2A000000 		.4byte	.LVL3-.Ltext0
+ 1263 0050 34000000 		.4byte	.LFE1-.Ltext0
+ 1264 0054 0400     		.2byte	0x4
+ 1265 0056 F3       		.byte	0xf3
+ 1266 0057 01       		.uleb128 0x1
+ 1267 0058 50       		.byte	0x50
+ 1268 0059 9F       		.byte	0x9f
+ 1269 005a 00000000 		.4byte	0
+ 1270 005e 00000000 		.4byte	0
+ 1271              	.LLST3:
+ 1272 0062 34000000 		.4byte	.LFB2-.Ltext0
+ 1273 0066 36000000 		.4byte	.LCFI1-.Ltext0
+ 1274 006a 0200     		.2byte	0x2
+ 1275 006c 7D       		.byte	0x7d
+ 1276 006d 00       		.sleb128 0
+ 1277 006e 36000000 		.4byte	.LCFI1-.Ltext0
+ 1278 0072 50000000 		.4byte	.LFE2-.Ltext0
+ 1279 0076 0200     		.2byte	0x2
+ 1280 0078 7D       		.byte	0x7d
+ 1281 0079 08       		.sleb128 8
+ 1282 007a 00000000 		.4byte	0
+ 1283 007e 00000000 		.4byte	0
+ 1284              	.LLST4:
+ 1285 0082 34000000 		.4byte	.LVL4-.Ltext0
+ 1286 0086 44000000 		.4byte	.LVL5-.Ltext0
+ 1287 008a 0100     		.2byte	0x1
+ 1288 008c 50       		.byte	0x50
+ 1289 008d 44000000 		.4byte	.LVL5-.Ltext0
+ARM GAS  /tmp/ccjLOM07.s 			page 27
+
+
+ 1290 0091 50000000 		.4byte	.LFE2-.Ltext0
+ 1291 0095 0400     		.2byte	0x4
+ 1292 0097 F3       		.byte	0xf3
+ 1293 0098 01       		.uleb128 0x1
+ 1294 0099 50       		.byte	0x50
+ 1295 009a 9F       		.byte	0x9f
+ 1296 009b 00000000 		.4byte	0
+ 1297 009f 00000000 		.4byte	0
+ 1298              	.LLST5:
+ 1299 00a3 50000000 		.4byte	.LFB3-.Ltext0
+ 1300 00a7 52000000 		.4byte	.LCFI2-.Ltext0
+ 1301 00ab 0200     		.2byte	0x2
+ 1302 00ad 7D       		.byte	0x7d
+ 1303 00ae 00       		.sleb128 0
+ 1304 00af 52000000 		.4byte	.LCFI2-.Ltext0
+ 1305 00b3 6C000000 		.4byte	.LFE3-.Ltext0
+ 1306 00b7 0200     		.2byte	0x2
+ 1307 00b9 7D       		.byte	0x7d
+ 1308 00ba 08       		.sleb128 8
+ 1309 00bb 00000000 		.4byte	0
+ 1310 00bf 00000000 		.4byte	0
+ 1311              	.LLST6:
+ 1312 00c3 50000000 		.4byte	.LVL6-.Ltext0
+ 1313 00c7 60000000 		.4byte	.LVL7-.Ltext0
+ 1314 00cb 0100     		.2byte	0x1
+ 1315 00cd 50       		.byte	0x50
+ 1316 00ce 60000000 		.4byte	.LVL7-.Ltext0
+ 1317 00d2 6C000000 		.4byte	.LFE3-.Ltext0
+ 1318 00d6 0400     		.2byte	0x4
+ 1319 00d8 F3       		.byte	0xf3
+ 1320 00d9 01       		.uleb128 0x1
+ 1321 00da 50       		.byte	0x50
+ 1322 00db 9F       		.byte	0x9f
+ 1323 00dc 00000000 		.4byte	0
+ 1324 00e0 00000000 		.4byte	0
+ 1325              	.LLST7:
+ 1326 00e4 6C000000 		.4byte	.LFB4-.Ltext0
+ 1327 00e8 6E000000 		.4byte	.LCFI3-.Ltext0
+ 1328 00ec 0200     		.2byte	0x2
+ 1329 00ee 7D       		.byte	0x7d
+ 1330 00ef 00       		.sleb128 0
+ 1331 00f0 6E000000 		.4byte	.LCFI3-.Ltext0
+ 1332 00f4 C0010000 		.4byte	.LFE4-.Ltext0
+ 1333 00f8 0200     		.2byte	0x2
+ 1334 00fa 7D       		.byte	0x7d
+ 1335 00fb 0C       		.sleb128 12
+ 1336 00fc 00000000 		.4byte	0
+ 1337 0100 00000000 		.4byte	0
+ 1338              	.LLST8:
+ 1339 0104 6C000000 		.4byte	.LVL8-.Ltext0
+ 1340 0108 92000000 		.4byte	.LVL11-.Ltext0
+ 1341 010c 0100     		.2byte	0x1
+ 1342 010e 50       		.byte	0x50
+ 1343 010f 92000000 		.4byte	.LVL11-.Ltext0
+ 1344 0113 AC000000 		.4byte	.LVL13-.Ltext0
+ 1345 0117 0400     		.2byte	0x4
+ 1346 0119 F3       		.byte	0xf3
+ARM GAS  /tmp/ccjLOM07.s 			page 28
+
+
+ 1347 011a 01       		.uleb128 0x1
+ 1348 011b 50       		.byte	0x50
+ 1349 011c 9F       		.byte	0x9f
+ 1350 011d AC000000 		.4byte	.LVL13-.Ltext0
+ 1351 0121 B8000000 		.4byte	.LVL14-.Ltext0
+ 1352 0125 0100     		.2byte	0x1
+ 1353 0127 50       		.byte	0x50
+ 1354 0128 B8000000 		.4byte	.LVL14-.Ltext0
+ 1355 012c D2000000 		.4byte	.LVL16-.Ltext0
+ 1356 0130 0400     		.2byte	0x4
+ 1357 0132 F3       		.byte	0xf3
+ 1358 0133 01       		.uleb128 0x1
+ 1359 0134 50       		.byte	0x50
+ 1360 0135 9F       		.byte	0x9f
+ 1361 0136 D2000000 		.4byte	.LVL16-.Ltext0
+ 1362 013a DE000000 		.4byte	.LVL17-.Ltext0
+ 1363 013e 0100     		.2byte	0x1
+ 1364 0140 50       		.byte	0x50
+ 1365 0141 DE000000 		.4byte	.LVL17-.Ltext0
+ 1366 0145 F8000000 		.4byte	.LVL19-.Ltext0
+ 1367 0149 0400     		.2byte	0x4
+ 1368 014b F3       		.byte	0xf3
+ 1369 014c 01       		.uleb128 0x1
+ 1370 014d 50       		.byte	0x50
+ 1371 014e 9F       		.byte	0x9f
+ 1372 014f F8000000 		.4byte	.LVL19-.Ltext0
+ 1373 0153 04010000 		.4byte	.LVL20-.Ltext0
+ 1374 0157 0100     		.2byte	0x1
+ 1375 0159 50       		.byte	0x50
+ 1376 015a 04010000 		.4byte	.LVL20-.Ltext0
+ 1377 015e 1E010000 		.4byte	.LVL22-.Ltext0
+ 1378 0162 0400     		.2byte	0x4
+ 1379 0164 F3       		.byte	0xf3
+ 1380 0165 01       		.uleb128 0x1
+ 1381 0166 50       		.byte	0x50
+ 1382 0167 9F       		.byte	0x9f
+ 1383 0168 1E010000 		.4byte	.LVL22-.Ltext0
+ 1384 016c 2A010000 		.4byte	.LVL23-.Ltext0
+ 1385 0170 0100     		.2byte	0x1
+ 1386 0172 50       		.byte	0x50
+ 1387 0173 2A010000 		.4byte	.LVL23-.Ltext0
+ 1388 0177 44010000 		.4byte	.LVL25-.Ltext0
+ 1389 017b 0400     		.2byte	0x4
+ 1390 017d F3       		.byte	0xf3
+ 1391 017e 01       		.uleb128 0x1
+ 1392 017f 50       		.byte	0x50
+ 1393 0180 9F       		.byte	0x9f
+ 1394 0181 44010000 		.4byte	.LVL25-.Ltext0
+ 1395 0185 50010000 		.4byte	.LVL26-.Ltext0
+ 1396 0189 0100     		.2byte	0x1
+ 1397 018b 50       		.byte	0x50
+ 1398 018c 50010000 		.4byte	.LVL26-.Ltext0
+ 1399 0190 6A010000 		.4byte	.LVL28-.Ltext0
+ 1400 0194 0400     		.2byte	0x4
+ 1401 0196 F3       		.byte	0xf3
+ 1402 0197 01       		.uleb128 0x1
+ 1403 0198 50       		.byte	0x50
+ARM GAS  /tmp/ccjLOM07.s 			page 29
+
+
+ 1404 0199 9F       		.byte	0x9f
+ 1405 019a 6A010000 		.4byte	.LVL28-.Ltext0
+ 1406 019e 76010000 		.4byte	.LVL29-.Ltext0
+ 1407 01a2 0100     		.2byte	0x1
+ 1408 01a4 50       		.byte	0x50
+ 1409 01a5 76010000 		.4byte	.LVL29-.Ltext0
+ 1410 01a9 90010000 		.4byte	.LVL31-.Ltext0
+ 1411 01ad 0400     		.2byte	0x4
+ 1412 01af F3       		.byte	0xf3
+ 1413 01b0 01       		.uleb128 0x1
+ 1414 01b1 50       		.byte	0x50
+ 1415 01b2 9F       		.byte	0x9f
+ 1416 01b3 90010000 		.4byte	.LVL31-.Ltext0
+ 1417 01b7 9C010000 		.4byte	.LVL32-.Ltext0
+ 1418 01bb 0100     		.2byte	0x1
+ 1419 01bd 50       		.byte	0x50
+ 1420 01be 9C010000 		.4byte	.LVL32-.Ltext0
+ 1421 01c2 C0010000 		.4byte	.LFE4-.Ltext0
+ 1422 01c6 0400     		.2byte	0x4
+ 1423 01c8 F3       		.byte	0xf3
+ 1424 01c9 01       		.uleb128 0x1
+ 1425 01ca 50       		.byte	0x50
+ 1426 01cb 9F       		.byte	0x9f
+ 1427 01cc 00000000 		.4byte	0
+ 1428 01d0 00000000 		.4byte	0
+ 1429              	.LLST9:
+ 1430 01d4 6C000000 		.4byte	.LVL8-.Ltext0
+ 1431 01d8 74000000 		.4byte	.LVL9-.Ltext0
+ 1432 01dc 0100     		.2byte	0x1
+ 1433 01de 51       		.byte	0x51
+ 1434 01df 74000000 		.4byte	.LVL9-.Ltext0
+ 1435 01e3 76000000 		.4byte	.LVL10-.Ltext0
+ 1436 01e7 0400     		.2byte	0x4
+ 1437 01e9 F3       		.byte	0xf3
+ 1438 01ea 01       		.uleb128 0x1
+ 1439 01eb 51       		.byte	0x51
+ 1440 01ec 9F       		.byte	0x9f
+ 1441 01ed 76000000 		.4byte	.LVL10-.Ltext0
+ 1442 01f1 A2000000 		.4byte	.LVL12-.Ltext0
+ 1443 01f5 0100     		.2byte	0x1
+ 1444 01f7 51       		.byte	0x51
+ 1445 01f8 AC000000 		.4byte	.LVL13-.Ltext0
+ 1446 01fc C8000000 		.4byte	.LVL15-.Ltext0
+ 1447 0200 0100     		.2byte	0x1
+ 1448 0202 51       		.byte	0x51
+ 1449 0203 D2000000 		.4byte	.LVL16-.Ltext0
+ 1450 0207 EE000000 		.4byte	.LVL18-.Ltext0
+ 1451 020b 0100     		.2byte	0x1
+ 1452 020d 51       		.byte	0x51
+ 1453 020e F8000000 		.4byte	.LVL19-.Ltext0
+ 1454 0212 14010000 		.4byte	.LVL21-.Ltext0
+ 1455 0216 0100     		.2byte	0x1
+ 1456 0218 51       		.byte	0x51
+ 1457 0219 1E010000 		.4byte	.LVL22-.Ltext0
+ 1458 021d 3A010000 		.4byte	.LVL24-.Ltext0
+ 1459 0221 0100     		.2byte	0x1
+ 1460 0223 51       		.byte	0x51
+ARM GAS  /tmp/ccjLOM07.s 			page 30
+
+
+ 1461 0224 44010000 		.4byte	.LVL25-.Ltext0
+ 1462 0228 60010000 		.4byte	.LVL27-.Ltext0
+ 1463 022c 0100     		.2byte	0x1
+ 1464 022e 51       		.byte	0x51
+ 1465 022f 6A010000 		.4byte	.LVL28-.Ltext0
+ 1466 0233 86010000 		.4byte	.LVL30-.Ltext0
+ 1467 0237 0100     		.2byte	0x1
+ 1468 0239 51       		.byte	0x51
+ 1469 023a 90010000 		.4byte	.LVL31-.Ltext0
+ 1470 023e AC010000 		.4byte	.LVL33-.Ltext0
+ 1471 0242 0100     		.2byte	0x1
+ 1472 0244 51       		.byte	0x51
+ 1473 0245 00000000 		.4byte	0
+ 1474 0249 00000000 		.4byte	0
+ 1475              	.LLST10:
+ 1476 024d C0010000 		.4byte	.LVL34-.Ltext0
+ 1477 0251 D0010000 		.4byte	.LVL35-.Ltext0
+ 1478 0255 0100     		.2byte	0x1
+ 1479 0257 50       		.byte	0x50
+ 1480 0258 D0010000 		.4byte	.LVL35-.Ltext0
+ 1481 025c E0010000 		.4byte	.LFE5-.Ltext0
+ 1482 0260 0400     		.2byte	0x4
+ 1483 0262 F3       		.byte	0xf3
+ 1484 0263 01       		.uleb128 0x1
+ 1485 0264 50       		.byte	0x50
+ 1486 0265 9F       		.byte	0x9f
+ 1487 0266 00000000 		.4byte	0
+ 1488 026a 00000000 		.4byte	0
+ 1489              		.section	.debug_aranges,"",%progbits
+ 1490 0000 1C000000 		.4byte	0x1c
+ 1491 0004 0200     		.2byte	0x2
+ 1492 0006 00000000 		.4byte	.Ldebug_info0
+ 1493 000a 04       		.byte	0x4
+ 1494 000b 00       		.byte	0
+ 1495 000c 0000     		.2byte	0
+ 1496 000e 0000     		.2byte	0
+ 1497 0010 00000000 		.4byte	.Ltext0
+ 1498 0014 E0010000 		.4byte	.Letext0-.Ltext0
+ 1499 0018 00000000 		.4byte	0
+ 1500 001c 00000000 		.4byte	0
+ 1501              		.section	.debug_line,"",%progbits
+ 1502              	.Ldebug_line0:
+ 1503 0000 E6000000 		.section	.debug_str,"MS",%progbits,1
+ 1503      02009A00 
+ 1503      00000201 
+ 1503      FB0E0D00 
+ 1503      01010101 
+ 1504              	.LASF17:
+ 1505 0000 49435052 		.ascii	"ICPR\000"
+ 1505      00
+ 1506              	.LASF33:
+ 1507 0005 4E564943 		.ascii	"NVIC_DISABLE_INT\000"
+ 1507      5F444953 
+ 1507      41424C45 
+ 1507      5F494E54 
+ 1507      00
+ 1508              	.LASF29:
+ARM GAS  /tmp/ccjLOM07.s 			page 31
+
+
+ 1509 0016 53484353 		.ascii	"SHCSR\000"
+ 1509      5200
+ 1510              	.LASF38:
+ 1511 001c 474E5520 		.ascii	"GNU C 4.8.3 20131129 (release) [ARM/embedded-4_8-br"
+ 1511      4320342E 
+ 1511      382E3320 
+ 1511      32303133 
+ 1511      31313239 
+ 1512 004f 616E6368 		.ascii	"anch revision 205641] -mcpu=cortex-m0plus -mthumb -"
+ 1512      20726576 
+ 1512      6973696F 
+ 1512      6E203230 
+ 1512      35363431 
+ 1513 0082 67647761 		.ascii	"gdwarf-2 -g -O -fomit-frame-pointer\000"
+ 1513      72662D32 
+ 1513      202D6720 
+ 1513      2D4F202D 
+ 1513      666F6D69 
+ 1514              	.LASF2:
+ 1515 00a6 6C6F6E67 		.ascii	"long int\000"
+ 1515      20696E74 
+ 1515      00
+ 1516              	.LASF32:
+ 1517 00af 4E564943 		.ascii	"NVIC_ENABLE_INT\000"
+ 1517      5F454E41 
+ 1517      424C455F 
+ 1517      494E5400 
+ 1518              	.LASF20:
+ 1519 00bf 4E564943 		.ascii	"NVIC_MemMap\000"
+ 1519      5F4D656D 
+ 1519      4D617000 
+ 1520              	.LASF13:
+ 1521 00cb 49434552 		.ascii	"ICER\000"
+ 1521      00
+ 1522              	.LASF4:
+ 1523 00d0 756E7369 		.ascii	"unsigned char\000"
+ 1523      676E6564 
+ 1523      20636861 
+ 1523      7200
+ 1524              	.LASF8:
+ 1525 00de 6C6F6E67 		.ascii	"long unsigned int\000"
+ 1525      20756E73 
+ 1525      69676E65 
+ 1525      6420696E 
+ 1525      7400
+ 1526              	.LASF5:
+ 1527 00f0 73686F72 		.ascii	"short unsigned int\000"
+ 1527      7420756E 
+ 1527      7369676E 
+ 1527      65642069 
+ 1527      6E7400
+ 1528              	.LASF14:
+ 1529 0103 52455345 		.ascii	"RESERVED_1\000"
+ 1529      52564544 
+ 1529      5F3100
+ 1530              	.LASF37:
+ 1531 010e 7072696F 		.ascii	"priority\000"
+ARM GAS  /tmp/ccjLOM07.s 			page 32
+
+
+ 1531      72697479 
+ 1531      00
+ 1532              	.LASF25:
+ 1533 0117 56544F52 		.ascii	"VTOR\000"
+ 1533      00
+ 1534              	.LASF15:
+ 1535 011c 49535052 		.ascii	"ISPR\000"
+ 1535      00
+ 1536              	.LASF19:
+ 1537 0121 4E564943 		.ascii	"NVIC_MemMapPtr\000"
+ 1537      5F4D656D 
+ 1537      4D617050 
+ 1537      747200
+ 1538              	.LASF30:
+ 1539 0130 44465352 		.ascii	"DFSR\000"
+ 1539      00
+ 1540              	.LASF9:
+ 1541 0135 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 1541      206C6F6E 
+ 1541      6720756E 
+ 1541      7369676E 
+ 1541      65642069 
+ 1542              	.LASF6:
+ 1543 014c 75696E74 		.ascii	"uint8_t\000"
+ 1543      385F7400 
+ 1544              	.LASF24:
+ 1545 0154 49435352 		.ascii	"ICSR\000"
+ 1545      00
+ 1546              	.LASF27:
+ 1547 0159 53485052 		.ascii	"SHPR2\000"
+ 1547      3200
+ 1548              	.LASF26:
+ 1549 015f 41495243 		.ascii	"AIRCR\000"
+ 1549      5200
+ 1550              	.LASF10:
+ 1551 0165 73697A65 		.ascii	"sizetype\000"
+ 1551      74797065 
+ 1551      00
+ 1552              	.LASF36:
+ 1553 016e 4E564943 		.ascii	"NVIC_Set_Priority\000"
+ 1553      5F536574 
+ 1553      5F507269 
+ 1553      6F726974 
+ 1553      7900
+ 1554              	.LASF3:
+ 1555 0180 6C6F6E67 		.ascii	"long long int\000"
+ 1555      206C6F6E 
+ 1555      6720696E 
+ 1555      7400
+ 1556              	.LASF23:
+ 1557 018e 43505549 		.ascii	"CPUID\000"
+ 1557      4400
+ 1558              	.LASF21:
+ 1559 0194 5343425F 		.ascii	"SCB_MemMap\000"
+ 1559      4D656D4D 
+ 1559      617000
+ 1560              	.LASF11:
+ARM GAS  /tmp/ccjLOM07.s 			page 33
+
+
+ 1561 019f 49534552 		.ascii	"ISER\000"
+ 1561      00
+ 1562              	.LASF1:
+ 1563 01a4 73686F72 		.ascii	"short int\000"
+ 1563      7420696E 
+ 1563      7400
+ 1564              	.LASF28:
+ 1565 01ae 53485052 		.ascii	"SHPR3\000"
+ 1565      3300
+ 1566              	.LASF22:
+ 1567 01b4 4143544C 		.ascii	"ACTLR\000"
+ 1567      5200
+ 1568              	.LASF34:
+ 1569 01ba 4E564943 		.ascii	"NVIC_SET_PENDING\000"
+ 1569      5F534554 
+ 1569      5F50454E 
+ 1569      44494E47 
+ 1569      00
+ 1570              	.LASF35:
+ 1571 01cb 4E564943 		.ascii	"NVIC_CLEAR_PENDING\000"
+ 1571      5F434C45 
+ 1571      41525F50 
+ 1571      454E4449 
+ 1571      4E4700
+ 1572              	.LASF7:
+ 1573 01de 75696E74 		.ascii	"uint32_t\000"
+ 1573      33325F74 
+ 1573      00
+ 1574              	.LASF39:
+ 1575 01e7 2E2E2F2E 		.ascii	"../../cpu/arm/mkl25z/./nvic.c\000"
+ 1575      2E2F6370 
+ 1575      752F6172 
+ 1575      6D2F6D6B 
+ 1575      6C32357A 
+ 1576              	.LASF40:
+ 1577 0205 2F686F6D 		.ascii	"/home/glacsweb/glacsweb/contiki/examples/rime\000"
+ 1577      652F676C 
+ 1577      61637377 
+ 1577      65622F67 
+ 1577      6C616373 
+ 1578              	.LASF0:
+ 1579 0233 7369676E 		.ascii	"signed char\000"
+ 1579      65642063 
+ 1579      68617200 
+ 1580              	.LASF12:
+ 1581 023f 52455345 		.ascii	"RESERVED_0\000"
+ 1581      52564544 
+ 1581      5F3000
+ 1582              	.LASF41:
+ 1583 024a 4E564943 		.ascii	"NVIC_SET_SYSTICK_PRI\000"
+ 1583      5F534554 
+ 1583      5F535953 
+ 1583      5449434B 
+ 1583      5F505249 
+ 1584              	.LASF16:
+ 1585 025f 52455345 		.ascii	"RESERVED_2\000"
+ 1585      52564544 
+ARM GAS  /tmp/ccjLOM07.s 			page 34
+
+
+ 1585      5F3200
+ 1586              	.LASF18:
+ 1587 026a 52455345 		.ascii	"RESERVED_3\000"
+ 1587      52564544 
+ 1587      5F3300
+ 1588              	.LASF31:
+ 1589 0275 5343425F 		.ascii	"SCB_MemMapPtr\000"
+ 1589      4D656D4D 
+ 1589      61705074 
+ 1589      7200
+ 1590              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 4.8.3 20131129 (release) [ARM/embedded-4_8-br
+ARM GAS  /tmp/ccjLOM07.s 			page 35
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 nvic.c
+     /tmp/ccjLOM07.s:75     .text:00000000 $t
+     /tmp/ccjLOM07.s:80     .text:00000000 NVIC_ENABLE_INT
+     /tmp/ccjLOM07.s:105    .text:00000018 $d
+     /tmp/ccjLOM07.s:109    .text:0000001c $t
+     /tmp/ccjLOM07.s:114    .text:0000001c NVIC_DISABLE_INT
+     /tmp/ccjLOM07.s:140    .text:00000030 $d
+     /tmp/ccjLOM07.s:144    .text:00000034 $t
+     /tmp/ccjLOM07.s:149    .text:00000034 NVIC_SET_PENDING
+     /tmp/ccjLOM07.s:176    .text:0000004c $d
+     /tmp/ccjLOM07.s:180    .text:00000050 $t
+     /tmp/ccjLOM07.s:185    .text:00000050 NVIC_CLEAR_PENDING
+     /tmp/ccjLOM07.s:212    .text:00000068 $d
+     /tmp/ccjLOM07.s:216    .text:0000006c $t
+     /tmp/ccjLOM07.s:221    .text:0000006c NVIC_Set_Priority
+     /tmp/ccjLOM07.s:252    .rodata:00000000 $d
+     /tmp/ccjLOM07.s:475    .text:000001b8 $d
+     /tmp/ccjLOM07.s:480    .text:000001c0 $t
+     /tmp/ccjLOM07.s:485    .text:000001c0 NVIC_SET_SYSTICK_PRI
+     /tmp/ccjLOM07.s:509    .text:000001d8 $d
+                     .debug_frame:00000010 $d
+
+NO UNDEFINED SYMBOLS
