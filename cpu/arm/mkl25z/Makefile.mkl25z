@@ -1,6 +1,6 @@
 # Adapted from Makefile.msp430
 
-GCC_PATH = /home/glacsweb/arm-gcc/bin/
+GCC_PATH = /usr/bin/
 EWL_SUPPORT_PATH = /home/glacsweb/arm-gcc/ARM_GCC_Support/ewl/
 EABI_LIB = /home/glacsweb/arm-gcc/lib/gcc/arm-none-eabi/4.8.3/
 EABI_INCLUDE = /home/glacsweb/arm-gcc/arm-none-eabi/
@@ -45,19 +45,9 @@ CONTIKI_CPU_DIRS = . ../common/dbg-io loader
 
 MKL25Z     = __arm_start.c watchdog.c kinetis_sysinit.c clock.c debug-uart.c rtimer-arch.c serial.c spi.c nvic.c cpu.c clock.c __arm_end.c kinetis_sysinit.c
 
-# SYSAPPS = codeprop-otf.c
-# APPDIRS += $(CONTIKI)/cpu/at91sam7s/loader
-
-# ELFLOADER = elfloader-otf.c elfloader-arm.c symtab.c cfs-ram.c
-
-# include $(CONTIKI_CPU_ARM_COMMON)/usb/Makefile.usb
-
-# include $(CONTIKI_CPU_ARM_COMMON)/SD-card/Makefile.sdcard
 
 TARGETLIBS = random.c dbg-printf.c dbg-puts.c dbg-putchar.c dbg-sprintf.c dbg-snprintf.c strformat.c
-
 CONTIKI_TARGET_SOURCEFILES += $(MKL25Z) $(SYSAPPS) $(ELFLOADER) $(TARGETLIBS) $(UIPDRIVERS) $(USB) $(PLATFORM_SOURCEFILES)
-
 CONTIKI_SOURCEFILES        += $(CONTIKI_TARGET_SOURCEFILES)
 
 
