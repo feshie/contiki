@@ -43,10 +43,7 @@
 
 void SPI0_init(void);		/* Initialise SPI0. */
 
-void SPI0_csn_low(void);	/* SPI0 CSn control */
-void SPI0_csn_high(void);	/* SPI0 CSn control */
-
-uint16_t SPI_single_tx_rx(uint8_t in, uint8_t module); /* Single SPI Send/Recieve. */
+uint8_t SPI_single_tx_rx(uint8_t in, uint8_t module); /* Single SPI Send/Recieve. */
 uint8_t SPI_tx_and_rx(uint8_t addr, uint8_t value, uint8_t module); /* Send data to SPI Address. */
 
 #endif /* SPI_H_MKL25Z__ */

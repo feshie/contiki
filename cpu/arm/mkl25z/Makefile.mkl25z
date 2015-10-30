@@ -2,8 +2,9 @@
 
 GCC_PATH = /usr/bin/
 EWL_SUPPORT_PATH = /home/glacsweb/arm-gcc/ARM_GCC_Support/ewl/
+EWL_SPECS = /home/glacsweb/arm-gcc/arm-none-eabi/lib/armv6-m/
 EABI_LIB = /home/glacsweb/arm-gcc/lib/gcc/arm-none-eabi/4.8.3/
-EABI_INCLUDE = /home/glacsweb/arm-gcc/arm-none-eabi/
+EABI_INCLUDE = /usr/arm-none-eabi/include
 
 ### Code common for all ARM CPUs
 
@@ -14,28 +15,6 @@ CONTIKI_CPU_ARM_COMMON=$(CONTIKI_CPU_ARM)/common
 CONTIKI_CPU=$(CONTIKI_CPU_ARM)/mkl25z
 
 MCU = cortex-m0plus
-
-# List all user C define here, like -D_DEBUG=1
-UDEFS =
-
-# Define ASM defines here
-UADEFS =
-
-# List all default C defines here, like -D_DEBUG=1
-DDEFS =
-
-# List all default ASM defines here, like -D_DEBUG=1
-DADEFS =
-
-# List all default directories to look for include files here
-DINCDIR =
-
-# List the default directory to look for the libraries here
-DLIBDIR =
-
-# List all default libraries here
-DLIBS =
-
 
 ### Define the source files we have in the mkl25z port
 
@@ -55,14 +34,14 @@ THREADS =
 
 ### Compiler definitions
 ### Compiler definitions
-CC       = $(GCC_PATH)arm-none-eabi-gcc
-CP       = $(GCC_PATH)arm-none-eabi-objcopy
-LD       = $(GCC_PATH)arm-none-eabi-ld
-AS       = $(GCC_PATH)arm-none-eabi-as
-AR       = $(GCC_PATH)arm-none-eabi-ar
-NM       = $(GCC_PATH)arm-none-eabi-nm
-OBJCOPY  = $(GCC_PATH)arm-none-eabi-objcopy
-STRIP    = $(GCC_PATH)arm-none-eabi-strip
+CC       = arm-none-eabi-gcc
+CP       = arm-none-eabi-objcopy
+LD       = arm-none-eabi-ld
+AS       = arm-none-eabi-as
+AR       = arm-none-eabi-ar
+NM       = arm-none-eabi-nm
+OBJCOPY  = arm-none-eabi-objcopy
+STRIP    = arm-none-eabi-strip
 HEX      = $(CP) -O ihex
 BIN      = $(CP) -O binary -S
 S19      = $(CP) -O srec
@@ -95,28 +74,21 @@ ARCH_FLAGS = -mthumb
 MCFLAGS = -mcpu=$(MCU)
 CPFLAGS = -gdwarf-2 -fomit-frame-pointer -Wall -Wstrict-prototypes -fverbose-asm 
 
-DEFS = $(DDEFS) $(UDEFS)
-ADEFS = $(DADEFS) $(UADEFS)
 OBJS = $(ASRC:.S=.o) $(SRC:.c=.o)
 
-CFLAGSNO = -I. -L$(EWL_SUPPORT_PATH)lib/armv6-m \
-			-L$(CONTIKI)/core -I$(CONTIKI_CPU) -I$(CONTIKI_CPU)/loader \
-			-I$(CONTIKI_CPU)/dbg-io -I$(CONTIKI)/dev \
-			-I$(CONTIKI)/platform/$(TARGET) -L$(CONTIKI)/core \
-			-I$(EWL_SUPPORT_PATH)EWL_C/include \
-			-I$(EWL_SUPPORT_PATH)EWL_Runtime/include \
-			-I$(EABI_LIB)include \
-			-I$(EABI_LIB)include-fixed \
-			-I$(EABI_INCLUDE)include ${addprefix -I,$(APPDIRS)} \
-            -DMCK=$(MCK) \
-           -g
+CFLAGSNO = -I. -I$(EABI_INCLUDE) -DMCK=$(MCK) -g
+#			-I$(EWL_SUPPORT_PATH)lib/armv6-m \
+#			-I$(EWL_SUPPORT_PATH)EWL_C/include \
+#			-I$(EWL_SUPPORT_PATH)EWL_Runtime/include \
+#			-I$(EABI_LIB)include \
+#			-I$(EABI_LIB)include-fixed
 
-LDFLAGSNO = -L$(CONTIKI_CPU) -L$(EWL_SUPPORT_PATH)lib/armv6-m
+LDFLAGSNO = -L$(CONTIKI_CPU) -L$(EWL_SUPPORT_PATH)lib/armv6-m $(CFLAGSNO)
 		   
  
-ASFLAGS = $(MCFLAGS) $(ARCH_FLAGS) -g -gdwarf-2 -Wa,-amhls=$(<:.S=.lst) $(ADEFS)		   
-CFLAGS  += $(MCFLAGS) $(OPT) $(CPFLAGS) $(ARCH_FLAGS) $(CFLAGSNO) $(CPLATFLAGS) -O -DRUN_AS_SYSTEM -DROM_RUN -D__SDCC -Wa,-ahlms=$(<:.c=.lst) $(DEFS)
-LDFLAGS += $(MCFLAGS) $(ARCH_FLAGS) $(LDFLAGSNO) -nostartfiles -T $(LINKERSCRIPT) -Xlinker --gc-sections -Wl,-Map=$(FULL_PRJ).map,-cref,-no-warn-mismatch -n -specs=ewl_c.specs -Xlinker --undefined=__pformatter_ -Xlinker --defsym=__pformatter=__pformatter_ -Xlinker --undefined=__sformatter -Xlinker --defsym=__sformatter=__sformatter -mcpu=cortex-m0 -mthumb -mfloat-abi=soft -g3 -gdwarf-2 -gstrict-dwarf
+ASFLAGS = $(MCFLAGS) $(ARCH_FLAGS) -g -gdwarf-2 -Wa,-amhls=$(<:.S=.lst)		   
+CFLAGS  += $(MCFLAGS) $(OPT) $(CPFLAGS) $(ARCH_FLAGS) $(CFLAGSNO) $(CPLATFLAGS) -O -DRUN_AS_SYSTEM -DROM_RUN -D__SDCC -Wa,-ahlms=$(<:.c=.ls)
+LDFLAGS += $(MCFLAGS) $(ARCH_FLAGS) $(LDFLAGSNO) -nostartfiles -T $(LINKERSCRIPT) -Xlinker --gc-sections -Wl,-Map=$(FULL_PRJ).map,-cref,-no-warn-mismatch -n -specs=$(EWL_SPECS)/ewl_c.specs -Xlinker --undefined=__pformatter_ -Xlinker --defsym=__pformatter=__pformatter_ -Xlinker --undefined=__sformatter -Xlinker --defsym=__sformatter=__sformatter -mcpu=cortex-m0 -mthumb -mfloat-abi=soft -g3 -gdwarf-2 -gstrict-dwarf
 
 CDEPFLAGS = $(CFLAGS) -D __MAKING_DEPS__
 
@@ -181,8 +153,6 @@ CUSTOM_RULE_C_TO_CE=yes
 CUSTOM_RULE_LINK=yes
 
 %.$(TARGET): %.co $(PROJECT_OBJECTFILES) contiki-$(TARGET).a $(STARTUP) # $(OBJECTDIR)/empty-symbols.o
-	#cp ${CONTIKI}/tools/empty-symbols.c symbols.c
-	#cp ${CONTIKI}/tools/empty-symbols.h symbols.h
 	$(CC) $(LDFLAGS) $(CFLAGS) -nostartfiles -o $@ $(filter-out %.a,$^) $(filter %.a,$^) -lc $(filter %.a,$^)
 	$(CC) $(LDFLAGS) $(CFLAGS) -nostartfiles -o contiki-$(TARGET).elf $(filter-out %.a,$^) $(filter %.a,$^) -lc $(filter %.a,$^)
 	$(S19) contiki-$(TARGET).elf contiki-$(TARGET).srec
@@ -190,9 +160,6 @@ CUSTOM_RULE_LINK=yes
 
  
 .PHONY: symbols.c
-%.$(TARGET): %.co $(PROJECT_OBJECTFILES) $(INTERRUPT_OBJECTFILES) contiki-$(TARGET).a $(OBJECTDIR)/symbols.o
-	$(CC) $(LDFLAGS) $(CFLAGS) -o $@ $(filter-out %.a,$^) $(filter %.a,$^) $(filter %.a,$^)
-	$(CC) $(LDFLAGS) $(CFLAGS) -o $@ $(filter-out %.a,$^) $(filter %.a,$^) $(filter %.a,$^)
 
 
 clean: clean_cpu

@@ -1,23 +1,18 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
+#include <stdarg.h>
 
-#include <clock.h>
-#include <etimer.h>
-
-#include <sys/process.h>
-#include <sys/procinit.h>
-#include <sys/autostart.h>
+#include "contiki.h"
+#include "platform-conf.h"
 
 #include <MKL25Z4.h>
-
 #include "nvic.h"
 #include "debug-uart.h"
 #include "cpu.h"
-
-#include <cc11xx.h>
-#include "contiki-conf.h"
-
-
+#include "spi.h"
+#include "cc1120.h"
+#include "cc1120-arch.h"
 
 //#include "dev/slip.h"
 #include "dev/watchdog.h"
@@ -26,54 +21,67 @@
 #include "net/netstack.h"
 #include "net/mac/frame802154.h"
 
-#if WITH_UIP6
-#include "net/uip-ds6.h"
-#endif /* WITH_UIP6 */
+#if NETSTACK_CONF_WITH_IPV6
+#include "net/ipv6/uip-ds6.h"
+#endif /* NETSTACK_CONF_WITH_IPV6 */
 
-#include "net/rime.h"
+#include "net/rime/rime.h"
 
 #include "sys/node-id.h"
 #include "sys/autostart.h"
-#include "sys/profile.h"
 
-#ifndef WITH_UIP
-#define WITH_UIP 0
+#define DEBUG 1
+#if DEBUG
+#include <stdio.h>
+#define PRINTF(...) printf(__VA_ARGS__)
+#else
+#define PRINTF(...)
 #endif
 
-#if WITH_UIP
-#include "net/uip.h"
-#include "net/uip-fw.h"
-#include "net/uip-fw-drv.h"
-#include "net/uip-over-mesh.h"
-//static struct uip_fw_netif slipif =
- // {UIP_FW_NETIF(192,168,1,2, 255,255,255,255, slip_send)};
-static struct uip_fw_netif meshif =
-  {UIP_FW_NETIF(172,16,0,0, 255,255,0,0, uip_over_mesh_send)};
+#ifndef NETSTACK_CONF_WITH_IPV4
+#define NETSTACK_CONF_WITH_IPV4 0
+#endif
 
-#endif /* WITH_UIP */
+#if NETSTACK_CONF_WITH_IPV4
+#include "net/ip/uip.h"
+#include "net/ipv4/uip-fw.h"
+#include "net/uip-fw-drv.h"
+#include "net/ipv4/uip-over-mesh.h"
+static struct uip_fw_netif slipif =
+{ UIP_FW_NETIF(192, 168, 1, 2, 255, 255, 255, 255, slip_send) };
+static struct uip_fw_netif meshif =
+{ UIP_FW_NETIF(172, 16, 0, 0, 255, 255, 0, 0, uip_over_mesh_send) };
+
+#endif /* NETSTACK_CONF_WITH_IPV4 */
 
 #define UIP_OVER_MESH_CHANNEL 8
-#if WITH_UIP
+#if NETSTACK_CONF_WITH_IPV4
 static uint8_t is_gateway;
-#endif /* WITH_UIP */
+#endif /* NETSTACK_CONF_WITH_IPV4 */
 
-unsigned short node_id = 0;
+unsigned short node_id = 0x55;
 unsigned char node_mac[8];
 
 unsigned int idle_count = 0;
 
+void
+uip_log(char *msg)
+{
+  puts(msg);
+}
+
 static void
 set_rime_addr(void)
 {
-  rimeaddr_t addr;
-  int i;
+  linkaddr_t addr;
+  //int i;
 
-  memset(&addr, 0, sizeof(rimeaddr_t));
-#if UIP_CONF_IPV6
+  memset(&addr, 0, sizeof(linkaddr_t));
+#if NETSTACK_CONF_WITH_IPV6
   memcpy(addr.u8, node_mac, sizeof(addr.u8));
 #else
   if(node_id == 0) {
-    for(i = 0; i < sizeof(rimeaddr_t); ++i) {
+    for(i = 0; i < sizeof(linkaddr_t); ++i) {
       addr.u8[i] = node_mac[7 - i];
     }
   } else {
@@ -81,12 +89,24 @@ set_rime_addr(void)
     addr.u8[1] = node_id >> 8;
   }
 #endif
-  rimeaddr_set_node_addr(&addr);
-  printf("Rime started with address ");
+  linkaddr_set_node_addr(&addr);
+  /*printf("Rime started with address ");
   for(i = 0; i < sizeof(addr.u8) - 1; i++) {
     printf("%d.", addr.u8[i]);
   }
-  printf("%d\n", addr.u8[i]);
+  printf("%d\n", addr.u8[i]);*/
+}
+
+static void
+print_processes(struct process *const processes[])
+{
+  /*  const struct process * const * p = processes;*/
+  printf("Starting");
+  while(*processes != NULL) {
+    //printf(" '%s'", (*processes)->name);
+    processes++;
+  }
+  putchar('\n');
 }
 
 int
@@ -101,8 +121,8 @@ main(void)
   printf("clock...");
   clock_init();
   
-  //printf("rtimer...");
-  //rtimer_init();
+  printf("rtimer...");
+  rtimer_init();
   
   printf("set node_mac...");
   node_mac[0] = 0xc1;  /* Hardcoded for Z1 */
@@ -124,6 +144,8 @@ main(void)
   process_start(&etimer_process, NULL);
   printf("ctimer...");
   ctimer_init();
+  printf("SPI0...");
+  SPI0_init();
   printf("set rime_address...");
   set_rime_addr();
   printf("\n\r\n\r");
@@ -132,9 +154,9 @@ main(void)
   printf("Init Radio...");
   NETSTACK_CONF_RADIO.init();
   
-  printf("Set channel to 42 (868.25MHz)...");
-  cc11xx_channel_set(RF_CHANNEL);
-  printf("OK\n\r");
+  //printf("Set channel to 42 (868.25MHz)...");
+  //cc1120_channel_set(RF_CHANNEL);
+  //printf("OK\n\r");
   
   printf(CONTIKI_VERSION_STRING " started. ");
   
@@ -219,7 +241,7 @@ main(void)
   timesynch_set_authority_level(rimeaddr_node_addr.u8[0]);
 #endif /* TIMESYNCH_CONF_ENABLED */
 
-#if WITH_UIP
+#if NETSTACK_CONF_WITH_IPV4
   process_start(&tcpip_process, NULL);
   process_start(&uip_fw_process, NULL);	/* Start IP output */
   //process_start(&slip_process, NULL);
@@ -251,7 +273,7 @@ main(void)
   energest_init();
   ENERGEST_ON(ENERGEST_TYPE_CPU);
 
-  //print_processes(autostart_processes);
+  print_processes(autostart_processes);
   autostart_start(autostart_processes);
 
   /*
@@ -313,6 +335,7 @@ main(void)
   
   
   return 0;
+
 }
 
 

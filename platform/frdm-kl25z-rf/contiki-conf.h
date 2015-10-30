@@ -21,6 +21,10 @@ typedef int32_t s32_t;
 typedef unsigned int clock_time_t;
 typedef unsigned int uip_stats_t;
 
+typedef int bool;
+#define true 1
+#define false 0
+
 #ifndef BV
 #define BV(x) (1<<(x))
 #endif
@@ -58,7 +62,7 @@ typedef unsigned int uip_stats_t;
 #define PLATFORM_HAS_LEDS   0
 #define PLATFORM_HAS_BUTTON 0
 
-#define NETSTACK_CONF_RADIO   cc11xx_driver
+#define NETSTACK_CONF_RADIO   cc1120_driver
 
 #if WITH_UIP6
 
@@ -66,7 +70,6 @@ typedef unsigned int uip_stats_t;
 #define NETSTACK_CONF_NETWORK sicslowpan_driver
 #define NETSTACK_CONF_MAC     csma_driver
 #define NETSTACK_CONF_RDC     contikimac_driver
-
 #define NETSTACK_CONF_FRAMER  framer_802154
 
 

@@ -1,77 +1,5 @@
-/*-----------------------------------------------------------------------------------------------------------------------------------*/
-/*	cc1120-mkl25z-rf-arch.c	
- *	
- *	Architecture code for CC1120 on the the Freescale FRDM-KL25z Freedom Board with Uni of Southampton RF module
- *	
- *	Author: Graeme Bragg
- * 			ARM-ECS / Pervasive Systems Centre
- * 			School of Electronics & Computer Science
- * 			University of Southampton
- * 
- *	1/5/2014	Rev.01	Modified cc1120-msp-arch.c from Thingsquare Mist for 
- *						the FRDM-KL25Z-RF platform running Contiki.	
- *
- *	Page references relate to the KL25 Sub-Family Reference Manual, Document 
- *	No. KL25P80M48SF0RM, Rev. 3 September 2012. Available on 25/02/2013 from: 
- *	http://cache.freescale.com/files/32bit/doc/ref_manual/KL25P80M48SF0RM.pdf?fr=gdc
- *	
- *	Page references to "M0 Book" refer to "The Definitive Guide to the 
- *	ARM Cortex-M0" by Joseph Yiu, ISBN 978-0-12-385477-3.
- */
-/*-----------------------------------------------------------------------------------------------------------------------------------*/
-/*
- * Copyright (c) 2012, Thingsquare, http://www.thingsquare.com/.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * 3. Neither the name of the copyright holder nor the names of its
- *    contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE
- * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- */
 
-/*-----------------------------------------------------------------------------------------------------------------------------------*/
-/*	cc1120-mkl25z-rf-arch.c	
- *	
- *	Architecture code for CC1120 on the the Freescale FRDM-KL25z Freedom Board with Uni of Southampton RF module
- *	
- *	Author: Graeme Bragg
- * 			ARM-ECS / Pervasive Systems Centre
- * 			School of Electronics & Computer Science
- * 			University of Southampton
- * 
- * 
- *	1/5/2014	Rev.01		
- *
- *	Page references relate to the KL25 Sub-Family Reference Manual, Document 
- *	No. KL25P80M48SF0RM, Rev. 3 September 2012. Available on 25/02/2013 from: 
- *	http://cache.freescale.com/files/32bit/doc/ref_manual/KL25P80M48SF0RM.pdf?fr=gdc
- *	
- *	Page references to "M0 Book" refer to "The Definitive Guide to the 
- *	ARM Cortex-M0" by Joseph Yiu, ISBN 978-0-12-385477-3.
- *	
- *
+/* 
  * Copyright (c) 2014, University of Southampton, Electronics and Computer Science
  * All rights reserved.
  *
@@ -100,183 +28,286 @@
  * SUCH DAMAGE.
  *
  */				
-/*-----------------------------------------------------------------------------------------------------------------------------------*/
 
+ /**
+ * \file
+ *         Architecture specific CC1120 functions for the FRDM-KL25Z-RF
+ * \author
+ *         Graeme Bragg <g.bragg@ecs.soton.ac.uk>
+ *         Phil Basford <pjb@ecs.soton.ac.uk>
+ */
 
-#include "contiki.h"
-#include "contiki-net.h"
-#include <cc1120-config.h>
-#include <cc11xx.h>
-#include <cc11xx-arch.h>
+#include "derivative.h"
+#include "cc1120.h"
+#include "cc1120-arch.h"
+#include "cc1120-const.h"
 
-#include <MKL25Z4.h>                   /* I/O map for MKL25Z128VLK4 */
 #include "cpu.h"
 #include "spi.h"
 #include "nvic.h"
-//#include "dev/leds.h"
 
 #include <stdio.h>
+#include <watchdog.h>
 
 #define READ_BIT 0x80
 #define TEST_VALUE 0xA5
 
-uint8_t cc1120_csn_check(void);
-void ccc1120_reset(void);
+#define DEBUG 1
+#if DEBUG
+#include <stdio.h>
+#define PRINTF(...) printf(__VA_ARGS__)
+#else
+#define PRINTF(...)
+#endif
+
+static uint8_t enabled;
+
+/* Busy Wait for time-outable waiting. */
+#define BUSYWAIT_UNTIL(cond, max_time)                                  \
+  do {                                                                  \
+    rtimer_clock_t t0;                                                  \
+    t0 = RTIMER_NOW();                                                  \
+    while(!(cond) && RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + (max_time)));   \
+  } while(0)
+
+
+/* ---------------------------- Init Functions ----------------------------- */
+/*---------------------------------------------------------------------------*/
+
+void
+cc1120_arch_init(void)
+{
+	PRINTF("\n\rConfigure CC1120 (arch)...\n\r");	
+	/* Configure pins.  This may have already been done but func is repeat-execution safe. */
+	PRINTF("\tRadio Control Pins\n\r");
+	cc1120_arch_pin_init();
+	
+	/* Init SPI.  May have already done but we need to ensure SPI is configured.*/
+	PRINTF("\tSPI...\n\r");
+  	SPI0_init();			/* Configure SPI with CSn. */
+
+
+	/* Configure GPIO Input pins */
+	PRINTF("\tGPIO Pins...\n\r");
+  	GPIOA_PDDR &= (uint32_t)~GPIO_PDDR_PDD(0x2000); 				/* Set Pin A13 as input for GPIO3 */
+	GPIOA_PDDR &= (uint32_t)~GPIO_PDDR_PDD(0x1000);					/* Set Pin A12 as input for GPIO2 */
+
+	PRINTF("\tRadio Interrupt...\n\r");
+	GPIOA_PDDR &= (uint32_t)~GPIO_PDDR_PDD(0x20);					/* Set Pin A5 as input for GPIO2 */
+	PORTA_PCR13 = PORT_PCR_ISF_MASK | PORT_PCR_MUX(0x01);				/* Set Pin A13 to be GPIO, no interrupt, clear ISF. */
+	PORTA_PCR12 = PORT_PCR_ISF_MASK | PORT_PCR_MUX(0x01);				/* Set Pin A12 to be GPIO, no interrupt, clear ISF. */		
+	PORTA_PCR5 = PORT_PCR_ISF_MASK | PORT_PCR_MUX(0x01) | PORT_PCR_IRQC(0x09);	/* Set Pin A5 to be GPIO, Rising edge interrupt, clear ISF. */
+	NVIC_Set_Priority(IRQ_PORTA, 1);						/* Set Interrupt priority. */
+                                  
+        PRINTF("\tOK!\n\r");   	                            
+
+}
 
 /*---------------------------------------------------------------------------*/
+
+void 
+cc1120_arch_pin_init(void)
+{
+	/* Configure CSn pin on Port D, Pin 0 */
+  	GPIOD_PDDR |= GPIO_PDDR_PDD(0x01); 				/* Set pin as Output.*/                                 
+  	GPIOD_PDOR |= GPIO_PDOR_PDO(0x01);    				/* Set initialisation value to 1 */                                           
+  	PORTD_PCR0 = PORT_PCR_ISF_MASK | PORT_PCR_MUX(0x01);		/* Clear ISF & set MUX to be basic pin. */
+	enabled = 0;
+
+  	/* Configure CC1120 Reset pin on Port B, Pin 8. */
+  	GPIOB_PDDR |= GPIO_PDDR_PDD(0x0100); 				/* Set pin as Output. */                                                  
+  	GPIOB_PDOR |= GPIO_PDOR_PDO(0x0100);   				/* Set initialisation value on 1 */                                           
+  	PORTB_PCR8 = PORT_PCR_ISF_MASK | PORT_PCR_MUX(0x01);		/* Clear ISF & Set mux to be basic pin. */
+
+
+	GPIOD_PDDR &= (uint32_t)~GPIO_PDDR_PDD(0x08);			/* Set Pin D3 as an Input for reading MISO */
+
+	GPIOD_PSOR |= GPIO_PSOR_PTSO(0x01);				/* Make sure that the CSn is set HIGH. */
+	GPIOB_PSOR |= GPIO_PSOR_PTSO(0x0100);				/* Make sure that the Reset is set HIGH. */
+}
+
+
+/* ---------------------------- Reset Functions ---------------------------- */
+void
+cc1120_arch_reset(void)
+{
+	GPIOD_PSOR |= GPIO_PSOR_PTSO(0x01);			/* Assert CSn to de-select CC1120. */
+	GPIOB_PCOR |= GPIO_PCOR_PTCO(0x0100);			/* Clear !Reset pin. */
+	clock_delay(CC1120_RESET_DELAY_USEC/100);		/* Delay for a little. */
+	GPIOB_PSOR |= GPIO_PSOR_PTSO(0x0100);			/* Assert !Reset pin. */
+}
+
+
+/* ----------------------------- SPI Functions ----------------------------- */
+uint8_t
+cc1120_arch_spi_enabled(void)
+{
+	return enabled;
+}
+
 void
 cc1120_arch_spi_enable(void)
 {
-  printf("CC1120 select");
-  /* Set CSn to low (0) */
-  SPI0_csn_low();
+	if(!enabled)
+	{
+		rtimer_clock_t t0 = RTIMER_NOW(); 
+		int i = 0;
+		
+		/* Set CSn to low to select CC1120 */
+		GPIOD_PCOR |= GPIO_PCOR_PTCO(0x01);	
+		
+		PORTD_PCR3 &= ~PORT_PCR_MUX_MASK; 			  /* Clear Port D, Pin 3 Mux. */
+  		PORTD_PCR3 |= PORT_PCR_ISF_MASK | PORT_PCR_MUX(0x01);     /* Set Port D, Pin 3 GPIO. */
+		
+	
+		
+		watchdog_periodic();
 
-  /* The MISO pin should go low before chip is fully enabled. */
-  while (GPIOC_PDOR & 0x020000);
-  printf("ed\n\r");
+		/* The MISO pin should go LOW before chip is fully enabled. */
+		while(GPIOD_PDIR & GPIO_PDIR_PDI(0x08))
+		{
+			if(RTIMER_CLOCK_LT((t0 + CC1120_EN_TIMEOUT), RTIMER_NOW()) )
+			{
+				watchdog_periodic();
+				if(i == 0)
+				{
+					/* Timeout.  Try a SNOP and a re-enable once. */
+					PORTD_PCR3 |= PORT_PCR_ISF_MASK | PORT_PCR_MUX(0x02); 	/* Set Port D, Pin 3 back to MISO. */
+					(void) cc1120_arch_spi_rw_byte(CC1120_STROBE_SNOP);	/* SNOP. */
+					GPIOD_PSOR |= GPIO_PSOR_PTSO(0x01);			/* Disable. */
+					clock_wait(50);											/* Wait. */
+					PORTD_PCR3 &= ~PORT_PCR_MUX_MASK; 			/* Clear Port D, Pin 3 Mux. */
+  					PORTD_PCR3 |= PORT_PCR_ISF_MASK | PORT_PCR_MUX(0x01);   /* Set Port D, Pin 3 GPIO. */
+					GPIOD_PCOR |= GPIO_PCOR_PTCO(0x01);			/* Enable. */
+					
+					i++;
+				}
+				else
+				{
+					break;
+				}
+				
+				t0 = RTIMER_NOW(); 		/* Reset timeout. */
+			}
+		}
+		PORTD_PCR3 |= PORT_PCR_ISF_MASK | PORT_PCR_MUX(0x02); 		/* Set Port D, Pin 3 back to MISO. */
+	
+		enabled = 1;
+	}
 }
+
 /*---------------------------------------------------------------------------*/
 void
 cc1120_arch_spi_disable(void)
 {
-  /* Set CSn to high (1) */
-  SPI0_csn_high();
-}
-/*---------------------------------------------------------------------------*/
-int
-cc1120_arch_spi_rw_byte(unsigned char c)
-{
-	return SPI_single_tx_rx(c, 0);
-}
-/*---------------------------------------------------------------------------*/
-int
-cc1120_arch_spi_rw(unsigned char *inBuf, unsigned char *outBuf, int len)
-{
-  int i;
-  if(inBuf == NULL && outBuf == NULL) {
-    /* error: both buffers are NULL */
-    return 1;
-  } else if(inBuf == NULL) {
-    for(i = 0; i < len; i++) {
-      (void)SPI_single_tx_rx(outBuf[i], 0);
-    }
-  } else if(outBuf == NULL) {
-    for(i = 0; i < len; i++) {
-      inBuf[i] = SPI_single_tx_rx(0, 0);
-    }
-  } else {
-    for(i = 0; i < len; i++) {
-      inBuf[i] = SPI_single_tx_rx(outBuf[i],0);
-    }
-  }
-  return 0;
-}
-/*---------------------------------------------------------------------------*/
-void
-cc1120_arch_init(void)
-{
-  uint8_t test3, test2, test1, test = 0;
-  
-  printf("conf SPI...");
-  SPI0_init();			/* Configure SPI with CSn. */
-
-  printf("conf pins...");
-  /* Configure CC1120 CSn Sense pin - Port C, Pin 17. */
-  GPIOD_PDDR &= ~GPIO_PDDR_PDD(0x020000); 					/* Set pin as Input. */                                                  
-                                         
-  PORTC_PCR17 &= ~(PORT_PCR_ISF_MASK | PORT_PCR_MUX_MASK);	/* Clear PCR Multiplex and Interrupt flag. */
-  PORTC_PCR17 |= PORT_PCR_MUX(0x01);						/* Set mux to be basic pin. */
-   
-   
-  /* Configure CC1120 Reset pin. */
-  GPIOB_PDDR &= ~GPIO_PDDR_PDD(0x0100); 					/* Set pin as Input initially for HiZ. */                                                  
-  GPIOB_PDOR &= ~GPIO_PDOR_PDO(0x0100);   					/* Set initialisation value on 1 */                                           
-
-  PORTB_PCR8 &= ~(PORT_PCR_MUX_MASK);						/* Clear PCR Multiplex. */
-  PORTB_PCR8 |= PORT_PCR_ISF_MASK | PORT_PCR_MUX(0x01);		/* Clear ISF & Set mux to be basic pin. */
- 
-  
-  /* Configure CC1120 GPIO pins. */
-  /* GPIO0 is connected to Port A, Pin 5. 
-   * Configure pin to have rising-edge interrupt with the 
-   * pull-down resistor enabled. Clear ISF flag & set MUX
-   * to GPIO. */
-  //PORTA_PCR5 = PORT_PCR_ISF_MASK | PORT_PCR_IRQC(0x09) | PORT_PCR_MUX(0x01) | PORT_PCR_PE_MASK;
-  PORTA_PCR5 &= ~PORT_PCR_MUX_MASK;						/* Clear PCR Multiplex. */
-  PORTA_PCR5 |= (PORT_PCR_ISF_MASK | PORT_PCR_MUX(0x01));	/* Clear ISF & set MUX to be basic pin. */
-  
-  GPIOA_PDDR &= ~GPIO_PDDR_PDD(0x3020);						/* Set pins as Input. */
-  
-  //NVIC_Set_Priority(IRQ_PORTA, 1);							/* Set Interrupt priority. */
-  
-  /* GPIO2 is connected to Port A, Pin 12. 
-   * Clear ISF flag & set MUX to GPIO. */
-  PORTA_PCR12 &= ~PORT_PCR_MUX_MASK;						/* Clear PCR Multiplex. */
-  PORTA_PCR12 |= (PORT_PCR_ISF_MASK | PORT_PCR_MUX(0x01));	/* Clear ISF & set MUX to be basic pin. */
-  
-  /* GPIO3 is connected to Port A, Pin 13. 
-   * Clear ISF flag & set MUX to GPIO. */
-  PORTA_PCR13 &= ~PORT_PCR_MUX_MASK;						/* Clear PCR Multiplex. */
-  PORTA_PCR13 |= (PORT_PCR_ISF_MASK | PORT_PCR_MUX(0x01));	/* Clear ISF & set MUX to be basic pin. */
-  
-  printf("Reset CC1120...");
-  /* Reset CC1120. */
-  cc1120_reset();
-  
-  printf("Check CC1120...");
-  cc1120_arch_spi_enable();
-  test3 = CC11xx_ARCH_SPI_RW_BYTE(46);
-  test2 = CC11xx_ARCH_SPI_RW_BYTE(TEST_VALUE);
-  test1 = CC11xx_ARCH_SPI_RW_BYTE(46 | READ_BIT);
-  test = CC11xx_ARCH_SPI_RW_BYTE(0);
-   
-  /* Deselect radio. */
-  cc1120_arch_spi_disable();
-  if(test != TEST_VALUE)
-  {
-	printf("*** NOT OK! ***\n\r");
-	while(1)
+	if(enabled)
 	{
-		printf("Check CC1120 and reset.\n\r");
+		/* Set CSn to high (1) */
+		GPIOD_PSOR |= GPIO_PSOR_PTSO(0x01);
+		enabled = 0;
 	}
-  }
-  else
-  {
-		printf("OK\n\r\n\r");
-  }
-  //clock_delay(400);
-
-  /* Enable Radio. */
-  //cc1120_arch_spi_enable();
 }
+
 /*---------------------------------------------------------------------------*/
+uint8_t
+cc1120_arch_spi_rw_byte(uint8_t val)
+{
+	return SPI_single_tx_rx(val, 0);
+}
+
+/*---------------------------------------------------------------------------*/
+uint8_t 
+cc1120_arch_txfifo_load(uint8_t *packet, uint8_t packet_length)
+{
+	uint8_t status, i;
+	//status = cc1120_arch_spi_rw_byte(CC1120_FIFO_ACCESS | CC1120_STANDARD_BIT | CC1120_WRITE_BIT);
+	status = cc1120_arch_spi_rw_byte(CC1120_FIFO_ACCESS | CC1120_BURST_BIT | CC1120_WRITE_BIT);
+	cc1120_arch_spi_rw_byte(packet_length);
+	
+	for(i = 0; i < packet_length; i++)
+	{
+		cc1120_arch_spi_rw_byte(packet[i]);
+	}
+	
+	return status;
+}
+
+
+/*---------------------------------------------------------------------------*/
+void 
+cc1120_arch_rxfifo_read(uint8_t *packet, uint8_t packet_length)
+{
+	uint8_t i;
+	
+	(void) cc1120_arch_spi_rw_byte(CC1120_FIFO_ACCESS | CC1120_BURST_BIT | CC1120_READ_BIT);
+	
+	for(i = 0; i < packet_length; i++)
+	{
+		packet[i] = cc1120_arch_spi_rw_byte(0);
+	}
+	watchdog_periodic();
+}
+
+
+/*---------------------------------------------------------------------------*/
+uint8_t 
+cc1120_arch_read_cca(void)
+{
+	/*if(CC1120_GDO3_PORT(IN) & BV(CC1120_GDO3_PIN))
+	{
+		return 1;
+	}
+	else
+	{*/
+		return 0;
+	//}
+}
+
+
+/*---------------------------------------------------------------------------*/
+uint8_t
+cc1120_arch_read_gpio3(void)
+{
+	if(GPIOA_PDIR & GPIO_PDIR_PDI(0x2000))
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+/* -------------------------- Interrupt Functions -------------------------- */
+
 void
 cc1120_arch_interrupt_enable(void)
 {
-  /* Enable interrupt. */
-  //NVIC_ENABLE_INT(IRQ_PORTA);
+	/* Reset interrupt trigger */
+	PORTA_PCR5 = PORT_PCR_ISF_MASK;
+  	NVIC_CLEAR_PENDING(IRQ_PORTA);
+	/* Enable interrupt on the GDO0 pin */
+	NVIC_ENABLE_INT(IRQ_PORTA);
+}
+
+/*---------------------------------------------------------------------------*/
+void
+cc1120_arch_interrupt_disable(void)
+{
+	/* Disable interrupt on the GDO0 pin */
+	NVIC_DISABLE_INT(IRQ_PORTA);
+	/* Reset interrupt trigger */
+	PORTA_PCR5 = PORT_PCR_ISF_MASK;
+  	NVIC_CLEAR_PENDING(IRQ_PORTA);
 }
 /*---------------------------------------------------------------------------*/
-
-uint8_t 
-cc1120_csn_check(void)
-{
-	/* Check if SO is high. 1 if not, 0 if it is. */
-	return ((FGPIOC_PDOR & 0x020000) != 0) ? 0 : 1;
-}
-
 void
-cc1120_reset(void)
+cc1120_arch_interrupt_acknowledge(void)
 {
-	/* Deselect CC1120. */
-	cc1120_arch_spi_disable();
-	
-	/*Reset CC1120. */
-	GPIOB_PDDR |= GPIO_PDDR_PDD(0x0100);
-	//clock_delay(600);
-	GPIOB_PDDR &= ~GPIO_PDDR_PDD(0x0100);
+	/* Reset interrupt trigger */
+  	PORTA_PCR5 = PORT_PCR_ISF_MASK;
+  	NVIC_CLEAR_PENDING(IRQ_PORTA);
 }
-
 
 /*---------------------------------------------------------------------------*/
 void PORTA_IRQHandler(void)
@@ -284,16 +315,15 @@ void PORTA_IRQHandler(void)
   ENERGEST_ON(ENERGEST_TYPE_IRQ);
 
   if(PORTA_PCR5 & PORT_PCR_ISF_MASK) {
-    if(cc11xx_rx_interrupt()) {
-      //LPM4_EXIT;
-    }
+    cc1120_interrupt_handler();
   }
-
-  /* Reset interrupt trigger */
-  PORTA_PCR5 = PORT_PCR_ISF_MASK;
-  NVIC_CLEAR_PENDING(IRQ_PORTA);
-  
+ 
   ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }
 /*---------------------------------------------------------------------------*/
+
+
+
+
+
 

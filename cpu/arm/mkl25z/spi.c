@@ -59,16 +59,7 @@
 
 void SPI0_init(void)
 {
-  port_enable(PORTD_EN_MASK | PORTC_EN_MASK); 				/* Make sure that clocks are enable to Port D and Port C */
-  
-  
-  /* Configure CSn pin on Port D, Pin 0 */
-  GPIOD_PDDR |= GPIO_PDDR_PDD(0x01); 						/* Set pin as Output. */                                                  
-  GPIOD_PDOR |= GPIO_PDOR_PDO(0x01);    					/* Set initialisation value on 1 */                                           
-
-  PORTD_PCR0 &= ~PORT_PCR_MUX_MASK;							/* Clear PCR Multiplex. */
-  PORTD_PCR0 |= PORT_PCR_ISF_MASK | PORT_PCR_MUX(0x01);		/* Clear ISF & set MUX to be basic pin. */
-  
+  port_enable(PORTC_EN_MASK); 				/* Make sure that clocks are enable to Port D and Port C */
   
   /* Configure SPI0. */
   SIM_SCGC4 |= SIM_SCGC4_SPI0_MASK;      					/* Enable clock to SPI Module */
@@ -82,43 +73,31 @@ void SPI0_init(void)
   PORTC_PCR5 &= ~PORT_PCR_MUX_MASK;							/* Clear Port C, Pin 5 Mux. */
   PORTC_PCR5 |= PORT_PCR_ISF_MASK | PORT_PCR_MUX(0x02); 	/* Clear ISF & Set Port C, Pin 5 as Clock. */
   
-  printf("\n\rSPI0_C1 = %d...", SPI0_C1);
+  //printf("\n\rSPI0_C1 = %d...", SPI0_C1);
   SPI0_C1 = (SPI_C1_MSTR_MASK | SPI_C1_SSOE_MASK); 							/* Set SPI0_C1: Master Mode */
-  printf("\n\rSPI0_C1 = %d...", SPI0_C1);
+  //printf("\n\rSPI0_C1 = %d...", SPI0_C1);
   SPI0_C2 = SPI_C2_MODFEN_MASK;        									/* Set SPI0_C2: Default state */
-  printf("\n\rSPI0_C1 = %d...", SPI0_C1);
+  //printf("\n\rSPI0_C1 = %d...", SPI0_C1);
   
   SPI0_BR = SPI_BR_SPPR(0x20);         						/* Set baud rate register */
-  printf("\n\rSPI0_C1 = %d...", SPI0_C1);
+  //printf("\n\rSPI0_C1 = %d...", SPI0_C1);
   
   SPI0_C1 |= SPI_C1_SPE_MASK;          						/* Enable SPI module */
-  printf("\n\rSPI0_C1 = %d...", SPI0_C1);
-}
-
-
-/* SPI CSn control */
-void SPI0_csn_low(void)
-{
-	FGPIOD_PCOR = 0x01;		/* Clear CSn bit. */
-}
-
-void SPI0_csn_high(void)
-{
-	FGPIOD_PSOR = 0x01;		/* Set CSn bit. */
+  //printf("\n\rSPI0_C1 = %d...", SPI0_C1);
 }
 
 
 /* Single SPI Send/Recieve. */
-uint16_t SPI_single_tx_rx(uint8_t in, uint8_t module) {
+uint8_t SPI_single_tx_rx(uint8_t in, uint8_t module) {
 	
 	uint8_t i = 1;
 	uint16_t tmp;
-	printf("\n\rSPI0_C1 = %d", SPI0_C1);
+	//printf("\n\rSPI0_C1 = %d", SPI0_C1);
 
 	while(i){
 		tmp = SPI0_S;
 		tmp &= SPI_S_SPTEF_MASK;
-		printf("\n\rTX tmp = %d", tmp);
+		//printf("\n\rTX tmp = %d", tmp);
 		if (tmp == SPI_S_SPTEF_MASK) {
 			SPI0_D = in;
 			i = 0;
@@ -129,11 +108,11 @@ uint16_t SPI_single_tx_rx(uint8_t in, uint8_t module) {
 	while(i) {
 		tmp = SPI0_S;
 		tmp &= SPI_S_SPRF_MASK;
-		printf("\n\rRX tmp = %d", tmp);
+		//printf("\n\rRX tmp = %d", tmp);
 		if (tmp == SPI_S_SPRF_MASK) {
-			printf("\n\rData");
+			//printf("\n\rData");
 			tmp = SPI0_D;
-			printf("%d", tmp);
+			//printf("%d", tmp);
 			i = 0;
 		}
 	}
