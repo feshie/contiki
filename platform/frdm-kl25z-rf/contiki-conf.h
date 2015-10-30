@@ -21,7 +21,8 @@ typedef int32_t s32_t;
 typedef unsigned int clock_time_t;
 typedef unsigned int uip_stats_t;
 
-typedef int bool;
+//typedef uint8_t bool;
+
 #define true 1
 #define false 0
 
