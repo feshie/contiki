@@ -3,8 +3,10 @@
 #include <string.h>
 #include <stdarg.h>
 
+#include "contiki-conf.h"
 #include "contiki.h"
 #include "platform-conf.h"
+#include "sys/autostart.h"
 
 #include <MKL25Z4.h>
 #include "nvic.h"
@@ -28,7 +30,6 @@
 #include "net/rime/rime.h"
 
 #include "sys/node-id.h"
-#include "sys/autostart.h"
 
 #define DEBUG 1
 #if DEBUG
@@ -102,11 +103,7 @@ print_processes(struct process *const processes[])
 {
   /*  const struct process * const * p = processes;*/
   printf("Starting");
-  while(*processes != NULL) {
-    //printf(" '%s'", (*processes)->name);
-    processes++;
-  }
-  putchar('\n');
+  printf("\n");
 }
 
 int
@@ -116,12 +113,7 @@ main(void)
   port_enable(PORTB_EN_MASK | PORTC_EN_MASK | PORTD_EN_MASK | PORTE_EN_MASK);
   
   dbg_setup_uart();
-  printf("Initialising...");
-  
-  printf("clock...");
   clock_init();
-  
-  printf("rtimer...");
   rtimer_init();
   
   printf("set node_mac...");
@@ -134,8 +126,8 @@ main(void)
   node_mac[3] = 0x00;  /* Hardcoded */
   node_mac[4] = 0x00;  /* Hardcoded */
   node_mac[5] = 0x00;  /* Hardcoded */
-  node_mac[6] = 12345678 >> 8;
-  node_mac[7] = 12345678 & 0xff;
+  node_mac[6] = (uint8_t)(12345678 >> 8);
+  node_mac[7] = (uint8_t)(12345678 & 0xff);
   
   
   printf("process...");
@@ -153,10 +145,6 @@ main(void)
   
   printf("Init Radio...");
   NETSTACK_CONF_RADIO.init();
-  
-  //printf("Set channel to 42 (868.25MHz)...");
-  //cc1120_channel_set(RF_CHANNEL);
-  //printf("OK\n\r");
   
   printf(CONTIKI_VERSION_STRING " started. ");
   
@@ -178,7 +166,7 @@ main(void)
   NETSTACK_MAC.init();
   NETSTACK_NETWORK.init();
 
-  printf("%s %s, channel check rate %lu Hz, radio channel %u\n",
+  printf("%s %s, channel check rate %d Hz, radio channel %d\n",
          NETSTACK_MAC.name, NETSTACK_RDC.name,
          CLOCK_SECOND / (NETSTACK_RDC.channel_check_interval() == 0 ? 1:
                          NETSTACK_RDC.channel_check_interval()),

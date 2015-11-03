@@ -32,7 +32,7 @@
  */				
 /*-----------------------------------------------------------------------------------------------------------------------------------*/
 
-#include <MKL25Z4.h>                   /* I/O map for MKL25Z128VLK4 */
+#include "derivative.h"                  /* I/O map for MKL25Z128VLK4 */
 #include "cpu.h"
 
 void port_enable(uint8_t PortMask)		/* Enable clock to used ports.  This is required before configuring the port. Page 206. */
@@ -161,7 +161,7 @@ void cpu_init(void)
 	PORTA_PCR20 = (uint32_t)((PORTA_PCR20 & ~0x01000000) | 0x0700);								/* Set PORTA_PCR20 as Reset, ISF=0,MUX=7 */
 	PORTA_PCR4 = (uint32_t)((PORTA_PCR4 & ~0x01000000) | 0x0700);								/* Set PORTA_PCR4 as NMI, ISF=0,MUX=7. */
 	
-	NVIC_IPR1 &= (uint32_t)~0x00FF0000;          												/* Set NVIC_IPR1: Irq 4 to 7 Priority Register.	PRI_6=0 */
+	NVIC->IP[1] &= (uint32_t)~0x00FF0000;          												/* Set NVIC_IPR1: Irq 4 to 7 Priority Register.	PRI_6=0 */
             
 	/*lint -save  -e950 Disable MISRA rule (1.1) checking. */\
 		asm("CPSIE i");\
@@ -171,13 +171,13 @@ void cpu_init(void)
 
 void cpu_run(void)							/* Place core into RUN mode. */
 {
-	SCB_SCR &= (uint32_t)~(SCB_SCR_SLEEPDEEP_MASK | SCB_SCR_SLEEPONEXIT_MASK);		/* Clear Sleep Deep mask and Sleep on Exit mask. M0 book Page 457. */
+	SCB->SCR &= (uint32_t)~(SCB_SCR_SLEEPDEEP_MASK | SCB_SCR_SLEEPONEXIT_MASK);		/* Clear Sleep Deep mask and Sleep on Exit mask. M0 book Page 457. */
 }
 
 void cpu_wait(void)							/* Place Core into WAIT mode (or VLPW if in VLPR). */
 {
-	SCB_SCR &= (uint32_t)~(SCB_SCR_SLEEPDEEP_MASK); 								/* Clear Sleep Deep mask so that WFI puts CPU into wait. M0 book Page 457. */
-	SCB_SCR |= (uint32_t)SCB_SCR_SLEEPONEXIT_MASK; 									/* Set Sleep On Exit mask so that CPU returns to wait after interrupt. M0 book Page 457. */
+	SCB->SCR &= (uint32_t)~(SCB_SCR_SLEEPDEEP_MASK); 								/* Clear Sleep Deep mask so that WFI puts CPU into wait. M0 book Page 457. */
+	SCB->SCR |= (uint32_t)SCB_SCR_SLEEPONEXIT_MASK; 									/* Set Sleep On Exit mask so that CPU returns to wait after interrupt. M0 book Page 457. */
 	asm("DSB");																		/* DSB instruction to ensure effect of of previous writes.  See http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dai0321a/BIHBGGHF.html */
 	asm("WFI");																		/* Enter sleep/wait. Page 141 to 143. */
 }
@@ -187,11 +187,11 @@ void cpu_stop(Type_StopMode StopMode)		/* Place core into one of the STOP modes.
 	/* Clear Low Leakage Wakeup Unit flags */
 	LLWU_F1 = (uint8_t)0xFF;														/* CLear LLWU_F1: Write 1 to all bits. Page 255. */
 	LLWU_F2 = (uint8_t)0xFF;														/* CLear LLWU_F2: Write 1 to all bits. Page 257. */
-	LLWU_F3 = (uint8_t)0xFF;														/* CLear LLWU_F3: Write 1 to all bits. Page 258. */
+	//LLWU_F3 = (uint8_t)0xFF;														/* CLear LLWU_F3: Write 1 to all bits. Page 258. */
 	LLWU_FILT1 |= LLWU_FILT1_FILTF_MASK;											/* Clear LLWU_FILT1: Write 1 to FILTF bit. Page 260. */
 	LLWU_FILT2 |= LLWU_FILT2_FILTF_MASK;											/* Clear LLWU_FILT2: Write 1 to FILTF bit. Page 261. */
 		
-	SCB_SCR |= (uint32_t)(SCB_SCR_SLEEPDEEP_MASK); 									/* Set Sleep Deep mask so that WFI puts CPU into sleep. M0 book Page 457. */
+	SCB->SCR |= (uint32_t)(SCB_SCR_SLEEPDEEP_MASK); 									/* Set Sleep Deep mask so that WFI puts CPU into sleep. M0 book Page 457. */
 	
 	switch(StopMode) {																/* Set the stop mode */
 		case Mode_Stop:	
@@ -236,7 +236,7 @@ void cpu_stop(Type_StopMode StopMode)		/* Place core into one of the STOP modes.
 		default:			SMC_PMCTRL = (uint8_t)((SMC_PMCTRL & ~SMC_PMCTRL_STOPM_MASK) | 0x00);			/* Default to Normal STOP. */
 	}
 	
-	SCB_SCR &= (uint32_t)~(SCB_SCR_SLEEPONEXIT_MASK);								/* Clear Sleep On Exit mask so that CPU does not return to sleep after interrupt. M0 book Page 457. */
+	SCB->SCR &= (uint32_t)~(SCB_SCR_SLEEPONEXIT_MASK);								/* Clear Sleep On Exit mask so that CPU does not return to sleep after interrupt. M0 book Page 457. */
 	//SCB_SCR |= (uint32_t)SCB_SCR_SLEEPONEXIT_MASK; 									/* Set Sleep On Exit mask so that CPU returns to sleep after interrupt.	M0 book Page 457. */
 	(void)(SMC_PMCTRL == 0);        												/* Dummy read of SMC_PMCTRL to ensure the register is written */
 	asm("DSB");																		/* DSB instruction to ensure effect of of previous writes.  See http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dai0321a/BIHBGGHF.html */
@@ -246,5 +246,259 @@ void cpu_stop(Type_StopMode StopMode)		/* Place core into one of the STOP modes.
 
 void NMI_Handler(void)		/* NMI Interrupt Handler.  Required as NMI fires during init and default causes a break.		*/
 {
-	;
+	printf("NMI Fire");;
 }
+
+/**
+ **===========================================================================
+ **  Default interrupt handlers
+ **===========================================================================
+ */
+void Default_Handler()
+{
+	printf("Default Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_NMI()
+{
+	printf("NMI Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_HardFault()
+{
+	printf("HardFault Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_SVC()
+{
+	printf("SVC Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_PendSV()
+{
+	printf("PendSV Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_SysTick()
+{
+	printf("Systick Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_DMA0()
+{
+	printf("DMA0 Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_DMA1()
+{
+	printf("DMA1 Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_DMA2()
+{
+	printf("DMA2 Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_DMA3()
+{
+	printf("DMA3 Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_MCM()
+{
+	printf("MCM Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_FTFL()
+{
+	printf("FTFL Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_PMC()
+{
+	printf("PMC Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_LLW()
+{
+	printf("LLW Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_I2C0()
+{
+	printf("I2C0 Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_I2C1()
+{
+	printf("I2C1 Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_SPI0()
+{
+	printf("SPI0 Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_SPI1()
+{
+	printf("SPI1 Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_UART0()
+{
+	printf("UART0 Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_UART1()
+{
+	printf("UART1 Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_UART2()
+{
+	printf("UART2 Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_ADC0()
+{
+	printf("ADC0 Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_CMP0()
+{
+	printf("CMP0 Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_FTM0()
+{
+	printf("FTM0 Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_FTM1()
+{
+	printf("FTM1 Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_FTM2()
+{
+	printf("FTM2 Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_RTC_Alarm()
+{
+	printf("RTC Alarm Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_RTC_Seconds()
+{
+	printf("RTC Seconds Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_PIT()
+{
+	printf("PIT Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_USBOTG()
+{
+	printf("USBOTG Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_DAC0()
+{
+	printf("DAC0 Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_TSI0()
+{
+	printf("TSI0 Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_MCG()
+{
+	printf("MCG Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_LPTimer()
+{
+	printf("LPTMR Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_PORTA()
+{
+	printf("PORTA Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+void Default_Handler_PORTD()
+{
+	printf("PORTD Handler - BREAKPOINT");
+	__asm("bkpt");
+}
+
+/* Weak definitions of handlers point to Default_Handler if not implemented */
+void HardFault_Handler() __attribute__ ((weak, alias("Default_Handler_HardFault")));
+void SVC_Handler() __attribute__ ((weak, alias("Default_Handler_SVC")));
+void PendSV_Handler() __attribute__ ((weak, alias("Default_Handler_PendSV")));
+void SysTick_Handler() __attribute__ ((weak, alias("Default_Handler_SysTick")));
+void DMA0_IRQHandler() __attribute__ ((weak, alias("Default_Handler_DMA0")));
+void DMA1_IRQHandler() __attribute__ ((weak, alias("Default_Handler_DMA1")));
+void DMA2_IRQHandler() __attribute__ ((weak, alias("Default_Handler_DMA2")));
+void DMA3_IRQHandler() __attribute__ ((weak, alias("Default_Handler_DMA3")));
+void LLWU_IRQHandler() __attribute__ ((weak, alias("Default_Handler_LLW")));
+void I2C0_IRQHandler() __attribute__ ((weak, alias("Default_Handler_I2C0")));
+void I2C1_IRQHandler() __attribute__ ((weak, alias("Default_Handler_I2C1")));
+void SPI0_IRQHandler() __attribute__ ((weak, alias("Default_Handler_SPI0")));
+void SPI1_IRQHandler() __attribute__ ((weak, alias("Default_Handler_SPI1")));
+void UART0_IRQHandler() __attribute__ ((weak, alias("Default_Handler_UART0")));
+void UART1_IRQHandler() __attribute__ ((weak, alias("Default_Handler_UART1")));
+void UART2_IRQHandler() __attribute__ ((weak, alias("Default_Handler_UART2")));
+void ADC0_IRQHandler() __attribute__ ((weak, alias("Default_Handler_ADC0")));
+void CMP0_IRQHandler() __attribute__ ((weak, alias("Default_Handler_CMP0")));
+void TPM0_IRQHandler() __attribute__ ((weak, alias("Default_Handler_FTM0")));
+void TPM1_IRQHandler() __attribute__ ((weak, alias("Default_Handler_FTM1")));
+void TPM2_IRQHandler() __attribute__ ((weak, alias("Default_Handler_FTM2")));
+void RTC_IRQHandler() __attribute__ ((weak, alias("Default_Handler_RTC_Alarm")));
+void RTC_Seconds_IRQHandler() __attribute__ ((weak, alias("Default_Handler_RTC_Seconds")));
+void PIT_IRQHandler() __attribute__ ((weak, alias("Default_Handler_PIT")));
+void USB0_IRQHandler() __attribute__ ((weak, alias("Default_Handler_USBOTG")));
+void DAC0_IRQHandler() __attribute__ ((weak, alias("Default_Handler_DAC0")));
+void TSI0_IRQHandler() __attribute__ ((weak, alias("Default_Handler_TSI0")));
+void MCG_IRQHandler() __attribute__ ((weak, alias("Default_Handler_MCG")));
+void LPTMR0_IRQHandler() __attribute__ ((weak, alias("Default_Handler_LPTimer")));
+void PORTA_IRQHandler() __attribute__ ((weak, alias("Default_Handler_PORTA")));
+void PORTD_IRQHandler() __attribute__ ((weak, alias("Default_Handler_PORTD")));

@@ -107,7 +107,7 @@ void serial_init(uint32_t UART0_baudrate, uint32_t UART1_baudrate, uint32_t UART
 
 void UART0_init(uint32_t baudrate) 		/* Initialise UART0.			*/
 {
-	if(baudrate != NULL)
+	if(baudrate != 0)
 	{
 		uint16_t bauddiv;
 
@@ -163,7 +163,7 @@ void UART0_init(uint32_t baudrate) 		/* Initialise UART0.			*/
 
 void UART1_init(uint32_t baudrate) 		/* Initialise UART1.			*/
 {
-	if(baudrate != NULL)
+	if(baudrate != 0)
 	{
 		uint16_t bauddiv;
 
@@ -209,7 +209,7 @@ void UART1_init(uint32_t baudrate) 		/* Initialise UART1.			*/
 
 void UART2_init(uint32_t baudrate) 		/* Initialise UART1.			*/
 {
-	if(baudrate != NULL)
+	if(baudrate != 0)
 	{
 		uint16_t bauddiv;
 
@@ -420,7 +420,6 @@ void UART1_IRQHandler(void)					/* UART1 Interrupt Handler 		*/
 			/* Check for error flags 		*/
 	if (UART1_IntStatReg & (UART_S1_OR_MASK | UART_S1_NF_MASK | UART_S1_FE_MASK | UART_S1_PF_MASK)) 		
 	{	
-		UART1_S1 = (uint8_t)UART_S1_Err;					/* Write to status register to acknowledge error.					*/
 		(void) UART1_D;										/* Dummy read of input data.										*/
 		UART1_IntStatReg &= (uint8_t)~UART_S1_RDRF_MASK;	/* Clear RDRF flag so that data is junked.							*/
 	}
@@ -450,7 +449,6 @@ void UART2_IRQHandler(void)					/* UART2 Interrupt Handler 		*/
 			/* Check for error flags 		*/
 	if (UART2_IntStatReg & (UART_S1_OR_MASK | UART_S1_NF_MASK | UART_S1_FE_MASK | UART_S1_PF_MASK)) 		
 	{	
-		UART2_S1 = (uint8_t)UART_S1_Err;					/* Write to status register to acknowledge error.					*/
 		(void) UART2_D;										/* Dummy read of input data.										*/
 		UART2_IntStatReg &= (uint8_t)~UART_S1_RDRF_MASK;	/* Clear RDRF flag so that data is junked.							*/
 	}

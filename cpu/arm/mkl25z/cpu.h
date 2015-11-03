@@ -29,6 +29,9 @@
 #ifndef __CPU_H
 #define __CPU_H
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #define PORTB_EN_MASK	0x01
 #define PORTC_EN_MASK	0x02
 #define PORTD_EN_MASK	0x04
@@ -48,7 +51,13 @@
 	#define MCGIRCLK		1000
 #endif 
 
-
+/* SCR Bit Fields */
+#define SCB_SCR_SLEEPONEXIT_MASK                 0x2u
+#define SCB_SCR_SLEEPONEXIT_SHIFT                1
+#define SCB_SCR_SLEEPDEEP_MASK                   0x4u
+#define SCB_SCR_SLEEPDEEP_SHIFT                  2
+#define SCB_SCR_SEVONPEND_MASK                   0x10u
+#define SCB_SCR_SEVONPEND_SHIFT                  4
 
 
 typedef enum {
@@ -73,5 +82,50 @@ void cpu_stop(Type_StopMode StopMode);		/* Enter stop mode. */
 
 
 void NMI_Handler(void);						/* NMI Interrupt Handler */
+void SysTick_Handler();
+
+/*
+** ===================================================================
+**     Method      :  Default_Handler
+**
+**     Description :
+**         The default interrupt handlers.
+** ===================================================================
+*/
+void Default_Handler_NMI();
+void Default_Handler_HardFault();
+void Default_Handler_SVC();
+void Default_Handler_PendSV();
+void Default_Handler_SysTick();
+void Default_Handler_DMA0();
+void Default_Handler_DMA1();
+void Default_Handler_DMA2();
+void Default_Handler_DMA3();
+void Default_Handler_MCM();
+void Default_Handler_FTFL();
+void Default_Handler_PMC();
+void Default_Handler_LLW();
+void Default_Handler_I2C0();
+void Default_Handler_I2C1();
+void Default_Handler_SPI0();
+void Default_Handler_SPI1();
+void Default_Handler_UART0();
+void Default_Handler_UART1();
+void Default_Handler_UART2();
+void Default_Handler_ADC0();
+void Default_Handler_CMP0();
+void Default_Handler_FTM0();
+void Default_Handler_FTM1();
+void Default_Handler_FTM2();
+void Default_Handler_RTC_Alarm();
+void Default_Handler_RTC_Seconds();
+void Default_Handler_PIT();
+void Default_Handler_USBOTG();
+void Default_Handler_DAC0();
+void Default_Handler_TSI0();
+void Default_Handler_MCG();
+void Default_Handler_LPTimer();
+void Default_Handler_PORTA();
+void Default_Handler_PORTD();
 
 #endif /* __CPU_H */

@@ -6,7 +6,22 @@ CONTIKI_CPU_ARM_COMMON=$(CONTIKI_CPU_ARM)/common
 CONTIKI_CPU=$(CONTIKI_CPU_ARM)/mkl25z
 MCU = cortex-m0plus
 
+ifeq ($(V),1)
+  TRACE_CC =
+  TRACE_LD =
+  TRACE_AR =
+  TRACE_AS =
+  Q=
+else
+  TRACE_CC = @echo "  CC       " $<
+  TRACE_LD = @echo "  LD       " $@
+  TRACE_AS = @echo "  AS       " $<
+  TRACE_AS = @echo "  AS       " $<
+  Q=@
+endif
+
 CC      = arm-none-eabi-gcc
+AS      = $(CC) -x assembler-with-cpp
 CPP     = arm-none-eabi-cpp
 CP      = arm-none-eabi-objcopy
 LD      = arm-none-eabi-ld
@@ -20,17 +35,17 @@ HEX     = $(OBJCOPY) -O ihex
 BIN     = $(OBJCOPY) -O binary -S
 S19     = $(OBJCOPY) -O srec
 
-MKL25Z = watchdog.c kinetis_sysinit.c clock.c debug-uart.c rtimer-arch.c serial.c spi.c nvic.c cpu.c clock.c kinetis_sysinit.c
-MKL25ZASM = startup.S
+MKL25Z = watchdog.c startup.c clock.c debug-uart.c rtimer-arch.c serial.c spi.c nvic.c cpu.c clock.c system_MKL25Z4.c
+MKL25ZASM = startup_MKL25Z4.S
 
 LDSCRIPT = $(CONTIKI_CPU)/MKL25Z128_flash.ld
 
-ARCH_FLAGS = -mthumb -gdwarf-2 -fomit-frame-pointer -Wall -Wstrict-prototypes -fverbose-asm
+ARCH_FLAGS = -mthumb -gdwarf-2 -fomit-frame-pointer -Wall -fverbose-asm -fdata-sections -ffunction-sections -Wno-strict-aliasing
 MCFLAGS = -mcpu=$(MCU)
 OPT = -O0
 
-CFLAGS += $(MCFLAGS) $(OPT) $(ARCH_FLAGS) -Wa,-ahlms=$(<:.c=.lst)
-LDFLAGS += $(MCFLAGS) -mthumb -nostartfiles -T$(LDSCRIPT) -Wl,-Map=$(FULL_PRJ).map,--cref,--no-warn-mismatch
+CFLAGS += $(MCFLAGS) $(OPT) $(ARCH_FLAGS) -Wa,-ahlms=$(<:.c=.lst) -DAUTOSTART_ENABLE
+LDFLAGS += $(MCFLAGS) -mthumb -nostartfiles -T$(LDSCRIPT) -Wl,--gc-sections,-Map=$(FULL_PRJ).map,--cref,--no-warn-mismatch -lc -lm -lgcc -lnosys
 ASFLAGS = $(MCFLAGS) -g -gdwarf-2 -mthumb -Wa,-amhls=$(<:.S=.lst)
 
 ### If the user-specified a Node ID, pass a define
@@ -42,15 +57,15 @@ endif
 CLEAN += symbols.c symbols.h *.d *.elf *.hex *.srec *.s19
 
 ### CPU-dependent directories
-CONTIKI_CPU_DIRS = . ../arm/common/dbg-io
+CONTIKI_CPU_DIRS = . ../common/dbg-io
 
 ### CPU-dependent source files
 DEBUG_IO_SOURCEFILES += dbg-printf.c dbg-puts.c dbg-putchar.c dbg-snprintf.c dbg-sprintf.c strformat.c
 
-CONTIKI_SOURCEFILES += $(MKL25Z) $(DEBUG_IO_SOURCEFILES)
+CONTIKI_SOURCEFILES += $(MKL25Z) $(DEBUG_IO_SOURCEFILES) $(CONTIKI_TARGET_SOURCEFILES)
 
 PROJECT_OBJECTFILES += ${addprefix $(OBJECTDIR)/,$(CONTIKI_TARGET_MAIN:.c=.o)}
-PROJECT_OBJECTFILES += ${addprefix $(OBJECTDIR)/,$(MKL25ZASM:.S=.o)}
+ASM_OBJECTFILES += ${addprefix $(OBJECTDIR)/,$(MKL25ZASM:.S=.o)}
 
 
 ### Don't treat the .elf as intermediate
@@ -60,51 +75,59 @@ PROJECT_OBJECTFILES += ${addprefix $(OBJECTDIR)/,$(MKL25ZASM:.S=.o)}
 FORCE:
 
 $(OBJECTDIR)/ieee-addr.o: ieee-addr.c FORCE | $(OBJECTDIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(TRACE_CC)
+	$(Q)$(CC) $(CFLAGS) -c $< -o $@
 
 ### Compilation rules
 
-%.srec: %.elf
-	$(S19) %.elf $@
-
 CUSTOM_RULE_C_TO_O=yes
 %.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(TRACE_CC)
+	$(Q)$(CC) $(CFLAGS) -c $< -o $@
 
 CUSTOM_RULE_C_TO_OBJECTDIR_O=yes
 $(OBJECTDIR)/%.o: %.c | $(OBJECTDIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(TRACE_CC)
+	$(Q)$(CC) $(CFLAGS) -c $< -o $@
 	
 CUSTOM_RULE_S_TO_O = yes
 %.o: %.S
-	$(AS) -c $(ASFLAGS) $< -o $@
+	$(TRACE_AS)
+	$(Q)$(AS) -c $(ASFLAGS) $< -o $@
 
 CUSTOM_RULE_S_TO_OBJECTDIR_O = yes
 $(OBJECTDIR)/%.o: %.S | $(OBJECTDIR)
-	$(AS) -c $(ASFLAGS) $< -o $@	
+	$(TRACE_AS)
+	$(Q)$(AS) -c $(ASFLAGS) $< -o $@	
 
 CUSTOM_RULE_C_TO_CO=yes
 %.co: %.c
-	$(CC) $(CFLAGS) $< -c -o $@	
+	$(TRACE_CC)
+	$(Q)$(CC) $(CFLAGS) $< -c -o $@	
 	
 CUSTOM_RULE_C_TO_CE=yes
 %.ce: %.o
-	$(LD) $(LDFLAGS) --relocatable $< -o $@
+	$(CC) $(LDFLAGS) --relocatable $< -o $@
 	$(STRIP) -K _init -K _fini --strip-unneeded -g -x $@	
 	
 CUSTOM_RULE_LINK=1
-%.elf: %.co $(PROJECT_OBJECTFILES) contiki-$(TARGET).a $(LDSCRIPT)
-	$(CC) $(LDFLAGS) ${filter-out $(LDSCRIPT) %.a,$^} ${filter %.a,$^} -lm -o $@
+%.elf: %.co $(ASM_OBJECTFILES) $(CONTIKI_OBJECTFILES) contiki-$(TARGET).a $(LDSCRIPT)
+	$(TRACE_LD)
+	$(Q)$(CC) $(LDFLAGS) ${filter-out $(LDSCRIPT) %.a,$^} ${filter %.a,$^} -lm -o $@
 
 %.hex: %.elf
-	$(HEX) %.elf $@
+	$(HEX) $< $@
 
+%.srec: %.elf
+	$(S19) $< $@
+
+test: 
+	@echo "Project OBJFILES = $(PROJECT_OBJECTFILES)"
+	@echo "Contiki OBJFILES = $(CONTIKI_OBJECTFILES)"
 
 
 ### We don't really need the .hex and .bin for the .$(TARGET) but let's make
 ### sure they get built
-%.$(TARGET): %.elf %.hex %.srec
-	cp $< $@
 
 clean: clean_cpu
 

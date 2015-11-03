@@ -2,7 +2,8 @@
 #include <sys/clock.h>
 #include <sys/cc.h>
 #include <sys/etimer.h>
-#include <MKL25Z4.h>
+#include "derivative.h"
+#include "core_cm0plus.h"
 
 #include "cpu.h"
 #include "nvic.h"
@@ -15,10 +16,9 @@ static unsigned int second_countdown = CLOCK_SECOND;
 //void
 //SysTick_handler(void) __attribute__ ((interrupt));
 
-void
-SysTick_Handler(void)
+void SysTick_Handler()
 {
-	(void)SYST_CSR;						/* Dummy read CSR register to clear Count flag. SysTick->CTRL in CMSIS */
+	//(void)SYST_CSR;						/* Dummy read CSR register to clear Count flag. SysTick->CTRL in CMSIS */
 	//SCB_ICSR = SCB_ICSR_PENDSTCLR_MASK;	/* Clear pending interrupt in SCB. */
 	current_clock++;						/* Increment current clock. */
 	if(etimer_pending() && etimer_next_expiration_time() >= current_clock) {
@@ -36,9 +36,10 @@ void
 clock_init()
 {
 	NVIC_SET_SYSTICK_PRI(8);					/* Set Systick priority. */
-	SYST_RVR = 	CORECLK/16/CLOCK_SECOND;		/* Set reload value.  SysTick->LOAD in CMSIS. */
-	SYST_CSR = 	SysTick_CSR_ENABLE_MASK | 		/* Enable SysTick. */
-				SysTick_CSR_TICKINT_MASK; 		/* Enable tick interrupt. */	
+	SysTick_Config(48000);
+	//SYST_RVR = 	CORECLK/16/CLOCK_SECOND;		/* Set reload value.  SysTick->LOAD in CMSIS. */
+	//SYST_CSR = 	SysTick_CSR_ENABLE_MASK | 		/* Enable SysTick. */
+	//			SysTick_CSR_TICKINT_MASK; 		/* Enable tick interrupt. */	
 	/* Leave clock source as "external" clock.  This is core clock / 16, so 48/16 = 3MHz. */
 	/* In CMSIS, this would be: SysTick->CTRL = SysTick_CTRL_ENABLE | SysTick_CTRL_TICKINT; */
 }
@@ -57,6 +58,15 @@ clock_delay(unsigned int t)
 		/* NOTE: this is not really accurate, as not sure yet about the cycle counts. Assuming 0.75 cycle for a NOP */
 		asm("nop \n\t");
 	} /* just something to wait, NOT the requested cycles */
+}
+
+void
+clock_wait(clock_time_t i)
+{
+  clock_time_t start;
+
+  start = clock_time();
+  while(clock_time() - start < (clock_time_t)i);
 }
 
 unsigned long

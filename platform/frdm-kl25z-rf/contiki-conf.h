@@ -30,42 +30,17 @@ typedef unsigned int uip_stats_t;
 #define BV(x) (1<<(x))
 #endif
 
-#define CC11xx_ARCH_SPI_ENABLE  cc1120_arch_spi_enable
-#define CC11xx_ARCH_SPI_DISABLE cc1120_arch_spi_disable
-#define CC11xx_ARCH_SPI_RW_BYTE cc1120_arch_spi_rw_byte
-#define CC11xx_ARCH_SPI_RW      cc1120_arch_spi_rw
-
-#define cc11xx_arch_spi_enable  cc1120_arch_spi_enable
-#define cc11xx_arch_spi_disable cc1120_arch_spi_disable
-#define cc11xx_arch_spi_rw_byte cc1120_arch_spi_rw_byte
-#define cc11xx_arch_spi_rw      cc1120_arch_spi_rw
-#define cc11xx_arch_interrupt_enable cc1120_arch_interrupt_enable
-
-#define cc11xx_arch_init        cc1120_arch_init
-
-
-
 #define RAND_MAX 0x7fff
 
-
-
-
+#define NETSTACK_CONF_RADIO cc1120_driver
 
 /*---------------------------------------- IP Config ----------------------------------------*/
-//#define WITH_UIP 1
-
-//#define UIP_CONF_IPV6               1
-#define UIP_CONF_IPV6_RPL               1
-
-
 #define WITH_ASCII 1
 
 #define PLATFORM_HAS_LEDS   0
 #define PLATFORM_HAS_BUTTON 0
 
-#define NETSTACK_CONF_RADIO   cc1120_driver
-
-#if WITH_UIP6
+#if NETSTACK_CONF_WITH_IPV6
 
 /* Network setup for IPv6 */
 #define NETSTACK_CONF_NETWORK sicslowpan_driver
@@ -105,11 +80,7 @@ typedef unsigned int uip_stats_t;
 
 #endif /* WITH_UIP6 */
 
-#define CC11xx_CONF_AUTOACK              1
-#define CXMAC_CONF_ANNOUNCEMENTS         0
-#define XMAC_CONF_ANNOUNCEMENTS          0
 #define RIME_CONF_NO_POLITE_ANNOUCEMENTS 0
-
 
 #define NETSTACK_RADIO_MAX_PAYLOAD_LEN 125
 
@@ -121,48 +92,34 @@ typedef unsigned int uip_stats_t;
 
 #define IEEE802154_CONF_PANID       0xABCD
 
-#define WITH_ASCII 1
-
-#define PROCESS_CONF_NUMEVENTS 8
-#define PROCESS_CONF_STATS 1
 
 
 
+#ifdef NETSTACK_CONF_WITH_IPV6
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#ifdef WITH_UIP6
-
-#define RIMEADDR_CONF_SIZE              8
+#define LINKADDR_CONF_SIZE              8
 
 #define UIP_CONF_LL_802154              1
 #define UIP_CONF_LLH_LEN                0
 
 #define UIP_CONF_ROUTER                 1
-#define UIP_CONF_IPV6_RPL               1
+#define NETSTACK_CONF_WITH_IPV6_RPL               1
 
-/* Handle 10 neighbors */
-#define NBR_TABLE_CONF_MAX_NEIGHBORS     15
-/* Handle 10 routes    */
-#define UIP_CONF_MAX_ROUTES   15
+/**
+ * Feshie deployment max neighbors is 5 (Router1). 8 is a safe max.
+ */
+#define NBR_TABLE_CONF_MAX_NEIGHBORS     8
+
+/**
+ * Feshie deployment has 8 nodes -> max 8 routes. 10 is a safe max.
+ */
+#define UIP_CONF_MAX_ROUTES   10
 
 #define UIP_CONF_ND6_SEND_RA		0
 #define UIP_CONF_ND6_REACHABLE_TIME     600000
 #define UIP_CONF_ND6_RETRANS_TIMER      10000
 
-#define UIP_CONF_IPV6                   1
+#define NETSTACK_CONF_WITH_IPV6                   1
 #define UIP_CONF_IPV6_QUEUE_PKT         0
 #define UIP_CONF_IPV6_CHECKS            1
 #define UIP_CONF_IPV6_REASSEMBLY        0
@@ -170,25 +127,25 @@ typedef unsigned int uip_stats_t;
 #define UIP_CONF_ND6_MAX_PREFIXES       3
 #define UIP_CONF_ND6_MAX_DEFROUTERS     2
 #define UIP_CONF_IP_FORWARD             0
-#define UIP_CONF_BUFFER_SIZE		140
+#define UIP_CONF_BUFFER_SIZE		240
 
 #define SICSLOWPAN_CONF_COMPRESSION_IPV6        0
 #define SICSLOWPAN_CONF_COMPRESSION_HC1         1
 #define SICSLOWPAN_CONF_COMPRESSION_HC01        2
 #define SICSLOWPAN_CONF_COMPRESSION             SICSLOWPAN_COMPRESSION_HC06
-
-
 #ifndef SICSLOWPAN_CONF_FRAG
 #define SICSLOWPAN_CONF_FRAG                    1
 #define SICSLOWPAN_CONF_MAXAGE                  8
 #endif /* SICSLOWPAN_CONF_FRAG */
 #define SICSLOWPAN_CONF_CONVENTIONAL_MAC	1
 #define SICSLOWPAN_CONF_MAX_ADDR_CONTEXTS       2
-
-#else /* WITH_UIP6 */
+#else /* NETSTACK_CONF_WITH_IPV6 */
 #define UIP_CONF_IP_FORWARD      1
 #define UIP_CONF_BUFFER_SIZE     108
-#endif /* WITH_UIP6 */
+#endif /* NETSTACK_CONF_WITH_IPV6 */
+
+#define PROCESS_CONF_NUMEVENTS 8
+#define PROCESS_CONF_STATS 1
 
 
 #define UIP_CONF_ICMP_DEST_UNREACH 1
