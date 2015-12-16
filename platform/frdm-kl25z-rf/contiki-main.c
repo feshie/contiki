@@ -109,14 +109,13 @@ print_processes(struct process *const processes[])
 int
 main(void)
 {
-  cpu_init();
+  //cpu_init();
   port_enable(PORTB_EN_MASK | PORTC_EN_MASK | PORTD_EN_MASK | PORTE_EN_MASK);
   
   dbg_setup_uart();
   clock_init();
   rtimer_init();
   
-  printf("set node_mac...");
   node_mac[0] = 0xc1;  /* Hardcoded for Z1 */
   node_mac[1] = 0x0c;  /* Hardcoded for Revision C */
   node_mac[2] = 0x00;  /* Hardcoded to arbitrary even number so that
@@ -129,35 +128,18 @@ main(void)
   node_mac[6] = (uint8_t)(12345678 >> 8);
   node_mac[7] = (uint8_t)(12345678 & 0xff);
   
-  
-  printf("process...");
   process_init();
-  printf("start etimer...");
   process_start(&etimer_process, NULL);
-  printf("ctimer...");
   ctimer_init();
-  printf("SPI0...");
   SPI0_init();
-  printf("set rime_address...");
   set_rime_addr();
-  printf("\n\r\n\r");
   
-  
-  printf("Init Radio...");
   NETSTACK_CONF_RADIO.init();
   
   printf(CONTIKI_VERSION_STRING " started. ");
   
-  #if WITH_UIP6
+#if WITH_UIP6
   memcpy(&uip_lladdr.addr, node_mac, sizeof(uip_lladdr.addr));
-  /* Setup nullmac-like MAC for 802.15.4 */
-/*   sicslowpan_init(sicslowmac_init(&cc2420_driver)); */
-/*   printf(" %s channel %u\n", sicslowmac_driver.name, RF_CHANNEL); */
-
-  //sicslowpan_init(sicslowmac_init(&cc11xx_driver));
-  //printf(" %s channel %u\n", sicslowmac_driver.name, RF_CHANNEL);
-
-
 
   /* Setup X-MAC for 802.15.4 */
   queuebuf_init();
@@ -214,28 +196,9 @@ main(void)
          RF_CHANNEL);
 #endif /* WITH_UIP6 */
 
-#if !WITH_UIP && !WITH_UIP6
-  uart0_set_input(serial_line_input_byte);
-  serial_line_init();
-#endif
-
-#if PROFILE_CONF_ON
-  profile_init();
-#endif /* PROFILE_CONF_ON */
-
-
-#if TIMESYNCH_CONF_ENABLED
-  timesynch_init();
-  timesynch_set_authority_level(rimeaddr_node_addr.u8[0]);
-#endif /* TIMESYNCH_CONF_ENABLED */
-
 #if NETSTACK_CONF_WITH_IPV4
   process_start(&tcpip_process, NULL);
   process_start(&uip_fw_process, NULL);	/* Start IP output */
-  //process_start(&slip_process, NULL);
-
-  //slip_set_input_callback(set_gateway);
-
   {
     uip_ipaddr_t hostaddr, netmask;
 
@@ -264,66 +227,22 @@ main(void)
   print_processes(autostart_processes);
   autostart_start(autostart_processes);
 
-  /*
-   * This is the scheduler loop.
-   */
-#if DCOSYNCH_CONF_ENABLED
-  timer_set(&mgt_timer, DCOSYNCH_PERIOD * CLOCK_SECOND);
-#endif
+	
   watchdog_start();
-  /*  watchdog_stop();*/
+	
   while(1) {
-    int r;
-#if PROFILE_CONF_ON
-    profile_episode_start();
-#endif /* PROFILE_CONF_ON */
+    uint8_t r;
+
     do {
       /* Reset watchdog. */
       watchdog_periodic();
       r = process_run();
     } while(r > 0);
-#if PROFILE_CONF_ON
-    profile_episode_end();
-#endif /* PROFILE_CONF_ON */
-
-    /*
-     * Idle processing.
-     */
-    
-      static unsigned long irq_energest = 0;
-
-#if DCOSYNCH_CONF_ENABLED
-      /* before going down to sleep possibly do some management */
-      if (timer_expired(&mgt_timer)) {
-	timer_reset(&mgt_timer);
-	//msp430_sync_dco();
-      }
-#endif
-
-      /* Re-enable interrupts and go to sleep atomically. */
-      ENERGEST_OFF(ENERGEST_TYPE_CPU);
-      ENERGEST_ON(ENERGEST_TYPE_LPM);
-      /* We only want to measure the processing done in IRQs when we
-	 are asleep, so we discard the processing time done when we
-	 were awake. */
-      energest_type_set(ENERGEST_TYPE_IRQ, irq_energest);
-      watchdog_stop();
-
-
-      /* We get the current processing time for interrupts that was
-	 done during the LPM and store it for next time around.  */
-      //dint();
-      irq_energest = energest_type_time(ENERGEST_TYPE_IRQ);
-      //eint();
-      watchdog_start();
-      ENERGEST_OFF(ENERGEST_TYPE_LPM);
-      ENERGEST_ON(ENERGEST_TYPE_CPU);
-    }
-  
-  
+	  
+	  
+  }
   
   return 0;
-
 }
 
 

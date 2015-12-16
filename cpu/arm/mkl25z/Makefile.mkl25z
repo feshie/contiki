@@ -35,7 +35,7 @@ HEX     = $(OBJCOPY) -O ihex
 BIN     = $(OBJCOPY) -O binary -S
 S19     = $(OBJCOPY) -O srec
 
-MKL25Z = watchdog.c startup.c clock.c debug-uart.c rtimer-arch.c serial.c spi.c nvic.c cpu.c clock.c system_MKL25Z4.c
+MKL25Z = watchdog.c startup.c clock.c debug-uart.c rtimer-arch.c serial.c spi.c nvic.c cpu.c system_MKL25Z4.c
 MKL25ZASM = startup_MKL25Z4.S
 
 LDSCRIPT = $(CONTIKI_CPU)/MKL25Z128_flash.ld
@@ -44,9 +44,10 @@ ARCH_FLAGS = -mthumb -gdwarf-2 -fomit-frame-pointer -Wall -fverbose-asm -fdata-s
 MCFLAGS = -mcpu=$(MCU)
 OPT = -O0
 
-CFLAGS += $(MCFLAGS) $(OPT) $(ARCH_FLAGS) -Wa,-ahlms=$(<:.c=.lst) -DAUTOSTART_ENABLE
+# -Wa,-ahlms=$(<:.c=.lst)
+CFLAGS += $(MCFLAGS) $(OPT) $(ARCH_FLAGS)  -DAUTOSTART_ENABLE -DCLOCK_SETUP=1
 LDFLAGS += $(MCFLAGS) -mthumb -nostartfiles -T$(LDSCRIPT) -Wl,--gc-sections,-Map=$(FULL_PRJ).map,--cref,--no-warn-mismatch -lc -lm -lgcc -lnosys
-ASFLAGS = $(MCFLAGS) -g -gdwarf-2 -mthumb -Wa,-amhls=$(<:.S=.lst)
+ASFLAGS = $(MCFLAGS) -g -gdwarf-2 -mthumb 
 
 ### If the user-specified a Node ID, pass a define
 ifdef NODEID

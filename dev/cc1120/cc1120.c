@@ -825,7 +825,7 @@ cc1120_driver_channel_clear(void)
 		rssi0 = cc1120_spi_single_read(CC1120_ADDR_RSSI0);
 		t0 = RTIMER_NOW();
 		while(!(rssi0 & CC1120_CARRIER_SENSE_VALID)) {
-			if(RTIMER_CLOCK_LT((t0 + RTIMER_SECOND/20), RTIMER_NOW())) {
+			if(RTIMER_CLOCK_LT((t0 + RTIMER_SECOND/15), RTIMER_NOW())) {
 				printf("\t RSSI Timeout.\n");		
 				//LEDS_OFF(LEDS_BLUE);
 				return 0;

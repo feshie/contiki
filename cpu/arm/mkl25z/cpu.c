@@ -59,109 +59,12 @@ void port_enable(uint8_t PortMask)		/* Enable clock to used ports.  This is requ
 
 void cpu_init(void)
 {
-	/* These two functions happen in startup code so not needed. */
-	//SCB_VTOR = (uint32_t)(&__vect_table); 		/* Set the interrupt vector table position */
-	//SIM_COPC = 0x00;							/* disable watchdog. */
-	
-	
-	port_enable(0);								/* Enable clocks to Port A. */
-	
-
-	/* System clock initialisation */
-#if defined(__21mhzIR)	/* 20.97MHz core and bus speed from internal 32kHz reference oscillator. */
-	SIM_CLKDIV1 = (uint32_t)0x0000;      										/* Set System Clock Divider Register to Divide-by-1 for OUTDIV1 and OUTDIV4.  Page 210. */
-	SIM_SOPT2 &= ~(SIM_SOPT2_PLLFLLSEL_MASK | SIM_SOPT2_TPMSRC_MASK); 			/* Set MCGFLLCLK without divide-by-two and clear TPMSRC. Page 195. */
-	SIM_SOPT2 |= SIM_SOPT2_TPMSRC(0x01);										/* Set TPM Clock Source to MCGFLLCLK. Page 195. */
-	
-	/* Stay in FEI Mode */
-	MCG_C1 |= (MCG_C1_IREFSTEN_MASK | MCG_C1_IRCLKEN_MASK | MCG_C1_IREFS_MASK);	/* Set MCG_C1 for Enabled Slow internal ref, enabled in STOP mode. IREFS=1,IRCLKEN=1,IREFSTEN=1. Page 371. */
-	MCG_C2 = 0x00;    															/* Set MCG_C2: LOCRE0=0,RANGE0=0,HGO0=0,EREFS0=0,LP=0,IRCS=0. Page 373. */
-	MCG_C4 &= ~0xE0;		     												/* Set MCG_C4: Set FLL clock speed. DMX32=0,DRST_DRS=0, Internal 32K with FLL multiplication of 640 gives 20.97152MHz. Page 374. */                      
-	OSC0_CR = 0x00;     														/* Set OSC0_CR: ERCLKEN=0,EREFSTEN=0,SC2P=0,SC4P=0,SC8P=0,SC16P=0 */                     
-	MCG_C5 = 0x00;																/* Set MCG_C5: PLLCLKEN0=0,PLLSTEN0=0,PRDIV0=0. Page 376. */                       
-	MCG_C6 = 0x00;																/* Set MCG_C6: LOLIE0=0,PLLS=0,CME0=0,VDIV0=0. Page 377. */
-	while((MCG_S & MCG_S_IREFST_MASK) == 0x00) {} 								/* Check that the source of the FLL reference clock is the internal reference clock. */
-	while((MCG_S & 0x0C) != 0x00) {}											/* Wait until output of the FLL is selected */
-
-		
-#else	/*48 MHz with a 24MHz bus clock generated from an 8MHz crystal. */
-	SIM_CLKDIV1 = (SIM_CLKDIV1_OUTDIV1(0x01) | SIM_CLKDIV1_OUTDIV4(0x01));		/* Set OUTDIV1 and OUTDIV4 to "divide-by-2". */
-	SIM_SOPT2 |= SIM_SOPT2_PLLFLLSEL_MASK; 										/* Select PLL as a clock source for various peripherals */
-	SIM_SOPT2 &= ~SIM_SOPT2_TPMSRC_MASK; 										/* Clear TPMSRC. Page 195. */
-	SIM_SOPT2 |= SIM_SOPT2_TPMSRC(0x01);    									/* Set TPM Clock Source to MCGFLLCLK. Page 195. */
-	
-	PORTA_PCR18 &= ~(PORT_PCR_ISF_MASK | PORT_PCR_MUX_MASK);					/* Set Port A Pin 18 as EXTAL0. */
-	PORTA_PCR19 &= ~(PORT_PCR_ISF_MASK | PORT_PCR_MUX_MASK);					/* Set Port A Pin 19 as XTAL0. */
-	
-	/* Need to go from FEI to FBE to PBE to PEE mode. */
-	/* See Page 384 for function diagram and descriptions. */
-	
-	/* Switch to FBE Mode */
-	OSC0_CR = OSC_CR_ERCLKEN_MASK; 												/* Enable External Reference Clock. */
-	MCG_C2 = (MCG_C2_RANGE0(0x02) | MCG_C2_EREFS0_MASK);						/* Set Freq range to VHF & enable 8MHz oscillator. */
-	MCG_C1 = (MCG_C1_CLKS(0x02) | MCG_C1_FRDIV(0x03) | MCG_C1_IRCLKEN_MASK);   	/* Set CLK SRC to external reference, Set divide factor to 64 & enable internal ref. */ 
-	MCG_C4 &= ~(MCG_C4_DMX32_MASK | MCG_C4_DRST_DRS_MASK);
-	MCG_C5 = MCG_C5_PRDIV0(0x01);  												/* Set PLL Ext Ref Divider to divide factor of 2. */
-	MCG_C6 = 0x00;													
-	
-	while((MCG_S & MCG_S_IREFST_MASK) != 0x00) { 								/* Check that the source of the FLL reference clock is the external reference clock. */
-	}
-	while((MCG_S & 0x0C) != 0x08) {    											/* Wait until external reference clock is selected as MCG output */
-	}
-	
-	/* Switch to PBE Mode */
-	OSC0_CR = OSC_CR_ERCLKEN_MASK;  											/* Enable External Reference Clock. */
-	MCG_C1 = (MCG_C1_CLKS(0x02) | MCG_C1_FRDIV(0x03) | MCG_C1_IRCLKEN_MASK); 	/* Select external Ref Clock, Divide Fact of 128, Int Ref enabled. */
-	MCG_C2 = (MCG_C2_RANGE0(0x02) | MCG_C2_EREFS0_MASK);						/* Set Freq range to VHF & enable 8MHz oscillator. */
-	MCG_C5 = MCG_C5_PRDIV0(0x01);  												/* Set PLL Ext Ref Divider to divide factor of 2. */
-	MCG_C6 = MCG_C6_PLLS_MASK;													/* Select PLL. */
-	
-	while((MCG_S & 0x0CU) != 0x08U) {    										/* Wait until external reference clock is selected as MCG output */
-	}
-	while((MCG_S & MCG_S_LOCK0_MASK) == 0x00U) { 								/* Wait until locked */
-	}
-	
-	/* Switch to PEE Mode */
-	OSC0_CR = OSC_CR_ERCLKEN_MASK; 												/* Enable External Reference Clock. */
-	
-	MCG_C1 = (MCG_C1_FRDIV(0x03) | MCG_C1_IRCLKEN_MASK); 						/* Select PLL as Clock Source, Divide Fact of 128, Int Ref enabled. */
-	MCG_C2 = (MCG_C2_RANGE0(0x02) | MCG_C2_EREFS0_MASK);						/* Set Freq range to VHF & enable 8MHz oscillator. */
-	MCG_C5 = MCG_C5_PRDIV0(0x01);  												/* Set PLL Ext Ref Divider to divide factor of 2. */
-	MCG_C6 = MCG_C6_PLLS_MASK;													/* Select PLL. */
-	while((MCG_S & 0x0CU) != 0x0CU) {   										/* Wait until output of the PLL is selected */
-	}
-#endif
-
-	/* Setup the internal oscillator for MCGIRCLK. */
-#if defined(OSCK32KSEL_RTCIN)	/* 32kHz internal "slow" oscillator with a link to RTC IN, or a 32K square wave source. */
-	port_enable(PORTC_EN_MASK);									/* Enable Port C clock. */			
-	SIM_SOPT1 &= ~SIM_SOPT1_OSC32KSEL_MASK;						/* Clear RTC Clock Source. */
-	SIM_SOPT1 |= 0x00080000;									/* Set ERCLK32K source to RTC_CLKIN. Page 193. */
-	SIM_SOPT2 = (SIM_SOPT2 & ~SIM_SOPT2_CLKOUTSEL_MASK) | 0x80;	/* Set CLKOUTSEL to MCGIRCLK (32k internal oscillator). */
-	
-	PORTC_PCR1 = ((PORTC_PCR1 & ~0x01000600) | 0x0100);			/* Set PORTC_PCR1 as RTC_CLKIN, ISF=0,MUX=1. */
-	PORTC_PCR3 = ((PORTC_PCR3 & ~0x01000200) | 0x0500);			/* Set PORTC_PCR3 as CLKOUT. ISF=0,MUX=5. */
-
-#else	/* 1kHz internal low power oscillator. */
-	SIM_SOPT1 &= ~SIM_SOPT1_OSC32KSEL_MASK;						/* Set OSC32KSEL to LPO 1KHz so that LPTMR will work.  RTC will NOT work properly. */
-	SIM_SOPT2 = (SIM_SOPT2 & ~SIM_SOPT2_CLKOUTSEL_MASK) | 0x70;	/* Set CLKOUTSEL to LPO Clock. */
-#endif 
-	
-	/* Initialization of the RCM module */
-	RCM_RPFW &= ~0x1F;																	/* Set RCM_RPFW: Reset Pin Filter Width register. RSTFLTSEL=0. Page 269. */                         
-	RCM_RPFC &= ~0x07;   																/* Set RCM_RPFC: Reset Pin Filter Control register. RSTFLTSS=0,RSTFLTSRW=0. Page 268. */
-	
-	/* Initialization of the PMC module */
-	PMC_LVDSC1 = (PMC_LVDSC1_LVDACK_MASK | PMC_LVDSC1_LVDRE_MASK);								/* Set PMC_LVDSC1: Clear LVD flag & enable LVD auto reset. LVDACK=1,LVDIE=0,LVDRE=1,LVDV=0. Page 240. */
-	PMC_LVDSC2 = (PMC_LVDSC2_LVWACK_MASK);														/* Set PMC_LVDSC2: Clear LVD warning flag. LVWACK=1,LVWIE=0,LVWV=0. Page 241. */
-	PMC_REGSC = (uint8_t)~(PMC_REGSC_BGEN_MASK | PMC_REGSC_ACKISO_MASK | PMC_REGSC_BGBE_MASK);	/* Set PMC_REGSC: BGEN=0,ACKISO=0,BGBE=0. Page 242. */                          
-	SMC_PMPROT = (uint8_t)(SMC_PMPROT_AVLLS_MASK | SMC_PMPROT_ALLS_MASK | SMC_PMPROT_AVLP_MASK);/* Set SMC_PMPROT: Setup Power mode protection register to allow low power modes. AVLP=1,ALLS=1,AVLLS=1.  Page 219. */
 	
 	/* CPU Pin Allocations */
-	PORTA_PCR20 = (uint32_t)((PORTA_PCR20 & ~0x01000000) | 0x0700);								/* Set PORTA_PCR20 as Reset, ISF=0,MUX=7 */
-	PORTA_PCR4 = (uint32_t)((PORTA_PCR4 & ~0x01000000) | 0x0700);								/* Set PORTA_PCR4 as NMI, ISF=0,MUX=7. */
+	PORTA_PCR20 = (uint32_t)((PORTA_PCR20 & ~0x01000000) | 0x0700);			/* Set PORTA_PCR20 as Reset, ISF=0,MUX=7 */
+	PORTA_PCR4 = (uint32_t)((PORTA_PCR4 & ~0x01000000) | 0x0700);			/* Set PORTA_PCR4 as NMI, ISF=0,MUX=7. */
 	
-	NVIC->IP[1] &= (uint32_t)~0x00FF0000;          												/* Set NVIC_IPR1: Irq 4 to 7 Priority Register.	PRI_6=0 */
+	NVIC->IP[1] &= (uint32_t)~0x00FF0000;          							/* Set NVIC_IPR1: Irq 4 to 7 Priority Register.	PRI_6=0 */
             
 	/*lint -save  -e950 Disable MISRA rule (1.1) checking. */\
 		asm("CPSIE i");\
@@ -244,6 +147,40 @@ void cpu_stop(Type_StopMode StopMode)		/* Place core into one of the STOP modes.
 }
 
 
+/* Interrupt enable/disable functions. */
+unsigned long __attribute__((naked))
+cpu_cpsie(void)
+{
+  unsigned long ret;
+
+  /* Read PRIMASK and enable interrupts */
+  __asm("    mrs     r0, PRIMASK\n"
+        "    cpsie   i\n"
+        "    bx      lr\n"
+        : "=r" (ret));
+
+  /* The inline asm returns, we never reach here.
+   * We add a return statement to keep the compiler happy */
+  return ret;
+}
+
+unsigned long __attribute__((naked))
+cpu_cpsid(void)
+{
+  unsigned long ret;
+
+  /* Read PRIMASK and disable interrupts */
+  __asm("    mrs     r0, PRIMASK\n"
+        "    cpsid   i\n"
+        "    bx      lr\n"
+        : "=r" (ret));
+
+  /* The inline asm returns, we never reach here.
+   * We add a return statement to keep the compiler happy */
+  return ret;
+}
+
+/*---------------------------------------------------------------------------*/
 void NMI_Handler(void)		/* NMI Interrupt Handler.  Required as NMI fires during init and default causes a break.		*/
 {
 	printf("NMI Fire");;
@@ -392,21 +329,21 @@ void Default_Handler_CMP0()
 	__asm("bkpt");
 }
 
-void Default_Handler_FTM0()
+void Default_Handler_TPM0()
 {
-	printf("FTM0 Handler - BREAKPOINT");
+	printf("TPM0 Handler - BREAKPOINT");
 	__asm("bkpt");
 }
 
-void Default_Handler_FTM1()
+void Default_Handler_TPM1()
 {
-	printf("FTM1 Handler - BREAKPOINT");
+	printf("TPM1 Handler - BREAKPOINT");
 	__asm("bkpt");
 }
 
-void Default_Handler_FTM2()
+void Default_Handler_TPM2()
 {
-	printf("FTM2 Handler - BREAKPOINT");
+	printf("TPM2 Handler - BREAKPOINT");
 	__asm("bkpt");
 }
 
@@ -489,9 +426,9 @@ void UART1_IRQHandler() __attribute__ ((weak, alias("Default_Handler_UART1")));
 void UART2_IRQHandler() __attribute__ ((weak, alias("Default_Handler_UART2")));
 void ADC0_IRQHandler() __attribute__ ((weak, alias("Default_Handler_ADC0")));
 void CMP0_IRQHandler() __attribute__ ((weak, alias("Default_Handler_CMP0")));
-void TPM0_IRQHandler() __attribute__ ((weak, alias("Default_Handler_FTM0")));
-void TPM1_IRQHandler() __attribute__ ((weak, alias("Default_Handler_FTM1")));
-void TPM2_IRQHandler() __attribute__ ((weak, alias("Default_Handler_FTM2")));
+void TPM0_IRQHandler() __attribute__ ((weak, alias("Default_Handler_TPM0")));
+void TPM1_IRQHandler() __attribute__ ((weak, alias("Default_Handler_TPM1")));
+void TPM2_IRQHandler() __attribute__ ((weak, alias("Default_Handler_TPM2")));
 void RTC_IRQHandler() __attribute__ ((weak, alias("Default_Handler_RTC_Alarm")));
 void RTC_Seconds_IRQHandler() __attribute__ ((weak, alias("Default_Handler_RTC_Seconds")));
 void PIT_IRQHandler() __attribute__ ((weak, alias("Default_Handler_PIT")));

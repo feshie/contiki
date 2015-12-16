@@ -81,6 +81,15 @@ void cpu_wait(void);						/* Enter wait mode. */
 void cpu_stop(Type_StopMode StopMode);		/* Enter stop mode. */
 
 
+/** \brief Disables all CPU interrupts */
+unsigned long cpu_cpsid(void);
+#define INTERRUPTS_DISABLE() cpu_cpsid()
+
+/** \brief Enables all CPU interrupts */
+unsigned long cpu_cpsie(void);
+#define INTERRUPTS_ENABLE()  cpu_cpsie()
+
+
 void NMI_Handler(void);						/* NMI Interrupt Handler */
 void SysTick_Handler();
 
@@ -114,9 +123,9 @@ void Default_Handler_UART1();
 void Default_Handler_UART2();
 void Default_Handler_ADC0();
 void Default_Handler_CMP0();
-void Default_Handler_FTM0();
-void Default_Handler_FTM1();
-void Default_Handler_FTM2();
+void Default_Handler_TPM0();
+void Default_Handler_TPM1();
+void Default_Handler_TPM2();
 void Default_Handler_RTC_Alarm();
 void Default_Handler_RTC_Seconds();
 void Default_Handler_PIT();

@@ -174,8 +174,8 @@ extern "C" {
 #if (CLOCK_SETUP == 0)
   #define DEFAULT_SYSTEM_CLOCK         20971520u           /* Default System clock value */
   #define MCG_MODE                     MCG_MODE_FEI /* Clock generator mode */
-  /* MCG_C1: CLKS=0,FRDIV=0,IREFS=1,IRCLKEN=1,IREFSTEN=0 */
-  #define SYSTEM_MCG_C1_VALUE          0x06U               /* MCG_C1 */
+  /* MCG_C1: CLKS=0,FRDIV=0,IREFS=1,IRCLKEN=1,IREFSTEN=1 */
+  #define SYSTEM_MCG_C1_VALUE          0x07U               /* MCG_C1 */
   /* MCG_C2: LOCRE0=0,RANGE0=2,HGO0=0,EREFS0=1,LP=0,IRCS=0 */
   #define SYSTEM_MCG_C2_VALUE          0x24U               /* MCG_C2 */
   /* MCG_C4: DMX32=0,DRST_DRS=0,FCTRIM=0,SCFTRIM=0 */
@@ -199,8 +199,8 @@ extern "C" {
 #elif (CLOCK_SETUP == 1)
   #define DEFAULT_SYSTEM_CLOCK         48000000u           /* Default System clock value */
   #define MCG_MODE                     MCG_MODE_PEE /* Clock generator mode */
-  /* MCG_C1: CLKS=0,FRDIV=3,IREFS=0,IRCLKEN=1,IREFSTEN=0 */
-  #define SYSTEM_MCG_C1_VALUE          0x1AU               /* MCG_C1 */
+  /* MCG_C1: CLKS=0,FRDIV=3,IREFS=0,IRCLKEN=1,IREFSTEN=1 */
+  #define SYSTEM_MCG_C1_VALUE          0x1BU               /* MCG_C1 */
   /* MCG_C2: LOCRE0=0,RANGE0=2,HGO0=0,EREFS0=1,LP=0,IRCS=0 */
   #define SYSTEM_MCG_C2_VALUE          0x24U               /* MCG_C2 */
   /* MCG_C4: DMX32=0,DRST_DRS=0,FCTRIM=0,SCFTRIM=0 */
@@ -274,8 +274,8 @@ extern "C" {
 #elif (CLOCK_SETUP == 4)
   #define DEFAULT_SYSTEM_CLOCK         48000000u           /* Default System clock value */
   #define MCG_MODE                     MCG_MODE_PEE /* Clock generator mode */
-  /* MCG_C1: CLKS=0,FRDIV=3,IREFS=0,IRCLKEN=1,IREFSTEN=0 */
-  #define SYSTEM_MCG_C1_VALUE          0x1AU               /* MCG_C1 */
+  /* MCG_C1: CLKS=0,FRDIV=3,IREFS=0,IRCLKEN=1,IREFSTEN=1 */
+  #define SYSTEM_MCG_C1_VALUE          0x1BU               /* MCG_C1 */
   /* MCG_C2: LOCRE0=0,RANGE0=2,HGO0=0,EREFS0=1,LP=0,IRCS=0 */
   #define SYSTEM_MCG_C2_VALUE          0x24U               /* MCG_C2 */
   /* MCG_C4: DMX32=0,DRST_DRS=0,FCTRIM=0,SCFTRIM=0 */

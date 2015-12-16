@@ -1,43 +1,73 @@
-#include <sys/rtimer.h>
 
 #include <stdio.h>
-#include <MKL25Z4.h>
-
-#include "nvic.h"
 
 #include "rtimer-arch.h"
 
-
+/*---------------------------------------------------------------------------*/
+static volatile rtimer_clock_t next_trigger;
+/*---------------------------------------------------------------------------*/
 
 void
 rtimer_arch_init(void)
 {	
-	SIM_SCGC5 |= SIM_SCGC5_LPTMR_MASK;								/* Set SIM_SCGC5: Enable LPTMR clock. LPTMR=1. Page 206. */
-	LPTMR0_CSR |= LPTMR_CSR_TCF_MASK;								/* Clear TCF. */
-	LPTMR0_PSR = LPTMR_PSR_PRESCALE(0x10) | LPTMR_PSR_PCS(0x01); 	/* Set LPTMR0_PSR: Configure for 125Hz counter: 1kHz LPO as clock source with divide-by-8 prescale. Page 90, 123 & 590. */
-	NVIC_Set_Priority(IRQ_LPTMR0, 0x80);							/* Set priority of LPTMR0 interrupt. */
-	NVIC_ENABLE_INT(IRQ_LPTMR0);									/* Enable LPTMR0 interrupt in NVIC. */
-	LPTMR0_CMR = 0xFFFF;											/* Set compare register to trigger interrupt at overflow. */
-	LPTMR0_CSR |= LPTMR_CSR_TIE_MASK | LPTMR_CSR_TEN_MASK ;				/* Enable timer and interrupt. */
+	/* TPM0 already configured and counting. */
+	return;
 }
 
 void
 rtimer_arch_schedule(rtimer_clock_t t)
 {
-	LPTMR0_CMR = t;
+	rtimer_clock_t now;
+	
+	/* Sanity check Value. */
+	now = RTIMER_NOW();
+	if((t - now) < 7) {
+		t = now + 7;	
+	}
+
+	TPM0_C0V = t;						/* Set TPM0_C0V Channel 0 compare value. */
+	next_trigger = t;					/* Store the value. */
+	
+	NVIC_EnableIRQ(TPM0_IRQn);			/* Enable TPM0 interrupt in NVIC. */
+	TPM0_C0SC = TPM_CnSC_CHF_MASK 		/* Enable channel interrupt & clear flag. */
+				| TPM_CnSC_CHIE_MASK 
+				| TPM_CnSC_MSA_MASK;
+		
 }
 
 
 rtimer_clock_t
 rtimer_arch_now(void)
 {
-  return LPTMR0_CNR;
+  	/* Return the TPM value. */
+	return TPM0_CNT;
+}
+
+rtimer_clock_t
+rtimer_arch_next_trigger()
+{
+  return next_trigger;
 }
 
 /*-----------------------------------------------------------------------------------------------------------------------------------*/
 /* Interrupt Handler */
-void LPTimer_IRQHandler(void)
+void TPM0_IRQHandler(void)
 {
-	LPTMR0_CSR |= LPTMR_CSR_TCF_MASK;				/* Clear it.														*/
+	
+	ENERGEST_ON(ENERGEST_TYPE_IRQ);
+
+	next_trigger = 0;
+	
+	NVIC_ClearPendingIRQ(TPM0_IRQn);			/* Clear the pending bit in NVIC. */
+	TPM0_C0SC = ~(TPM_CnSC_CHF_MASK 			/* Acknowledge interrupt & disable channel. */
+				  & TPM_CnSC_CHIE_MASK) 
+				| TPM_CnSC_MSA_MASK;
+	
+	NVIC_DisableIRQ(TPM0_IRQn);					/* Disable TPM0 interrupt in NVIC. */
+	
+	TPM0_C0V = 0x00U;							/* Clear the channel value. */	
+	
 	rtimer_run_next();
+	
+	ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }

@@ -91,8 +91,9 @@ cc1120_arch_init(void)
 	PORTA_PCR12 = PORT_PCR_ISF_MASK | (PORT_PCR_MUX(0x01);				/* Set Pin A12 to be GPIO, no interrupt, clear ISF. */		
 	PORTA_PCR5 = PORT_PCR_ISF_MASK | (PORT_PCR_MUX(0x01) | PORT_PCR_IRQC(0x09);	/* Set Pin A5 to be GPIO, Rising edge interrupt, clear ISF. */
 	NVIC_Set_Priority(IRQ_PORTA, 1);						/* Set Interrupt priority. */
-                                  
-        PRINTF("\tOK!\n\r");   	                            
+                       
+    enabled = 0;                              
+    PRINTF("\tOK!\n\r");   	                            
 
 }
 
@@ -146,13 +147,10 @@ cc1120_arch_spi_enable(void)
 		rtimer_clock_t t0 = RTIMER_NOW(); 
 		int i = 0;
 		
+  		PORTD_PCR3 = PORT_PCR_ISF_MASK | PORT_PCR_MUX(0x01);     /* Set Port D, Pin 3 GPIO. */
+		
 		/* Set CSn to low to select CC1120 */
 		GPIOD_PCOR |= GPIO_PCOR_PTCO(0x01);	
-		
-		PORTD_PCR3 &= ~PORT_PCR_MUX_MASK; 			  /* Clear Port D, Pin 3 Mux. */
-  		PORTD_PCR3 |= PORT_PCR_ISF_MASK | PORT_PCR_MUX(0x01);     /* Set Port D, Pin 3 GPIO. */
-		
-	
 		
 		watchdog_periodic();
 
@@ -165,12 +163,12 @@ cc1120_arch_spi_enable(void)
 				if(i == 0)
 				{
 					/* Timeout.  Try a SNOP and a re-enable once. */
-					PORTD_PCR3 |= PORT_PCR_ISF_MASK | PORT_PCR_MUX(0x02); 	/* Set Port D, Pin 3 back to MISO. */
+					PORTD_PCR3 = PORT_PCR_ISF_MASK | PORT_PCR_MUX(0x02); 	/* Set Port D, Pin 3 back to MISO. */
 					(void) cc1120_arch_spi_rw_byte(CC1120_STROBE_SNOP);	/* SNOP. */
 					CC1120_SPI_CSN_PORT(OUT) |= BV(CC1120_SPI_CSN_PIN);	/* Disable. */
 					clock_wait(50);											/* Wait. */
-					PORTD_PCR3 &= ~PORT_PCR_MUX_MASK; 			/* Clear Port D, Pin 3 Mux. */
-  					PORTD_PCR3 |= PORT_PCR_ISF_MASK | PORT_PCR_MUX(0x01);   /* Set Port D, Pin 3 GPIO. */
+					
+  					PORTD_PCR3 = PORT_PCR_ISF_MASK | PORT_PCR_MUX(0x01);   /* Set Port D, Pin 3 GPIO. */
 					CC1120_SPI_CSN_PORT(OUT) &= ~BV(CC1120_SPI_CSN_PIN);	/* Enable. */
 					
 					i++;
@@ -183,7 +181,7 @@ cc1120_arch_spi_enable(void)
 				t0 = RTIMER_NOW(); 		/* Reset timeout. */
 			}
 		}
-		PORTD_PCR3 |= PORT_PCR_ISF_MASK | PORT_PCR_MUX(0x02); 		/* Set Port D, Pin 3 back to MISO. */
+		PORTD_PCR3 = PORT_PCR_ISF_MASK | PORT_PCR_MUX(0x02); 		/* Set Port D, Pin 3 back to MISO. */
 	
 		enabled = 1;
 	}

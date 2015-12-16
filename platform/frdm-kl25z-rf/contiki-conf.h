@@ -3,12 +3,12 @@
 #define CONTIKI_CONF_H
 
 #include <stdint.h>
-#include <MKL25Z4.h>
+#include "derivative.h"
 
 #define CCIF
 #define CLIF
 
-#define CLOCK_CONF_SECOND 100
+#define CLOCK_CONF_SECOND 128
 
 /* These names are deprecated, use C99 names. */
 typedef uint8_t u8_t;
@@ -18,21 +18,32 @@ typedef int8_t s8_t;
 typedef int16_t s16_t;
 typedef int32_t s32_t;
 
-typedef unsigned int clock_time_t;
-typedef unsigned int uip_stats_t;
+/* Platform typedefs */
+typedef uint32_t clock_time_t;
+typedef uint32_t uip_stats_t;
 
-//typedef uint8_t bool;
-
-#define true 1
-#define false 0
+//#define true 1
+//#define false 0
 
 #ifndef BV
 #define BV(x) (1<<(x))
 #endif
 
-#define RAND_MAX 0x7fff
+//#define RAND_MAX 0x7fff
 
 #define NETSTACK_CONF_RADIO cc1120_driver
+
+#define CONTIKIMAC_CONF_CCA_CHECK_TIME		RTIMER_ARCH_SECOND/1600
+#define CONTIKIMAC_CONF_CCA_COUNT_MAX		2
+#define CONTIKIMAC_CONF_WITH_PHASE_OPTIMIZATION 0
+#define RDC_CONF_HARDWARE_CSMA 0
+#define RDC_CONF_HARDWARE_ACK 1
+#define CONTIKIMAC_CONF_INTER_PACKET_INTERVAL	0	//RTIMER_ARCH_SECOND/400	/* ~2.5ms */
+#define CONTIKIMAC_CONF_CCA_SLEEP_TIME  RTIMER_ARCH_SECOND/210 //210 ~4.8ms 140			/* 140 = ~7.1ms, 286 = ~3.5ms */
+#define CONTIKIMAC_CONF_LISTEN_TIME_AFTER_PACKET_DETECTED  RTIMER_ARCH_SECOND/20	/* ~50ms */
+#define CONTIKIMAC_CONF_SHORTEST_PACKET_SIZE 36
+
+#define NULLRDC_CONF_802154_AUTOACK_HW	1
 
 /*---------------------------------------- IP Config ----------------------------------------*/
 #define WITH_ASCII 1

@@ -4,6 +4,8 @@
 *.png
 *.log
 *.elf
+*.lst
+*.srec
 *.d
 *.ihex
 *.pyc
@@ -79,7 +81,6 @@ contiki-cc2530dk.lib
 *.dsc
 
 #cc65 build artifacts
-*.S
 *.eth
 *.dsk
 *.po
