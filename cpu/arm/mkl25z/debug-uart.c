@@ -30,7 +30,6 @@ dbg_send_bytes(const unsigned char *seq, unsigned int len)
 	return i;
 }
 
-static unsigned char dbg_write_overrun = 0;
 
 void
 dbg_putchar(const char ch)

@@ -55,7 +55,7 @@ void TPM0_IRQHandler(void)
 {
 	
 	ENERGEST_ON(ENERGEST_TYPE_IRQ);
-
+	printf("RT\r\n");
 	next_trigger = 0;
 	
 	NVIC_ClearPendingIRQ(TPM0_IRQn);			/* Clear the pending bit in NVIC. */

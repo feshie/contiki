@@ -99,11 +99,16 @@
 #ifndef SYSTEM_MKL25Z4_H_
 #define SYSTEM_MKL25Z4_H_                        /**< Symbol preventing repeated inclusion */
 
+#include "contiki-conf.h"
+
+#include <stdint.h>
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <stdint.h>
+
 
 
 #ifndef DISABLE_WDOG
@@ -161,9 +166,11 @@ extern "C" {
 /* RTC oscillator setting */
 
 /* Low power mode enable */
+#ifndef SYSTEM_SMC_PMPROT_VALUE	
 /* SMC_PMPROT: AVLP=1,ALLS=1,AVLLS=1 */
 #define SYSTEM_SMC_PMPROT_VALUE        0x2AU               /* SMC_PMPROT */
-
+#endif
+	
 /* Internal reference clock trim */
 /* #undef SLOW_TRIM_ADDRESS */                             /* Slow oscillator not trimmed. Commented out for MISRA compliance. */
 /* #undef SLOW_FINE_TRIM_ADDRESS */                        /* Slow oscillator not trimmed. Commented out for MISRA compliance. */

@@ -58,7 +58,7 @@ endif
 CLEAN += symbols.c symbols.h *.d *.elf *.hex *.srec *.s19
 
 ### CPU-dependent directories
-CONTIKI_CPU_DIRS = . ../common/dbg-io
+CONTIKI_CPU_DIRS = . dev ../common/dbg-io ../common/CMSIS
 
 ### CPU-dependent source files
 DEBUG_IO_SOURCEFILES += dbg-printf.c dbg-puts.c dbg-putchar.c dbg-snprintf.c dbg-sprintf.c strformat.c

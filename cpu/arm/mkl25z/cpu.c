@@ -65,10 +65,10 @@ void cpu_init(void)
 	PORTA_PCR4 = (uint32_t)((PORTA_PCR4 & ~0x01000000) | 0x0700);			/* Set PORTA_PCR4 as NMI, ISF=0,MUX=7. */
 	
 	NVIC->IP[1] &= (uint32_t)~0x00FF0000;          							/* Set NVIC_IPR1: Irq 4 to 7 Priority Register.	PRI_6=0 */
-            
-	/*lint -save  -e950 Disable MISRA rule (1.1) checking. */\
-		asm("CPSIE i");\
-	/*lint -restore Enable MISRA rule (1.1) checking. */\
+        
+	cpu_cpsie();
+	
+	
 }
 
 
@@ -178,6 +178,43 @@ cpu_cpsid(void)
   /* The inline asm returns, we never reach here.
    * We add a return statement to keep the compiler happy */
   return ret;
+}
+
+void cpu_reboot_src(void) {
+	uint8_t source0, source1;
+	source0 = RCM->SRS0;
+	source1 = RCM->SRS1;
+	
+	if(source0 & (RCM_SRS0_POR_MASK | RCM_SRS0_LVD_MASK)) {
+		printf("Reset due to POR with LVD.\n\r");
+	} else if(source0 & RCM_SRS0_POR_MASK){
+		printf("Reset due to POR.\n\r");
+	} else if(source0 & RCM_SRS0_LVD_MASK){
+		printf("Reset due to LVD.\n\r");
+	} else if(source0 & RCM_SRS0_WDOG_MASK){
+		printf("Reset due to Watchdog.\n\r");	
+	} else if(source0 & (RCM_SRS0_PIN_MASK | RCM_SRS0_WAKEUP_MASK)){
+		printf("Reset due to RST Wakeup.\n\r");
+	} else if(source0 & RCM_SRS0_WAKEUP_MASK){
+		printf("Reset due to Wakeup.\n\r");
+	} else if(source0 & RCM_SRS0_PIN_MASK){
+		printf("Reset due to RST.\n\r");	
+	} else if(source0 & RCM_SRS0_LOC_MASK){
+		printf("Reset due to LOC.\n\r");
+	} else if(source0 & RCM_SRS0_LOL_MASK){
+		printf("Reset due to LOL.\n\r");
+	} else if(source1 & RCM_SRS1_LOCKUP_MASK){
+		printf("Reset due to LOCKUP.\n\r");
+	} else if(source1 & RCM_SRS1_SW_MASK){
+		printf("Reset due to Software.\n\r");	
+	} else if(source1 & RCM_SRS1_MDM_AP_MASK){
+		printf("Reset due to MDM_AP.\n\r");
+	} else if(source1 & RCM_SRS1_SACKERR_MASK){
+		printf("Reset due to SACKERR.\n\r");
+	} else {
+		printf("Unknown reset source.\n\r");	
+	}
+	
 }
 
 /*---------------------------------------------------------------------------*/

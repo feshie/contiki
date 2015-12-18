@@ -76,7 +76,7 @@ clock_init()
 	TPM0_CNT = TPM_CNT_COUNT(0x00);      						/* Reset counter register */
 	TPM0_MOD = TPM_MOD_MOD(0xFFFF);      						/* Set up modulo register use all 16-bits */
 	TPM0_SC = TPM_SC_TOF_MASK | TPM_SC_PS(CLOCK_TPM0_PRESCALE); /* Clear TOF & set Prescale. */
-	TPM0_CONF = 0x00U;											/* Clear CONF so that TPM works in WAIT
+	TPM0_CONF = 0x00U;											/* Clear CONF so that TPM works in WAIT */
 	
 	/* Configure Channel 0 for RTIMER interrupts. */
 	TPM0_C0SC = TPM_CnSC_MSA_MASK; 				/* Config Channel 0 for software compare. */
@@ -224,7 +224,14 @@ void SysTick_Handler()
 	SCB->ICSR = SCB_ICSR_PENDSTCLR_Msk;		/* Clear pending interrupt in SCB. */
 	
 	update_ticks();
-	//printf("T");
+	//printf("ST\r\n");
+
+#if (DISABLE_WDOG == 0)
+	if(CPU_Watchdog_Disabled()) {
+		SIM_SRVCOP = 0x55;
+		SIM_SRVCOP = 0xAA;
+	}
+#endif		
 	
 	ENERGEST_OFF(ENERGEST_TYPE_IRQ);
 }

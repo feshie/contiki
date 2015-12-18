@@ -61,14 +61,14 @@
 
 
 typedef enum {
-  Mode_Stop,
-  Mode_PStop1,
-  Mode_PStop2,
-  Mode_LLS,
-  Mode_VLPS,
-  Mode_VLLS0,
-  Mode_VLLS1,
-  Mode_VLLS3
+	Mode_Stop,
+	Mode_PStop1,
+	Mode_PStop2,
+	Mode_LLS,
+	Mode_VLPS,
+	Mode_VLLS0,
+	Mode_VLLS1,
+	Mode_VLLS3
 } Type_StopMode;            				/* Stop Mode selection. */
 
 void port_enable(uint8_t PortMask);			/* Enable clock to used ports.  This is required before configuring the port. */
@@ -90,8 +90,16 @@ unsigned long cpu_cpsie(void);
 #define INTERRUPTS_ENABLE()  cpu_cpsie()
 
 
+#if (DISABLE_WDOG == 0)	
+uint8_t CPU_Watchdog_Disabled(void);
+void CPU_Watchdog_Disable(void);
+void CPU_Watchdog_Enable(void);
+#endif
+
+void cpu_reboot_src(void);
+
 void NMI_Handler(void);						/* NMI Interrupt Handler */
-void SysTick_Handler();
+void SysTick_Handler(void);
 
 /*
 ** ===================================================================

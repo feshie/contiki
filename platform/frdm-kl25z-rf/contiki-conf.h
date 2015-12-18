@@ -3,7 +3,6 @@
 #define CONTIKI_CONF_H
 
 #include <stdint.h>
-#include "derivative.h"
 
 #define CCIF
 #define CLIF
@@ -22,6 +21,12 @@ typedef int32_t s32_t;
 typedef uint32_t clock_time_t;
 typedef uint32_t uip_stats_t;
 
+/* Enable watchdog. */
+#define DISABLE_WDOG	1
+
+/* Set allowable low-power modes. Disable VLLS. */
+#define SYSTEM_SMC_PMPROT_VALUE		0x28
+
 //#define true 1
 //#define false 0
 
@@ -31,7 +36,8 @@ typedef uint32_t uip_stats_t;
 
 //#define RAND_MAX 0x7fff
 
-#define NETSTACK_CONF_RADIO cc1120_driver
+//#define NETSTACK_CONF_RADIO cc1120_driver
+#define NETSTACK_CONF_RADIO nullradio_driver
 
 #define CONTIKIMAC_CONF_CCA_CHECK_TIME		RTIMER_ARCH_SECOND/1600
 #define CONTIKIMAC_CONF_CCA_COUNT_MAX		2
@@ -56,7 +62,8 @@ typedef uint32_t uip_stats_t;
 /* Network setup for IPv6 */
 #define NETSTACK_CONF_NETWORK sicslowpan_driver
 #define NETSTACK_CONF_MAC     csma_driver
-#define NETSTACK_CONF_RDC     contikimac_driver
+//#define NETSTACK_CONF_RDC     contikimac_driver
+#define NETSTACK_CONF_RDC     nullrdc_driver
 #define NETSTACK_CONF_FRAMER  framer_802154
 
 

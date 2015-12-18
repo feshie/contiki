@@ -4,6 +4,7 @@
  */
 
 /* Include the derivative-specific header file */
+#include "contiki-conf.h"
 #include <MKL25Z4.h>
 #include <MKL25Z4_features.h>
 #include <MKL25Z4_extension.h>
