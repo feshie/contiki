@@ -42,13 +42,6 @@
 
 #include "cc1120.h"
 
-/* Contiki Headers. */
-#include "contiki.h"
-#include "contiki-conf.h"
-
-/* Platform Headers */
-#include "platform-conf.h"
-
 /* Misc Headers. */
 #include <string.h>
 #include <stdio.h>

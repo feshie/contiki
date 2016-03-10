@@ -17,9 +17,6 @@
 #include "cc1120-config.h"
 #include "cc1120-arch.h"
 
-/* Platform Headers */
-#include "platform-conf.h"
-
 /* Misc Headers. */
 #include <string.h>
 #include <stdio.h>
