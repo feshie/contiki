@@ -9,4 +9,5 @@ include $(CONTIKI)/platform/z1-feshie/Makefile.common
 
 MODULES += core/net \
            core/net/mac core/net/mac/contikimac \
-           core/net/llsec
+           core/net/llsec dev/cc1120
+

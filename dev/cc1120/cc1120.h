@@ -14,6 +14,7 @@
 
 /* CC1120 headers. */
 #include "cc1120-const.h"
+#include "cc1200-const.h"
 #include "cc1120-config.h"
 #include "cc1120-arch.h"
 

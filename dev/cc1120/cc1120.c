@@ -971,38 +971,39 @@ cc1120_set_channel(uint8_t channel)
   
   
   switch(radio_part) {
-		case CC1120_PART_NUM_CC1120:
-    case CC1120_PART_NUM_CC1121:
-    case CC1120_PART_NUM_CC1125:
-			freq_registers = CC1120_CHANNEL_MULTIPLIER;
-	    freq_registers *= channel;
-	    freq_registers += CC1120_BASE_FREQ;
-			break;
+	case CC1120_PART_NUM_CC1120:
+	case CC1120_PART_NUM_CC1121:
+	case CC1120_PART_NUM_CC1125:
+		freq_registers = CC1120_CHANNEL_MULTIPLIER;
+		freq_registers *= channel;
+		freq_registers += CC1120_BASE_FREQ;
+		break;
 		
-		case CC1120_PART_NUM_CC1200:
-    case CC1120_PART_NUM_CC1201:
-      if(channel == 0) {
-        freq_registers = CC1200_BASE_FREQ;
-      } else {
-        freq_registers = CC1200_CHANNEL_MULTIPLIER;
-        freq_registers *= channel;
+	case CC1120_PART_NUM_CC1200:
+    	case CC1120_PART_NUM_CC1201:
+      		if(channel == 0) {
+        		freq_registers = CC1200_BASE_FREQ;
+     		} else {
+       			freq_registers = CC1200_CHANNEL_MULTIPLIER;
+        		freq_registers *= channel;
         
 #if CC1120_FHSS_ETSI_50        
-        freq_registers += (((channel - 1)/5) + 1);
+        		freq_registers += (((channel - 1)/5) + 1);
 #elif CC1120_FHSS_FCC_50
-        freq_registers += (((channel + 1)/5) + 1);
+        		freq_registers += (((channel + 1)/5) + 1);
 #endif         
-        freq_registers += CC1200_BASE_FREQ;
-      }   
+        		freq_registers += CC1200_BASE_FREQ;
+      		}   
 			break;
 		
-		default:	/* Not a supported chip or no chip present... */
-			printf("*** ERROR: No Radio ***\n");
-			while(1)	/* Spin ad infinitum as we cannot continue. */
-			{
-				watchdog_periodic();	/* Feed the dog to stop reboots. */
-			}
-			break;
+	default:	/* Not a supported chip or no chip present... */
+		printf("*** ERROR: No Radio ***\n");
+		while(1)	/* Spin ad infinitum as we cannot continue. */
+		{
+			watchdog_periodic();	/* Feed the dog to stop reboots. */
+		}
+		break;
+  }
   
 	cc1120_spi_single_write(CC1120_ADDR_FREQ0, ((unsigned char*)&freq_registers)[0]);
 	cc1120_spi_single_write(CC1120_ADDR_FREQ1, ((unsigned char*)&freq_registers)[1]);
