@@ -6,5 +6,6 @@
 #include "cc1120.h"
 
 void cc1120_register_config(void);
+void cc1200_register_config(void);
 
 #endif /* CC1120_CONFIG_H */

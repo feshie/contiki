@@ -11,7 +11,7 @@ endif
 CLEAN += symbols.c symbols.h
 
 ARCH=msp430.c leds.c watchdog.c xmem.c \
-     spi.c cc1120.c cc1120-arch-z1.c cc1120-config.c \
+     spi.c cc1120-arch-z1.c \
      node-id.c sensors.c button-sensor.c cfs-coffee.c \
      uart0.c uart0-putchar.c uip-ipchksum.c \
      slip.c slip_uart0.c \
@@ -19,6 +19,8 @@ ARCH=msp430.c leds.c watchdog.c xmem.c \
      ds3231-sensor.c batv-sensor.c adc1-sensor.c adc2-sensor.c \
      uart1-putchar.c ms1-io.c reset-sensor.c \
 	 epoch_to_tm.c tm_to_epoch.c
+
+MODULES += dev/cc1120
 
 CONTIKI_TARGET_DIRS = . dev apps net
 ifndef CONTIKI_TARGET_MAIN

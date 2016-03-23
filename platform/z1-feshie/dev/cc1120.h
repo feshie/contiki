@@ -36,15 +36,20 @@
  * The "BASE_FREQ" is the FREQ[2,1,0] setting for 863.000000MHz. Channel spacing 
  * is 125KHz. Actual register setting is worked out as FREQ[2,1,0] = CC1120_BASE_FREQ + 
  * (Channel * CC1120_CHANNEL_MULTIPLIER) */
-#define CC1120_BASE_FREQ	0x6BE000
+#define CC1120_BASE_FREQ			0x6BE000
 #define CC1120_CHANNEL_MULTIPLIER	0x400
+
+#define CC1200_BASE_FREQ			0x564CCC
+#define CC1200_CHANNEL_MULTIPLIER	0x0333
 
 #elif CC1120_FHSS_FCC_50
 /* FHSS 902 -- 928 MHz (FCC Part 15.247; 15.249). BASE_FREQ gives 902.000000MHz.
  * Actual FREQ[2,1,0] is worked out as per the description for 868MHz. */
-#define CC1120_BASE_FREQ	0x70C000
-#define CC1120_CHAN_MULTI	1024
+#define CC1120_BASE_FREQ			0x70C000
+#define CC1120_CHAN_MULTIPLIER		0x400
 
+#define CC1200_BASE_FREQ			0x5A3333
+#define CC1200_CHANNEL_MULTIPLIER	0x0333
 
 #else
 #error Unknown FHSS frequencies, please define CC1120_FHSS_ETSI_50 or CC1120_FHSS_FCC_50

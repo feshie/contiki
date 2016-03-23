@@ -166,7 +166,7 @@ const struct radio_driver cc1120_driver = {
 /* ------------------- Internal variables -------------------------------- */
 static uint8_t ack_tx, current_channel, packet_pending, broadcast, ack_seq, tx_seq, 
 				rx_rssi, rx_lqi, lbt_success, radio_pending, radio_on, txfirst, txlast = 0;
-static uint8_t locked, lock_on, lock_off;
+static uint8_t locked, lock_on, lock_off, radio_part;
 
 static uint8_t ack_buf[ACK_LEN];
 static uint8_t tx_buf[CC1120_MAX_PAYLOAD];
@@ -187,11 +187,18 @@ cc1120_driver_init(void)
 	cc1120_arch_reset();
 	
 	/* Check CC1120 - we read the part number register as a test. */
-	uint8_t part = cc1120_spi_single_read(CC1120_ADDR_PARTNUMBER);
+	radio_part = cc1120_spi_single_read(CC1120_ADDR_PARTNUMBER);
 	
-	switch(part) {
+	switch(radio_part) {
 		case CC1120_PART_NUM_CC1120:
 			printf("CC1120");
+			cc1120_register_config();
+      
+      cc1120_spi_single_write(CC1120_ADDR_PKT_CFG1, 0x05);		                    /* Set PKT_CFG1 - CRC Configured as 01 and status bytes appended, No data whitening, address check or byte swap.*/
+      cc1120_spi_single_write(CC1120_ADDR_FIFO_CFG, 0x80);		                    /* Set RX FIFO CRC Auto flush. */		
+      cc1120_spi_single_write(CC1120_ADDR_AGC_GAIN_ADJUST, (CC1120_RSSI_OFFSET));	/* Set the RSSI Offset. This is a two's compliment number. */
+      cc1120_spi_single_write(CC1120_ADDR_AGC_CS_THR, (CC1120_CS_THRESHOLD));   	/* Set Carrier Sense Threshold. This is a two's compliment number. */
+
 			break;
 		case CC1120_PART_NUM_CC1121:
 			printf("CC1121");
@@ -201,6 +208,13 @@ cc1120_driver_init(void)
 			break;
 		case CC1120_PART_NUM_CC1200:
 			printf("CC1200");
+			cc1200_register_config();
+      
+      cc1120_spi_single_write(CC1200_ADDR_PKT_CFG1, 0x03);		                    /* Set PKT_CFG1 - CRC Configured as 01 and status bytes appended, No data whitening, address check or byte swap.*/
+	    cc1120_spi_single_write(CC1200_ADDR_FIFO_CFG, 0x80);		                    /* Set RX FIFO CRC Auto flush. */		
+      cc1120_spi_single_write(CC1200_ADDR_AGC_GAIN_ADJUST, (CC1120_RSSI_OFFSET));	/* Set the RSSI Offset. This is a two's compliment number. */
+      cc1120_spi_single_write(CC1200_ADDR_AGC_CS_THR, (CC1120_CS_THRESHOLD));   	/* Set Carrier Sense Threshold. This is a two's compliment number. */
+
 			break;
 		case CC1120_PART_NUM_CC1201:
 			printf("CC1201");
@@ -217,7 +231,6 @@ cc1120_driver_init(void)
 	// TODO: Cover sync-word errata somewhere?
 	
 	/* Configure CC1120 */
-	cc1120_register_config();
 	cc1120_gpio_config();
 	cc1120_misc_config();
 	
@@ -939,17 +952,10 @@ cc1120_gpio_config(void)
 void
 cc1120_misc_config(void)
 {
-	cc1120_spi_single_write(CC1120_ADDR_FIFO_CFG, 0x80);		/* Set RX FIFO CRC Auto flush. */
-	cc1120_spi_single_write(CC1120_ADDR_PKT_CFG1, 0x05);		/* Set PKT_CFG1 - CRC Configured as 01 and status bytes appended, No data whitening, address check or byte swap.*/
 	cc1120_spi_single_write(CC1120_ADDR_PKT_CFG0, 0x20);		/* Set PKT_CFG1 for variable length packet. */
 	cc1120_spi_single_write(CC1120_ADDR_RFEND_CFG1, 0x0F);		/* Set RXEND to go into IDLE after good packet and to never timeout. */
 	cc1120_spi_single_write(CC1120_ADDR_RFEND_CFG0, 0x30);		/* Set TXOFF to go to RX for ACK and to stay in RX on bad packet. */
-	cc1120_spi_single_write(CC1120_ADDR_AGC_GAIN_ADJUST, (CC1120_RSSI_OFFSET));	/* Set the RSSI Offset. This is a two's compliment number. */
-	cc1120_spi_single_write(CC1120_ADDR_AGC_CS_THR, (CC1120_CS_THRESHOLD));   	/* Set Carrier Sense Threshold. This is a two's compliment number. */
 	
-	//cc1120_spi_single_write(CC1120_ADDR_SYNC_CFG0, 0x0B);       /* Set the correct sync word length.  SmartRF sets 32-bits instead of 16-bits for 802.15.4G. */
-
-
 #if RDC_CONF_HARDWARE_CSMA	
 	cc1120_spi_single_write(CC1120_ADDR_PKT_CFG2, 0x10);		/* Configure Listen Before Talk (LBT), see Section 6.12 on Page 42 of the CC1120 userguide (swru295) for details. */
 #else
@@ -962,10 +968,42 @@ cc1120_set_channel(uint8_t channel)
 {
 	uint32_t freq_registers;
 	
-	freq_registers = CC1120_CHANNEL_MULTIPLIER;
-	freq_registers *= channel;
-	freq_registers += CC1120_BASE_FREQ;
-	
+  
+  
+  switch(radio_part) {
+		case CC1120_PART_NUM_CC1120:
+    case CC1120_PART_NUM_CC1121:
+    case CC1120_PART_NUM_CC1125:
+			freq_registers = CC1120_CHANNEL_MULTIPLIER;
+	    freq_registers *= channel;
+	    freq_registers += CC1120_BASE_FREQ;
+			break;
+		
+		case CC1120_PART_NUM_CC1200:
+    case CC1120_PART_NUM_CC1201:
+      if(channel == 0) {
+        freq_registers = CC1200_BASE_FREQ;
+      } else {
+        freq_registers = CC1200_CHANNEL_MULTIPLIER;
+        freq_registers *= channel;
+        
+#if CC1120_FHSS_ETSI_50        
+        freq_registers += (((channel - 1)/5) + 1);
+#elif CC1120_FHSS_FCC_50
+        freq_registers += (((channel + 1)/5) + 1);
+#endif         
+        freq_registers += CC1200_BASE_FREQ;
+      }   
+			break;
+		
+		default:	/* Not a supported chip or no chip present... */
+			printf("*** ERROR: No Radio ***\n");
+			while(1)	/* Spin ad infinitum as we cannot continue. */
+			{
+				watchdog_periodic();	/* Feed the dog to stop reboots. */
+			}
+			break;
+  
 	cc1120_spi_single_write(CC1120_ADDR_FREQ0, ((unsigned char*)&freq_registers)[0]);
 	cc1120_spi_single_write(CC1120_ADDR_FREQ1, ((unsigned char*)&freq_registers)[1]);
 	cc1120_spi_single_write(CC1120_ADDR_FREQ2, ((unsigned char*)&freq_registers)[2]);
