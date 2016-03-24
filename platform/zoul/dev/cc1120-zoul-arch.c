@@ -40,15 +40,22 @@
 #include "cc1120.h"
 #include "cc1120-arch.h"
 #include "cc1120-const.h"
+#include "board.h"
 
+#include "spi-arch.h"
+#include "dev/ioc.h"
+#include "dev/sys-ctrl.h"
 #include "dev/spi.h"
-#include "dev/leds.h"
+#include "dev/ssi.h"
+#include "dev/gpio.h"
 
-#include "isr_compat.h"
+#if PLATFORM_HAS_LEDS
+#include "dev/leds.h"
+#define LEDS_ON(x) leds_on(x)
+#endif
+
 #include <stdio.h>
 #include <watchdog.h>
-
-#define LEDS_ON(x) leds_on(x)
 
 static uint8_t enabled;
 
@@ -67,32 +74,32 @@ static uint8_t enabled;
 void
 cc1120_arch_init(void)
 {
-	/* Configure pins.  This may have already been done but func is repeat-execution safe. */
-	cc1120_arch_pin_init();
+	/* First leave RESET high */
+	GPIO_SOFTWARE_CONTROL(CC1200_RESET_PORT_BASE, CC1200_RESET_PIN_MASK);
+	GPIO_SET_OUTPUT(CC1200_RESET_PORT_BASE, CC1200_RESET_PIN_MASK);
+	ioc_set_over(CC1200_RESET_PORT, CC1200_RESET_PIN, IOC_OVERRIDE_OE);
+	GPIO_SET_PIN(CC1200_RESET_PORT_BASE, CC1200_RESET_PIN_MASK);
+
+	/* Initialize CSn, enable CSn and then wait for MISO to go low*/
+	spix_cs_init(CC1200_SPI_CSN_PORT, CC1200_SPI_CSN_PIN);
+
+	/* Initialize SPI */
+	spix_init(CC1200_SPI_INSTANCE);
+
+	/* Configure GPIOx */
+	GPIO_SOFTWARE_CONTROL(CC1200_GDO0_PORT_BASE, CC1200_GDO0_PIN_MASK);
+	GPIO_SET_INPUT(CC1200_GDO0_PORT_BASE, CC1200_GDO0_PIN_MASK);
+	GPIO_SOFTWARE_CONTROL(CC1200_GDO2_PORT_BASE, CC1200_GDO2_PIN_MASK);
+	GPIO_SET_INPUT(CC1200_GDO2_PORT_BASE, CC1200_GDO2_PIN_MASK);
+
+	/* Leave CSn as default */
+	cc1200_arch_spi_deselect();
+
+	/* Ensure MISO is high */
+	BUSYWAIT_UNTIL(
+		GPIO_READ_PIN(CC1200_SPI_MISO_PORT_BASE, CC1200_SPI_MISO_PIN_MASK),
+		RTIMER_SECOND / 10);
 	
-	/* Init SPI.  May have already done but we need to ensure SPI is configured.  On Z1 this is done in main. */
-	//spi_init();
-
-	/* Setup GPIO pins.  All are Inputs for now. */
-	CC1120_GDO0_PORT(SEL) &= ~BV(CC1120_GDO0_PIN);
-	CC1120_GDO0_PORT(DIR) &= ~BV(CC1120_GDO0_PIN);
-	CC1120_GDO0_PORT(REN) |= BV(CC1120_GDO0_PIN);
-	CC1120_GDO0_PORT(OUT) &= ~BV(CC1120_GDO0_PIN);
-	
-	/* Set CC1120 to a rising edge interrupt. */
-	CC1120_GDO0_PORT(IES) &= ~BV(CC1120_GDO0_PIN);
-	
-#ifdef CC1120_GPIO2_FUNC	
-	CC1120_GDO2_PORT(SEL) &= ~BV(CC1120_GDO2_PIN);
-	CC1120_GDO2_PORT(DIR) &= ~BV(CC1120_GDO2_PIN);
-#endif
-
-
-	CC1120_GDO3_PORT(SEL) &= ~BV(CC1120_GDO3_PIN);
-	CC1120_GDO3_PORT(DIR) &= ~BV(CC1120_GDO3_PIN);
-	CC1120_GDO3_PORT(REN) |= BV(CC1120_GDO3_PIN);
-	CC1120_GDO3_PORT(OUT) &= ~BV(CC1120_GDO3_PIN);
-
 }
 
 /*---------------------------------------------------------------------------*/
@@ -100,23 +107,17 @@ cc1120_arch_init(void)
 void 
 cc1120_arch_pin_init(void)
 {
-	/* Turn off CC2420. */
-	CC2420_PWR_PORT(DIR) |= BV(CC2420_PWR_PIN);
-	CC2420_PWR_PORT(OUT) &= ~BV(CC2420_PWR_PIN); 
-	CC2420_CSN_PORT(DIR) |= BV(CC2420_CSN_PIN);
-	CC2420_CSN_PORT(OUT) |= BV(CC2420_CSN_PIN); 
-	CC2420_RESET_PORT(DIR) |= BV(CC2420_RESET_PIN);
-	CC2420_RESET_PORT(OUT) |= BV(CC2420_RESET_PIN);
-	
-	/* Setup !RESET and CSn pins. */
-	CC1120_SPI_CSN_PORT(DIR) |= BV(CC1120_SPI_CSN_PIN);		/* Set CSn pin to Output. */
-	CC1120_SPI_CSN_PORT(SEL) &= ~BV(CC1120_SPI_CSN_PIN);	/* Set CSn pin to GPIO mode. */
-	CC1120_SPI_CSN_PORT(OUT) |= BV(CC1120_SPI_CSN_PIN);		/* Set CSn high to de-select radio. */
-	enabled = 0;
+	GPIO_SOFTWARE_CONTROL(CC1200_GDO0_PORT_BASE, CC1200_GDO0_PIN_MASK);
+	GPIO_SET_INPUT(CC1200_GDO0_PORT_BASE, CC1200_GDO0_PIN_MASK);
+	GPIO_DETECT_EDGE(CC1200_GDO0_PORT_BASE, CC1200_GDO0_PIN_MASK);
+	GPIO_TRIGGER_SINGLE_EDGE(CC1200_GDO0_PORT_BASE, CC1200_GDO0_PIN_MASK);
 
-	CC1120_RESET_PORT(DIR) |= BV(CC1120_RESET_PIN);			/* Set !Reset pin to Output. */
-	CC1120_RESET_PORT(SEL) &= ~BV(CC1120_RESET_PIN);		/* Set !Reset pin to GPIO mode. */
-	CC1120_RESET_PORT(OUT) |= BV(CC1120_RESET_PIN);			/* Set !Reset high to ensure radio does not hog SPI. */
+	GPIO_DETECT_RISING(CC1200_GDO0_PORT_BASE, CC1200_GDO0_PIN_MASK);
+
+	ioc_set_over(CC1200_GDO0_PORT, CC1200_GDO0_PIN, IOC_OVERRIDE_PUE);
+	nvic_interrupt_enable(CC1200_GPIOx_VECTOR);
+	gpio_register_callback(cc1120_interrupt_handler, CC1200_GDO0_PORT,
+						 CC1200_GDO0_PIN);
 }
 
 
@@ -124,10 +125,12 @@ cc1120_arch_pin_init(void)
 void
 cc1120_arch_reset(void)
 {
-	CC1120_SPI_CSN_PORT(OUT) |= BV(CC1120_SPI_CSN_PIN);	/* Assert CSn to de-select CC1120. */
-	CC1120_RESET_PORT(OUT) &= ~BV(CC1120_RESET_PIN);	/* Clear !Reset pin. */
-	clock_delay_usec(CC1120_RESET_DELAY_USEC);	/* Delay for a little. */
-	CC1120_RESET_PORT(OUT) |= BV(CC1120_RESET_PIN);		/* Assert !Reset pin. */
+	cc1120_arch_spi_disable();										/* Assert CSn to de-select CC1120. */
+
+	
+	GPIO_CLR_PIN(CC1200_RESET_PORT_BASE, CC1200_RESET_PIN_MASK);	/* Clear !Reset pin. */
+	clock_delay_usec(CC1120_RESET_DELAY_USEC);						/* Delay for a little. */
+	GPIO_SET_PIN(CC1200_RESET_PORT_BASE, CC1200_RESET_PIN_MASK);	/* Assert !Reset pin. */
 }
 
 
@@ -146,13 +149,13 @@ cc1120_arch_spi_enable(void)
 		rtimer_clock_t t0 = RTIMER_NOW(); 
 		int i = 0;
 		
-		/* Set CSn to low to select CC1120 */
-		CC1120_SPI_CSN_PORT(OUT) &= ~BV(CC1120_SPI_CSN_PIN);
+		/* Set CSn to low (0) */
+		GPIO_CLR_PIN(CC1200_SPI_CSN_PORT_BASE, CC1200_SPI_CSN_PIN_MASK);
 		
 		watchdog_periodic();
 
 		/* The MISO pin should go LOW before chip is fully enabled. */
-		while(CC1120_SPI_MISO_PORT(IN) & BV(CC1120_SPI_MISO_PIN))
+		while(GPIO_READ_PIN(CC1200_SPI_MISO_PORT_BASE, CC1200_SPI_MISO_PIN_MASK))
 		{
 			if(RTIMER_CLOCK_LT((t0 + CC1120_EN_TIMEOUT), RTIMER_NOW()) )
 			{
@@ -160,10 +163,10 @@ cc1120_arch_spi_enable(void)
 				if(i == 0)
 				{
 					/* Timeout.  Try a SNOP and a re-enable once. */
-					(void) cc1120_arch_spi_rw_byte(CC1120_STROBE_SNOP);		/* SNOP. */
-					CC1120_SPI_CSN_PORT(OUT) |= BV(CC1120_SPI_CSN_PIN);		/* Disable. */
-					clock_wait(50);											/* Wait. */
-					CC1120_SPI_CSN_PORT(OUT) &= ~BV(CC1120_SPI_CSN_PIN);	/* Enable. */
+					(void) cc1120_arch_spi_rw_byte(CC1120_STROBE_SNOP);					/* SNOP. */
+					GPIO_SET_PIN(CC1200_SPI_CSN_PORT_BASE, CC1200_SPI_CSN_PIN_MASK);	/* Disable. */
+					clock_wait(50);														/* Wait. */
+					GPIO_CLR_PIN(CC1200_SPI_CSN_PORT_BASE, CC1200_SPI_CSN_PIN_MASK);	/* Enable. */
 					
 					i++;
 				}
@@ -184,13 +187,10 @@ cc1120_arch_spi_enable(void)
 void
 cc1120_arch_spi_disable(void)
 {
-	if(enabled)
-	{
-		/* Set CSn to high (1) */
-		CC1120_SPI_CSN_PORT(OUT) |= BV(CC1120_SPI_CSN_PIN);
+	/* Set CSn to high (1) */
+	GPIO_SET_PIN(CC1200_SPI_CSN_PORT_BASE, CC1200_SPI_CSN_PIN_MASK);
 		
-		enabled = 0;
-	}
+	enabled = 0;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -198,10 +198,10 @@ uint8_t
 cc1120_arch_spi_rw_byte(uint8_t val)
 {
 	SPI_WAITFORTx_BEFORE();
-	SPI_TXBUF = val;
-	//SPI_WAITFOREOTx(); /* Causes SPI hanging when used with burst read/write. */
-	SPI_WAITFOREORx();
-	return SPI_RXBUF;
+	SPIX_BUF(CC1200_SPI_INSTANCE) = val;
+	SPIX_WAITFOREOTx(CC1200_SPI_INSTANCE);
+	SPIX_WAITFOREORx(CC1200_SPI_INSTANCE);
+	return SPIX_BUF(CC1200_SPI_INSTANCE);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -259,14 +259,7 @@ cc1120_arch_read_cca(void)
 uint8_t
 cc1120_arch_read_gpio3(void)
 {
-	if(CC1120_GDO3_PORT(IN) & BV(CC1120_GDO3_PIN))
-	{
-		return 1;
-	}
-	else
-	{
-		return 0;
-	}
+	return 0;
 }
 
 /* -------------------------- Interrupt Functions -------------------------- */
@@ -279,9 +272,9 @@ void
 cc1120_arch_interrupt_enable(void)
 {
 	/* Reset interrupt trigger */
-	CC1120_GDO0_PORT(IFG) &= ~BV(CC1120_GDO0_PIN);
+	
 	/* Enable interrupt on the GDO0 pin */
-	CC1120_GDO0_PORT(IE) |= BV(CC1120_GDO0_PIN);
+	GPIO_ENABLE_INTERRUPT(CC1200_GDO0_PORT_BASE, CC1200_GDO0_PIN_MASK);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -289,20 +282,15 @@ void
 cc1120_arch_interrupt_disable(void)
 {
 	/* Disable interrupt on the GDO0 pin */
-	CC1120_GDO0_PORT(IE) &= ~BV(CC1120_GDO0_PIN);
+	GPIO_DISABLE_INTERRUPT(CC1200_GDO0_PORT_BASE, CC1200_GDO0_PIN_MASK);
 	/* Reset interrupt trigger */
-	CC1120_GDO0_PORT(IFG) &= ~BV(CC1120_GDO0_PIN);
+	
 }
 /*---------------------------------------------------------------------------*/
 void
 cc1120_arch_interrupt_acknowledge(void)
 {
-	/* Disable interrupt on the GDO0 pin */
-	CC1120_GDO0_PORT(IE) &= ~BV(CC1120_GDO0_PIN);
-	/* Reset interrupt trigger */
-	CC1120_GDO0_PORT(IFG) &= ~BV(CC1120_GDO0_PIN);
-	/* Enable interrupt on the GDO0 pin */
-	CC1120_GDO0_PORT(IE) |= BV(CC1120_GDO0_PIN);
+	
 }
 
 
