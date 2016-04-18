@@ -133,6 +133,11 @@ static void processor(void);
 static void cc1120_gpio_config(void);
 static void cc1120_misc_config(void);
 
+static radio_result_t set_value(radio_param_t param, radio_value_t value);
+static radio_result_t get_value(radio_param_t param, radio_value_t *value);
+static radio_result_t set_object(radio_param_t param, const void *src, size_t size);
+static radio_result_t get_object(radio_param_t param, void *dest, size_t size);
+
 /* ---------------------- CC1120 SPI Functions ----------------------------- */
 static uint8_t cc1120_spi_write_addr(uint16_t addr, uint8_t burst, uint8_t rw);
 static void cc1120_write_txfifo(uint8_t *payload, uint8_t payload_len);
@@ -159,12 +164,16 @@ const struct radio_driver cc1120_driver = {
 	cc1120_driver_pending_packet,
 	cc1120_driver_on,
 	cc1120_driver_off,
+	get_value,
+	set_value,
+	get_object,
+	set_object
 };
 
 
 
 /* ------------------- Internal variables -------------------------------- */
-static uint8_t ack_tx, current_channel, packet_pending, broadcast, ack_seq, tx_seq, 
+static uint8_t ack_tx, current_channel, next_channel, packet_pending, broadcast, ack_seq, tx_seq, 
 				rx_rssi, rx_lqi, lbt_success, radio_pending, radio_on, txfirst, txlast = 0;
 static uint8_t locked, lock_on, lock_off, radio_part;
 
@@ -182,6 +191,7 @@ cc1120_driver_init(void)
 	
 	/* Initialise arch  - pins, spi, turn off cc2420 */
 	cc1120_arch_init();
+	cc1120_arch_pin_init();
 	
 	/* Reset CC1120 */
 	cc1120_arch_reset();
@@ -234,6 +244,8 @@ cc1120_driver_init(void)
 	cc1120_gpio_config();
 	cc1120_misc_config();
 	
+	printf(" detected & Configured\n\r");
+	
 	/* Set Channel */
 	cc1120_set_channel(RF_CHANNEL);                            
 	
@@ -259,6 +271,8 @@ cc1120_driver_prepare(const void *payload, unsigned short len)
 		PRINTFTXERR("!!! PREPARE ERROR: Packet too large. !!!\n");
 		return RADIO_TX_ERR;
 	}
+	
+	PRINTFTX("\t%d bytes\n", len);
 	
 	/* Make sure that the TX FIFO is empty as we only want a single packet in it. */
 	cc1120_flush_tx();
@@ -388,7 +402,13 @@ cc1120_driver_transmit(unsigned short transmit_len)
 	
 	/* Block until in TX.  If timeout is reached, strobe IDLE and 
 	 * reset CCA to clear TX & flush FIFO. */
+#if CC1120_GPIO_MODE == 0
+	
+#elif CC1120_GPIO_MODE == 2
+	while(!cc1120_arch_read_gpio2()) {
+#elif CC1120_GPIO_MODE == 3
 	while(!cc1120_arch_read_gpio3()) {
+#endif
 		watchdog_periodic();	/* Feed the dog to stop reboots. */
 		
 		if(RTIMER_CLOCK_LT((t0 + CC1120_LBT_TIMEOUT), RTIMER_NOW()) ) {
@@ -469,7 +489,15 @@ cc1120_driver_transmit(unsigned short transmit_len)
 	t0 = RTIMER_NOW();
 	
 	/* Block till TX is complete. */	
+#if CC1120_GPIO_MODE == 0
+	
+#elif CC1120_GPIO_MODE == 2
+	PRINTFTX(" - Wait for GPIO2");
+	while(cc1120_arch_read_gpio2()) {
+#elif CC1120_GPIO_MODE == 3
+	PRINTFTX(" - Wait for GPIO3");
 	while(cc1120_arch_read_gpio3()) {
+#endif
 		/* Wait for CC1120 interrupt handler to set TX_COMPLETE. */
 		watchdog_periodic();	/* Feed the dog to stop reboots. */
 		PRINTFTX(".");
@@ -821,16 +849,19 @@ cc1120_driver_channel_clear(void)
 
 	if(locked) {
 		PRINTF("SPI Locked\n");
+		printf(" L ");
 		return 1;
 	} else {
 		cur_state = cc1120_get_state();
 		if(cur_state == CC1120_STATUS_TX) {
 			/* Channel can't be clear in TX. */
+			
 			return 0;
 		} 
 		if(cur_state != CC1120_STATUS_RX) {
 			/* Not in RX... */
-			//printf(" NRX ");
+			printf(" NRX, S=0x%02x ", cur_state);
+			
 			return 1;
 		}
 		
@@ -838,9 +869,10 @@ cc1120_driver_channel_clear(void)
 		rssi0 = cc1120_spi_single_read(CC1120_ADDR_RSSI0);
 		t0 = RTIMER_NOW();
 		while(!(rssi0 & CC1120_CARRIER_SENSE_VALID)) {
-			if(RTIMER_CLOCK_LT((t0 + RTIMER_SECOND/15), RTIMER_NOW())) {
-				printf("\t RSSI Timeout.\n");		
+			if(RTIMER_CLOCK_LT((t0 + RTIMER_SECOND/10), RTIMER_NOW())) {
+				printf("\t RSSI Timeout, RSSI0 = 0x%02x, state = 0x%02x.\n", rssi0, cc1120_get_state());		
 				//LEDS_OFF(LEDS_BLUE);
+				
 				return 0;
 			}
 			rssi0 = cc1120_spi_single_read(CC1120_ADDR_RSSI0);
@@ -850,10 +882,12 @@ cc1120_driver_channel_clear(void)
 		if(rssi0 & CC1120_RSSI0_CARRIER_SENSE) {
 			cca = 0;
 			PRINTF("\t Channel NOT clear.\n");
+			
 			//LEDS_OFF(LEDS_BLUE);	
 		} else {
 			cca = 1;
 			PRINTF("\t Channel clear.\n");
+			
 			//LEDS_ON(LEDS_BLUE);
 		}
 	}
@@ -875,7 +909,7 @@ cc1120_driver_receiving_packet(void)
 			return 0;
 		} else {
 			pqt = cc1120_spi_single_read(CC1120_ADDR_MODEM_STATUS1);			/* Check PQT. */
-			if((pqt & CC1120_MODEM_STATUS1_SYNC_FOUND)) { // ((pqt & CC1120_MODEM_STATUS1_PQT_REACHED) && (pqt & CC1120_MODEM_STATUS1_PQT_VALID)) || || (cc1120_read_rxbytes() > 0)) //|| !(cc1120_arch_read_gpio3()))
+			if((pqt & CC1120_MODEM_STATUS1_SYNC_FOUND)) { 
 				PRINTF(" Yes. ****\n");
 				return 1;
 			} else {
@@ -945,7 +979,9 @@ cc1120_gpio_config(void)
 	cc1120_spi_single_write(CC1120_ADDR_IOCFG2, CC1120_GPIO2_FUNC);
 #endif
 
+#ifdef CC1120_GPIO3_FUNC
 	cc1120_spi_single_write(CC1120_ADDR_IOCFG3, CC1120_GPIO3_FUNC);
+#endif
 
 }
 
@@ -1058,6 +1094,7 @@ cc1120_set_channel(uint8_t channel)
 	}
 	
 	current_channel = channel;
+	next_channel = channel;
 	return current_channel;
 }
 
@@ -1089,7 +1126,7 @@ on(void)
 		cc1120_flush_rx();
 	}
 	
-	if((packet_pending == 0) && (cc1120_read_rxbytes > 0)) {
+	if((packet_pending == 0) && (cc1120_read_rxbytes() > 0)) {
 		/* Stray data in FIFO, flush. */
 		cc1120_flush_rx();
 	}
@@ -1126,6 +1163,11 @@ CC1120_RELEASE_SPI(void)
 	locked--;
 	
 	if(locked == 0) {
+		if(next_channel != current_channel)
+		{
+				
+		}	
+		
 		if(lock_off) {
 			off();
 			lock_off = 0;
@@ -1447,7 +1489,130 @@ cc1120_flush_tx(void)
 	return cur_state;
 }
 
+/* --------------------------- Radio Parameter Functions --------------------------- */
+/* Set a radio parameter object. */
+radio_result_t
+set_object(radio_param_t param, const void *src, size_t size)
+{
 
+  return RADIO_RESULT_NOT_SUPPORTED;
+
+}
+
+/* Get a radio parameter object. */
+radio_result_t
+get_object(radio_param_t param, void *dest, size_t size)
+{
+
+  return RADIO_RESULT_NOT_SUPPORTED;
+
+}
+
+/* Set a radio parameter value. */
+radio_result_t
+set_value(radio_param_t param, radio_value_t value)
+{
+
+  switch(param) {
+  case RADIO_PARAM_POWER_MODE:
+			if(value == RADIO_POWER_MODE_ON) {
+			  on();
+			  return RADIO_RESULT_OK;
+			}
+
+			if(value == RADIO_POWER_MODE_OFF) {
+			  off();
+			  return RADIO_RESULT_OK;
+			}
+
+			return RADIO_RESULT_INVALID_VALUE;
+
+		  break;
+
+  case RADIO_PARAM_CHANNEL:
+			if((value > 49) | (value < 0)) {
+			  return RADIO_RESULT_INVALID_VALUE;
+			}
+
+			/*
+			 * We always return OK here even if the channel update was
+			 * postponed. rf_channel is NOT updated in this case until
+			 * the channel update was performed. So reading back
+			 * the channel using get_value() might return the "old" channel
+			 * until the channel was actually changed
+			 */
+		  	if(locked) {
+				/* Radio is busy, defer channel change till unlock. */	
+		  		next_channel = value;
+			} else {
+				/* Set the new channel. */ 
+		    	cc1120_set_channel(value);
+			}
+
+			return RADIO_RESULT_OK;
+		 
+		  break;
+
+  case RADIO_PARAM_CCA_THRESHOLD:
+  case RADIO_PARAM_PAN_ID:
+  case RADIO_PARAM_16BIT_ADDR:
+  case RADIO_PARAM_RX_MODE:
+  case RADIO_PARAM_TX_MODE:
+  case RADIO_PARAM_TXPOWER:
+  case RADIO_PARAM_RSSI:
+  case RADIO_PARAM_64BIT_ADDR:
+  default:
+    		return RADIO_RESULT_NOT_SUPPORTED;
+  }
+}
+
+/* Get a radio parameter value. */
+radio_result_t
+get_value(radio_param_t param, radio_value_t *value)
+{
+  if(!value) {
+    return RADIO_RESULT_INVALID_VALUE;
+  }
+
+  switch(param) {
+  case RADIO_PARAM_POWER_MODE:
+			if(radio_on) {
+			  *value = (radio_value_t)RADIO_POWER_MODE_ON;
+			} else {
+			  *value = (radio_value_t)RADIO_POWER_MODE_OFF;
+			}
+			return RADIO_RESULT_OK;
+
+  case RADIO_PARAM_CHANNEL:
+
+			*value = (radio_value_t)current_channel;
+			return RADIO_RESULT_OK;
+
+
+  case RADIO_CONST_CHANNEL_MIN:
+			*value = (radio_value_t)0;
+			return RADIO_RESULT_OK;
+
+  case RADIO_CONST_CHANNEL_MAX:
+			*value = (radio_value_t)49;
+			return RADIO_RESULT_OK;
+
+  case RADIO_PARAM_PAN_ID:
+  case RADIO_PARAM_16BIT_ADDR:
+  case RADIO_PARAM_RX_MODE:
+  case RADIO_PARAM_TX_MODE:
+  case RADIO_PARAM_TXPOWER:
+  case RADIO_PARAM_CCA_THRESHOLD:
+  case RADIO_PARAM_RSSI:
+  case RADIO_PARAM_64BIT_ADDR:  
+  case RADIO_CONST_TXPOWER_MIN:
+  case RADIO_CONST_TXPOWER_MAX:
+  default:
+    		return RADIO_RESULT_NOT_SUPPORTED;
+
+  }
+
+}
 
 /* ----------------------------- CC1120 SPI Functions ----------------------------- */
 uint8_t
@@ -1503,7 +1668,7 @@ cc1120_write_txfifo(uint8_t *payload, uint8_t payload_len)
 	cc1120_arch_txfifo_load(payload, payload_len);
 	cc1120_arch_spi_disable();
 	
-	PRINTFTX("\t%d bytes in fifo (%d + length byte requested)\n", cc1120_read_txbytes());
+	PRINTFTX("\t%d bytes in fifo (%d + length byte requested)\n", cc1120_read_txbytes(), payload_len);
 }
 
 

@@ -257,6 +257,12 @@ cc1120_arch_read_cca(void)
 
 /*---------------------------------------------------------------------------*/
 uint8_t
+cc1120_arch_read_gpio2(void)
+{
+	return 0;
+}
+
+uint8_t
 cc1120_arch_read_gpio3(void)
 {
 	if(CC1120_GDO3_PORT(IN) & BV(CC1120_GDO3_PIN))

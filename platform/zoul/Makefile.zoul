@@ -32,14 +32,17 @@ CONTIKI_TARGET_SOURCEFILES += $(BOARD_SOURCEFILES)
 
 ### Include relevant radio files and define radio.
 ifeq ($(RADIO),cc1120)
-  CONTIKI_TARGET_SOURCEFILES += cc1120-zoul-arch.c cc1120-config.c
+  CONTIKI_TARGET_SOURCEFILES += cc1120-zoul-arch.c
   MODULES += dev/cc1120
-  CFLAGS += -DZOUL_RADIO=cc1120
-else
+  CFLAGS += -DZOUL_RADIO=1120
+else ifeq ($(RADIO),cc1200)
   CONTIKI_TARGET_SOURCEFILES += cc1200-zoul-arch.c
   MODULES += dev/cc1200
-  CFLAGS += -DZOUL_RADIO=cc1200
+  CFLAGS += -DZOUL_RADIO=1200
+else
+  CFLAGS += -DZOUL_RADIO=2538
 endif
+
 
 
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)

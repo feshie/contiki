@@ -19,7 +19,7 @@
 #include "cc1120-arch.h"
 
 /* Platform Headers */
-#include "platform-conf.h"
+//#include "platform-conf.h"
 
 /* Misc Headers. */
 #include <string.h>
@@ -30,6 +30,11 @@
 
 #if CC1120_FHSS_FCC_50 && CC1120_FHSS_ETSI_50
 #error Error: FHSS, both CC1120_FHSS_ETSI_50 and CC1120_FHSS_FCC_50 defined. Please set only one.
+#endif
+
+#ifndef CC1120_GPIO_MODE
+#define CC1120_GPIO_MODE 0
+#warning CC1120_GPIO_MODE not defined - assuming single GPIO.
 #endif
 
 #if CC1120_FHSS_ETSI_50

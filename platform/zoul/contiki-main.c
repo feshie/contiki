@@ -58,17 +58,32 @@
 #include "dev/cc2538-rf.h"
 #include "dev/udma.h"
 #include "dev/crypto.h"
+
 #include "usb/usb-serial.h"
 #include "lib/random.h"
+
 #include "net/netstack.h"
 #include "net/queuebuf.h"
 #include "net/ip/tcpip.h"
 #include "net/ip/uip.h"
 #include "net/mac/frame802154.h"
+
+#include "sys/autostart.h"
+
 #include "cpu.h"
 #include "reg.h"
 #include "ieee-addr.h"
 #include "lpm.h"
+
+#if NETSTACK_CONF_WITH_IPV6
+#include "net/ipv6/uip-ds6.h"
+#endif /* NETSTACK_CONF_WITH_IPV6 */
+
+#ifndef NETSTACK_CONF_WITH_IPV4
+#define NETSTACK_CONF_WITH_IPV4 0
+#endif
+
+#include "net/rime/rime.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -133,10 +148,12 @@ set_rf_params(void)
   }
 #endif
 
+#if ZOUL_RADIO!=1120
   NETSTACK_RADIO.set_value(RADIO_PARAM_PAN_ID, IEEE802154_PANID);
   NETSTACK_RADIO.set_value(RADIO_PARAM_16BIT_ADDR, short_addr);
   NETSTACK_RADIO.set_value(RADIO_PARAM_CHANNEL, CC2538_RF_CHANNEL);
   NETSTACK_RADIO.set_object(RADIO_PARAM_64BIT_ADDR, ext_addr, 8);
+#endif
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -156,7 +173,7 @@ main(void)
   fade(LEDS_RED);
   process_init();
   watchdog_init();
-
+	
   /*
    * Character I/O Initialisation.
    * When the UART receives a character it will call serial_line_input_byte to
@@ -228,6 +245,8 @@ main(void)
 
   watchdog_start();
   fade(LEDS_GREEN);
+	
+	
 
   while(1) {
     uint8_t r;

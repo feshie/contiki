@@ -62,7 +62,7 @@
 #define NETSTACK_CONF_MAC     csma_driver
 #define NETSTACK_CONF_RDC     contikimac_driver
 //#define NETSTACK_CONF_RDC     nullrdc_driver
-#define NETSTACK_CONF_RADIO   cc1120_driver
+//#define NETSTACK_CONF_RADIO   cc1120_driver
 #define NETSTACK_CONF_FRAMER  framer_802154
 
 /* Specify a minimum packet size for 6lowpan compression to be

@@ -99,7 +99,7 @@ typedef unsigned long clock_time_t;
 typedef unsigned long off_t;
 
 /* the low-level radio driver */
-#define NETSTACK_CONF_RADIO   cc1120_driver
+//#define NETSTACK_CONF_RADIO   cc1120_driver
 
 /*
  * Definitions below are dictated by the hardware and not really
@@ -255,8 +255,7 @@ typedef unsigned long off_t;
 
 #define CC1120_OFF_STATE CC1120_STATE_IDLE
 
-#define CC1120_SINGLE_INTERRUPT
-#define CC1120_DUAL_IO
+#define CC1120_GPIO_MODE	3
 
 #define CC1120_GPIO0_FUNC	CC1120_GPIO_MCU_WAKEUP
 //#define CC1120_GPIO0_FUNC	(CC1120_GPIO_PKT_SYNC_RXTX| CC1120_GPIO_INV_MASK)	

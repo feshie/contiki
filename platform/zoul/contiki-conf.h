@@ -587,6 +587,97 @@ typedef uint32_t rtimer_clock_t;
 /** @} */
 /*---------------------------------------------------------------------------*/
 
+/* **************************************************************************** */
+/* ------------------------------ CC1120 Related ------------------------------ */
+/* **************************************************************************** */
+
+//#define CC1120DEBUG		1
+//#define CC1120TXDEBUG		1
+#define CC1120TXERDEBUG		1
+//#define CC1120RXDEBUG		1
+#define CC1120RXERDEBUG		1
+//#define CC1120INTDEBUG		1
+//#define C1120PROCESSDEBUG	1
+//#define CC1120ARCHDEBUG		1
+//#define CC1120STATEDEBUG	1
+
+#define RF_CHANNEL				42
+
+#define CC1120_CS_THRESHOLD		0xA6	/*-100dBm */
+
+/* Other possible sensible values:
+ * 0xC4	-60dBm.
+ * 0xBF	-65dBm.
+ * 0xBA	-70dBm.
+ * 0xB5	-75dBm.
+ * 0xB0 -80dBm.
+ * 0xAB -85dBm.
+ * 0xA6 -90dBm.
+ * 0xA5 -91dBm.
+ * 0xA4 -92dBm.
+ * 0xA3 -93dBm.
+ * 0xA2 -94dBm.
+ * 0xA1 -95dBm.
+ * 0xA0 -96dBm.
+ * 0x9F -97dBm.
+ * 0x9E -98dBm.
+ * 0x9D -99dBm.
+ * 0x9C -100dBm.
+ * 0x9B -101dBm.
+ * 0x9A -102dBm.
+ * 0x99 -103dBm
+ * 0x98 -104dBm.
+ * 0x97 -105dBm.
+ * 0x96 -106dBm.
+ * 0x95 -107dBm.
+ * 0x94 -108dBm.
+ * 0x93 -109dBm.
+ * 0x92 -110dBm.
+ */
+//#define CC1120_RSSI_OFFSET	0x9A
+
+#define CC1120LEDS				1
+
+#define CC1120_LBT_TIMEOUT 		RTIMER_ARCH_SECOND			//80
+#define CC1120_ACK_WAIT			RTIMER_ARCH_SECOND/667	/* ~1.5ms. */
+
+#define CC1120_INTER_PACKET_INTERVAL	RTIMER_ARCH_SECOND/300 //275 //222
+
+#define CC1120_EN_TIMEOUT		RTIMER_ARCH_SECOND/500
+
+#define CC1120_FHSS_ETSI_50		1
+#define CC1120_FHSS_FCC_50		0
+
+#define CC1120_OFF_STATE CC1120_STATE_IDLE
+
+#define CC1120_GPIO_MODE 2
+
+#define CC1120_GPIO0_FUNC	CC1120_GPIO_MCU_WAKEUP
+//#define CC1120_GPIO0_FUNC	(CC1120_GPIO_PKT_SYNC_RXTX| CC1120_GPIO_INV_MASK)	
+#define CC1120_GPIO2_FUNC	CC1120_GPIO_RX0TX1_CFG
+//#define CC1120_GPIO3_FUNC	CC1120_GPIO_RXFIFO_THR_PKT
+//#define CC1120_GPIO3_FUNC	CC1120_GPIO_RX0TX1_CFG //CC1120_GPIO_MARC_2PIN_STATUS0	//(CC1120_GPIO_PKT_SYNC_RXTX| CC1120_GPIO_INV_MASK)								   
+											   
+/* **************************************************************************** */								   
+
+#if ZOUL_RADIO == 1120
+											   
+#define CONTIKIMAC_CONF_CCA_CHECK_TIME		RTIMER_ARCH_SECOND/1600
+#define CONTIKIMAC_CONF_CCA_COUNT_MAX		2
+#define CONTIKIMAC_CONF_WITH_PHASE_OPTIMIZATION 0
+#define RDC_CONF_HARDWARE_CSMA 0
+#define RDC_CONF_HARDWARE_ACK 1
+#define CONTIKIMAC_CONF_INTER_PACKET_INTERVAL	0	//RTIMER_ARCH_SECOND/400	/* ~2.5ms */
+#define CONTIKIMAC_CONF_CCA_SLEEP_TIME  RTIMER_ARCH_SECOND/210 //210 ~4.8ms 140			/* 140 = ~7.1ms, 286 = ~3.5ms */
+#define CONTIKIMAC_CONF_LISTEN_TIME_AFTER_PACKET_DETECTED  RTIMER_ARCH_SECOND/20	/* ~50ms */
+#define CONTIKIMAC_CONF_SHORTEST_PACKET_SIZE 36
+
+#define NULLRDC_CONF_802154_AUTOACK_HW	1
+#define CC1120_CONF_AUTOACK              1
+#define CONTIKIMAC_CONF_WITH_CONTIKIMAC_HEADER 0
+											   
+#endif
+											   
 #endif /* CONTIKI_CONF_H_ */
 
 /** @} */

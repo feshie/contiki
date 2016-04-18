@@ -51,6 +51,7 @@ void cc1120_arch_reset(void);
 void cc1120_arch_spi_enable(void);
 void cc1120_arch_spi_disable(void);
 uint8_t cc1120_arch_spi_enabled(void);
+uint8_t cc1120_arch_read_gpio2(void);
 uint8_t cc1120_arch_read_gpio3(void);
 
 uint8_t cc1120_arch_spi_rw_byte(uint8_t);

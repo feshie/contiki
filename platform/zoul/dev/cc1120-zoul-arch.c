@@ -67,8 +67,37 @@ static uint8_t enabled;
     while(!(cond) && RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + (max_time)));   \
   } while(0)
 
+#define CC1200_SPI_CLK_PORT_BASE   GPIO_PORT_TO_BASE(SPI0_CLK_PORT)
+#define CC1200_SPI_CLK_PIN_MASK    GPIO_PIN_MASK(SPI0_CLK_PIN)
+#define CC1200_SPI_MOSI_PORT_BASE  GPIO_PORT_TO_BASE(SPI0_TX_PORT)
+#define CC1200_SPI_MOSI_PIN_MASK   GPIO_PIN_MASK(SPI0_TX_PIN)
+#define CC1200_SPI_MISO_PORT_BASE  GPIO_PORT_TO_BASE(SPI0_RX_PORT)
+#define CC1200_SPI_MISO_PIN_MASK   GPIO_PIN_MASK(SPI0_RX_PIN)
+#define CC1200_SPI_CSN_PORT_BASE   GPIO_PORT_TO_BASE(CC1200_SPI_CSN_PORT)
+#define CC1200_SPI_CSN_PIN_MASK    GPIO_PIN_MASK(CC1200_SPI_CSN_PIN)
+#define CC1200_GDO0_PORT_BASE      GPIO_PORT_TO_BASE(CC1200_GDO0_PORT)
+#define CC1200_GDO0_PIN_MASK       GPIO_PIN_MASK(CC1200_GDO0_PIN)
+#define CC1200_GDO2_PORT_BASE      GPIO_PORT_TO_BASE(CC1200_GDO2_PORT)
+#define CC1200_GDO2_PIN_MASK       GPIO_PIN_MASK(CC1200_GDO2_PIN)
+#define CC1200_RESET_PORT_BASE     GPIO_PORT_TO_BASE(CC1200_RESET_PORT)
+#define CC1200_RESET_PIN_MASK      GPIO_PIN_MASK(CC1200_RESET_PIN)
+
+#if CC1120INTDEBUG || DEBUG
+	#define PRINTFINT(...) printf(__VA_ARGS__)
+#else
+	#define PRINTFINT(...) do {} while (0)
+#endif
 
 /* ---------------------------- Init Functions ----------------------------- */
+/*---------------------------------------------------------------------------*/
+void
+cc1120_int_handler(uint8_t port, uint8_t pin)
+{
+	PRINTFINT("\n\tInt\n");
+	/* To keep the gpio_register_callback happy */
+	cc1120_interrupt_handler();
+}
+
 /*---------------------------------------------------------------------------*/
 
 void
@@ -93,7 +122,7 @@ cc1120_arch_init(void)
 	GPIO_SET_INPUT(CC1200_GDO2_PORT_BASE, CC1200_GDO2_PIN_MASK);
 
 	/* Leave CSn as default */
-	cc1200_arch_spi_deselect();
+	cc1120_arch_spi_disable();
 
 	/* Ensure MISO is high */
 	BUSYWAIT_UNTIL(
@@ -116,7 +145,7 @@ cc1120_arch_pin_init(void)
 
 	ioc_set_over(CC1200_GDO0_PORT, CC1200_GDO0_PIN, IOC_OVERRIDE_PUE);
 	nvic_interrupt_enable(CC1200_GPIOx_VECTOR);
-	gpio_register_callback(cc1120_interrupt_handler, CC1200_GDO0_PORT,
+	gpio_register_callback(cc1120_int_handler, CC1200_GDO0_PORT,
 						 CC1200_GDO0_PIN);
 }
 
@@ -257,6 +286,12 @@ cc1120_arch_read_cca(void)
 
 /*---------------------------------------------------------------------------*/
 uint8_t
+cc1120_arch_read_gpio2(void)
+{
+	return GPIO_READ_PIN(CC1200_GDO2_PORT_BASE, CC1200_GDO2_PIN_MASK);
+}
+
+uint8_t
 cc1120_arch_read_gpio3(void)
 {
 	return 0;
@@ -271,6 +306,7 @@ cc1120_arch_read_gpio3(void)
 void
 cc1120_arch_interrupt_enable(void)
 {
+	PRINTFINT("\nInterrupt Enabled\n");
 	/* Reset interrupt trigger */
 	
 	/* Enable interrupt on the GDO0 pin */
@@ -281,6 +317,7 @@ cc1120_arch_interrupt_enable(void)
 void
 cc1120_arch_interrupt_disable(void)
 {
+	PRINTFINT("\nInterrupt Disabled\n");
 	/* Disable interrupt on the GDO0 pin */
 	GPIO_DISABLE_INTERRUPT(CC1200_GDO0_PORT_BASE, CC1200_GDO0_PIN_MASK);
 	/* Reset interrupt trigger */
