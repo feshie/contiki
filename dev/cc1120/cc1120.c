@@ -843,7 +843,7 @@ int
 cc1120_driver_channel_clear(void)
 {
 	PRINTF("**** Radio Driver: CCA ****\n");
-	uint8_t cca, cur_state, rssi0, off;
+	uint8_t cca, cur_state, rssi0, was_off;
 	rtimer_clock_t t0;
 
 	if(locked) {
@@ -853,7 +853,7 @@ cc1120_driver_channel_clear(void)
 	
 	if(!(radio_pending & CC1120_RX_ON)) {
 		/* Radio is off for some reason. */
-		off = 1;
+		was_off = 1;
 		on();
 	}
 		
@@ -892,7 +892,7 @@ cc1120_driver_channel_clear(void)
 		//LEDS_ON(LEDS_BLUE);
 	}
 	
-	if(off){
+	if(was_off){
 		/* If we were off, turn radio back off.*/
 		off();
 	}
@@ -1141,7 +1141,6 @@ on(void)
 		radio_pending |= CC1120_RX_ON;
 		cc1120_set_state(CC1120_STATE_RX);		/* Put radio into RX. */
 		ENERGEST_ON(ENERGEST_TYPE_LISTEN);
-		LEDS_ON(LEDS_BLUE);
 	}
 }
 
@@ -1153,7 +1152,6 @@ off(void)
 	
 	cc1120_set_state(CC1120_STATE_IDLE);		/* Set state to IDLE.  This will flush the RX FIFO if there is an error. */
 	radio_pending &= ~(CC1120_RX_ON);
-	LEDS_OFF(LEDS_BLUE);
 	ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
 	
 	cc1120_set_state(CC1120_OFF_STATE);			/* Put radio into the off state defined in platform-conf.h. */
@@ -1171,13 +1169,13 @@ CC1120_RELEASE_SPI(void)
 	locked--;
 	
 	if(locked < 0) {
-		printf("\n\r\tSTRAY CC1120_RELEASE_SPI\n\r")
+		printf("\n\r\tSTRAY CC1120_RELEASE_SPI\n\r");
 		locked = 0;
 	}
 	
 	if(locked == 0) {
 		if(radio_pending & CC1120_INTERRUPT_PENDING){
-			radio_pending &= ~(CC1120_INTERRUPT_PENDING);
+			//radio_pending &= ~(CC1120_INTERRUPT_PENDING);
 			cc1120_interrupt_handler();
 		}
 		
@@ -1211,7 +1209,7 @@ cc1120_set_state(uint8_t state)
 		cur_state = cc1120_get_state();
 	}
 	
-	if(cur_state == CC1120_STATUS_CC1120_TX_FIFO_ERROR) {
+	if(cur_state == CC1120_STATUS_TX_FIFO_ERROR) {
 		/* If there is a TX FIFO Error, clear it. */
 		cc1120_flush_tx();
 		cur_state = cc1120_get_state();
@@ -1363,7 +1361,7 @@ cc1120_set_idle(uint8_t cur_state)
 	while(cur_state != CC1120_STATUS_IDLE) {
 		PRINTFSTATE(".");
 		clock_delay(10);
-		if(cur_state == CC1120_STATUS_CC1120_TX_FIFO_ERROR) {
+		if(cur_state == CC1120_STATUS_TX_FIFO_ERROR) {
 			cc1120_spi_cmd_strobe(CC1120_STROBE_SFTX);
 		} else if(cur_state == CC1120_STATUS_RX_FIFO_ERROR) {		
 			cc1120_spi_cmd_strobe(CC1120_STROBE_SFRX);
@@ -1401,7 +1399,7 @@ cc1120_set_tx(void)
 	cur_state = cc1120_get_state();
 	while(cur_state != CC1120_STATUS_TX) {	
 		cur_state = cc1120_get_state();
-		if(cur_state == CC1120_STATUS_CC1120_TX_FIFO_ERROR) {	
+		if(cur_state == CC1120_STATUS_TX_FIFO_ERROR) {	
 			/* TX FIFO Error - flush TX. */	
 			return cc1120_flush_tx();
 		}
@@ -1422,13 +1420,13 @@ cc1120_flush_rx(void)
 	
 	if((cur_state != CC1120_STATUS_IDLE) && (cur_state != CC1120_STATUS_RX_FIFO_ERROR)) {
 		/* If not in IDLE or TXERROR, get to IDLE. */
-		if(cur_state == CC1120_STATUS_CC1120_TX_FIFO_ERROR) {
+		if(cur_state == CC1120_STATUS_TX_FIFO_ERROR) {
 			/* TX FIFO Error.  Flush TX FIFO. */
 			cc1120_spi_cmd_strobe(CC1120_STROBE_SFTX);
 		}
 		while((cur_state != CC1120_STATUS_IDLE) 
 				&& RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + (RTIMER_SECOND / 10))) {
-			if(cur_state == CC1120_STATUS_CC1120_TX_FIFO_ERROR) {
+			if(cur_state == CC1120_STATUS_TX_FIFO_ERROR) {
 				/* TX FIFO Error.  Flush TX FIFO. */
 				cc1120_spi_cmd_strobe(CC1120_STROBE_SFTX);
 			}
@@ -1459,7 +1457,7 @@ cc1120_flush_tx(void)
 	uint8_t cur_state = cc1120_get_state();
 	rtimer_clock_t t0 = RTIMER_NOW();
 	
-	if((cur_state != CC1120_STATUS_IDLE) && (cur_state != CC1120_STATUS_CC1120_TX_FIFO_ERROR)) {
+	if((cur_state != CC1120_STATUS_IDLE) && (cur_state != CC1120_STATUS_TX_FIFO_ERROR)) {
 		/* If not in IDLE or TXERROR, get to IDLE. */
 		if(cur_state == CC1120_STATUS_RX_FIFO_ERROR) {
 			/* RX FIFO Error.  Flush RX FIFO. */
@@ -1485,7 +1483,7 @@ cc1120_flush_tx(void)
 	/* Spin until we have flushed TX and are in IDLE. */
 	while((cur_state != CC1120_STATUS_IDLE) 
 			&& RTIMER_CLOCK_LT(RTIMER_NOW(), t0 + (RTIMER_SECOND / 5))) {
-		if(cur_state == CC1120_STATUS_CC1120_TX_FIFO_ERROR) {
+		if(cur_state == CC1120_STATUS_TX_FIFO_ERROR) {
 			/* (Another) TX FIFO error, flush. */
 			cc1120_spi_cmd_strobe(CC1120_STROBE_SFTX);
 		} else if(cur_state == CC1120_STATUS_RX_FIFO_ERROR) {
@@ -1696,15 +1694,23 @@ int
 cc1120_interrupt_handler(void)
 {
 	uint8_t marc_status;
-	//LEDS_ON(LEDS_BLUE);
+	LEDS_ON(LEDS_BLUE);
 	cc1120_arch_interrupt_acknowledge();
 	
 	/* Check if we have interrupted an SPI function, if so flag that interrupt is pending. */
 	if(locked) {
-		radio_pending != INTERRUPT_PENDING;
+		printf("  Deferring Int. ");
+		radio_pending |= CC1120_INTERRUPT_PENDING;
+		return 0;
 	}
 	
 	marc_status = cc1120_spi_single_read(CC1120_ADDR_MARC_STATUS1);
+	
+	if(radio_pending & CC1120_INTERRUPT_PENDING) {
+		printf("  Deferred int: MARC 0x%02x  ", marc_status);
+		radio_pending &= ~(CC1120_INTERRUPT_PENDING);
+	}
+	
 	if(marc_status == CC1120_MARC_STATUS_OUT_NO_FAILURE) {
 		LEDS_OFF(LEDS_BLUE);
 		return 0;
@@ -1721,6 +1727,7 @@ cc1120_interrupt_handler(void)
 		
 		/* We have received a packet.  This is done first to make RX faster. */
 		packet_pending++;
+		printf(" + ");
 		
 		process_poll(&cc1120_process);
 		LEDS_OFF(LEDS_BLUE);
@@ -1802,7 +1809,7 @@ cc1120_interrupt_handler(void)
 		default:
 			break;
 	}	
-	//LEDS_OFF(LEDS_BLUE);
+	LEDS_OFF(LEDS_BLUE);
 	return 1;
 }
 
@@ -1832,11 +1839,6 @@ void processor(void)
 	PRINTFPROC("** Process Poll **\n");
 	LEDS_ON(LEDS_RED);
 	watchdog_periodic();	
-	
-	/* Check if we have interrupted an SPI function, if so disable SPI. */
-	if(cc1120_arch_spi_enabled()) {
-		cc1120_arch_spi_disable();
-	}	
 	
 	len = cc1120_driver_read_packet(buf, CC1120_MAX_PAYLOAD);
 	
