@@ -114,6 +114,8 @@ cc1120_arch_init(void)
 
 	/* Initialize SPI */
 	spix_init(CC1200_SPI_INSTANCE);
+	spix_set_mode(CC1200_SPI_INSTANCE, SSI_CR0_FRF_MOTOROLA,
+                   0, 0, 8);
 
 	/* Configure GPIOx */
 	GPIO_SOFTWARE_CONTROL(CC1200_GDO0_PORT_BASE, CC1200_GDO0_PIN_MASK);

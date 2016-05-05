@@ -60,7 +60,7 @@ cc1200_register_config(void)
    cc1120_spi_single_write(CC1200_ADDR_AGC_CS_THR, 0xF1);      // Carrier Sense Threshold Configuration.
    cc1120_spi_single_write(CC1200_ADDR_AGC_CFG1, 0x11);        // Automatic Gain Control Configuration Reg. 1.
    cc1120_spi_single_write(CC1200_ADDR_AGC_CFG0, 0x90);        // Automatic Gain Control Configuration Reg. 0.
-   cc1120_spi_single_write(CC1200_ADDR_FIFO_CFG, 0x00);        // FIFO Configuration.
+   cc1120_spi_single_write(CC1200_ADDR_FIFO_CFG, 0x80);        // FIFO Configuration.
    cc1120_spi_single_write(CC1200_ADDR_FS_CFG, 0x12);          // Frequency Synthesizer Configuration.
    cc1120_spi_single_write(CC1200_ADDR_PKT_CFG0, 0x20);        // Packet Configuration Reg. 0.
    cc1120_spi_single_write(CC1200_ADDR_PA_CFG0, 0x53);         // Power Amplifier Configuration Reg. 0.
