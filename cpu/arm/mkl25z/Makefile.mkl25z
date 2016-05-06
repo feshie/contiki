@@ -1,0 +1,142 @@
+# Code common for all ARM CPUs
+CONTIKI_CPU_ARM=$(CONTIKI)/cpu/arm
+CONTIKI_CPU_ARM_COMMON=$(CONTIKI_CPU_ARM)/common
+
+# Define the CPU directory
+CONTIKI_CPU=$(CONTIKI_CPU_ARM)/mkl25z
+MCU = cortex-m0plus
+
+ifeq ($(V),1)
+  TRACE_CC =
+  TRACE_LD =
+  TRACE_AR =
+  TRACE_AS =
+  Q=
+else
+  TRACE_CC = @echo "  CC       " $<
+  TRACE_LD = @echo "  LD       " $@
+  TRACE_AS = @echo "  AS       " $<
+  TRACE_AS = @echo "  AS       " $<
+  Q=@
+endif
+
+CC      = arm-none-eabi-gcc
+AS      = $(CC) -x assembler-with-cpp
+CPP     = arm-none-eabi-cpp
+CP      = arm-none-eabi-objcopy
+LD      = arm-none-eabi-ld
+AR      = arm-none-eabi-ar
+OBJCOPY = arm-none-eabi-objcopy
+OBJDUMP = arm-none-eabi-objdump
+NM      = arm-none-eabi-nm
+SIZE    = arm-none-eabi-size
+STRIP   = arm-none-eabi-strip
+HEX     = $(OBJCOPY) -O ihex
+BIN     = $(OBJCOPY) -O binary -S
+S19     = $(OBJCOPY) -O srec
+
+MKL25Z = watchdog.c startup.c clock.c debug-uart.c rtimer-arch.c serial.c spi.c nvic.c cpu.c system_MKL25Z4.c gpio.c
+MKL25ZASM = startup_MKL25Z4.S
+
+LDSCRIPT = $(CONTIKI_CPU)/MKL25Z128_flash.ld
+
+ARCH_FLAGS = -mthumb -gdwarf-2 -fomit-frame-pointer -Wall -fverbose-asm -fdata-sections -ffunction-sections -Wno-strict-aliasing
+MCFLAGS = -mcpu=$(MCU)
+OPT = -O0
+
+# -Wa,-ahlms=$(<:.c=.lst)
+CFLAGS += $(MCFLAGS) $(OPT) $(ARCH_FLAGS)  -DAUTOSTART_ENABLE -DCLOCK_SETUP=1
+LDFLAGS += $(MCFLAGS) -mthumb -nostartfiles -T$(LDSCRIPT) -Wl,--gc-sections,-Map=$(FULL_PRJ).map,--cref,--no-warn-mismatch -lc -lm -lgcc -lnosys
+ASFLAGS = $(MCFLAGS) -g -gdwarf-2 -mthumb 
+
+### If the user-specified a Node ID, pass a define
+ifdef NODEID
+  CFLAGS += -DIEEE_ADDR_NODE_ID=$(NODEID)
+endif
+
+### CPU-dependent cleanup files
+CLEAN += symbols.c symbols.h *.d *.elf *.hex *.srec *.s19
+
+### CPU-dependent directories
+CONTIKI_CPU_DIRS = . dev ../common/dbg-io ../common/CMSIS
+
+### CPU-dependent source files
+DEBUG_IO_SOURCEFILES += dbg-printf.c dbg-puts.c dbg-putchar.c dbg-snprintf.c dbg-sprintf.c strformat.c
+
+CONTIKI_SOURCEFILES += $(MKL25Z) $(DEBUG_IO_SOURCEFILES) $(CONTIKI_TARGET_SOURCEFILES)
+
+PROJECT_OBJECTFILES += ${addprefix $(OBJECTDIR)/,$(CONTIKI_TARGET_MAIN:.c=.o)}
+ASM_OBJECTFILES += ${addprefix $(OBJECTDIR)/,$(MKL25ZASM:.S=.o)}
+
+
+### Don't treat the .elf as intermediate
+.PRECIOUS: %.elf %.hex %.bin %.srec %.s19
+
+### Always re-build ieee-addr.o in case the command line passes a new NODEID
+FORCE:
+
+$(OBJECTDIR)/ieee-addr.o: ieee-addr.c FORCE | $(OBJECTDIR)
+	$(TRACE_CC)
+	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+
+### Compilation rules
+
+CUSTOM_RULE_C_TO_O=yes
+%.o: %.c
+	$(TRACE_CC)
+	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+
+CUSTOM_RULE_C_TO_OBJECTDIR_O=yes
+$(OBJECTDIR)/%.o: %.c | $(OBJECTDIR)
+	$(TRACE_CC)
+	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+	
+CUSTOM_RULE_S_TO_O = yes
+%.o: %.S
+	$(TRACE_AS)
+	$(Q)$(AS) -c $(ASFLAGS) $< -o $@
+
+CUSTOM_RULE_S_TO_OBJECTDIR_O = yes
+$(OBJECTDIR)/%.o: %.S | $(OBJECTDIR)
+	$(TRACE_AS)
+	$(Q)$(AS) -c $(ASFLAGS) $< -o $@	
+
+CUSTOM_RULE_C_TO_CO=yes
+%.co: %.c
+	$(TRACE_CC)
+	$(Q)$(CC) $(CFLAGS) $< -c -o $@	
+	
+CUSTOM_RULE_C_TO_CE=yes
+%.ce: %.o
+	$(CC) $(LDFLAGS) --relocatable $< -o $@
+	$(STRIP) -K _init -K _fini --strip-unneeded -g -x $@	
+	
+CUSTOM_RULE_LINK=1
+%.elf: %.co $(ASM_OBJECTFILES) $(CONTIKI_OBJECTFILES) contiki-$(TARGET).a $(LDSCRIPT)
+	$(TRACE_LD)
+	$(Q)$(CC) $(LDFLAGS) ${filter-out $(LDSCRIPT) %.a,$^} ${filter %.a,$^} -lm -o $@
+
+%.hex: %.elf
+	$(HEX) $< $@
+
+%.srec: %.elf
+	$(SIZE) $<
+	$(S19) $< $@
+
+test: 
+	@echo "Project OBJFILES = $(PROJECT_OBJECTFILES)"
+	@echo "Contiki OBJFILES = $(CONTIKI_OBJECTFILES)"
+
+
+### We don't really need the .hex and .bin for the .$(TARGET) but let's make
+### sure they get built
+
+clean: clean_cpu
+
+.PHONY: mkl25z_clean
+
+clean_cpu:
+	-rm -rf $(BUILTSRCDIR)
+	-rm -rf $(CONTIKI_PROJECT)-nosyms.$(TARGET) *.elf *.srec *.hex
+
+

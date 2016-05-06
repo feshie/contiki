@@ -1,0 +1,18 @@
+MKL25ZRF =  
+
+CONTIKI_TARGET_DIRS = $(CONTIKI)/dev/cc1120 $(CONTIKI)/core/net ./dev
+
+CFLAGS+= -DWITH_UIP6 -DUIP_CONF_IPV6 -DAUTOSTART_ENABLE 
+
+MCK = 48000000
+#CPLATFLAGS +=  
+
+
+CONTIKI_TARGET_SOURCEFILES += contiki-main.c cc1120-mkl25z-rf-arch.c leds-arch.c
+
+MODULES += core/net core/net/mac core/net/mac/contikimac core/net/llsec dev/cc1120
+
+include $(CONTIKI)/cpu/arm/mkl25z/Makefile.mkl25z
+
+
+
