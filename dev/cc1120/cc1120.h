@@ -25,8 +25,9 @@
 #include <string.h>
 #include <stdio.h>
 
-#define CC1120_MAX_PAYLOAD 125
-#define CC1120_MIN_PAYLOAD 3
+#define CC1120_MAX_PAYLOAD 	125
+#define CC1120_MIN_PAYLOAD 	3
+#define CC1120_TX_ERR_COUNT	5
 
 #if CC1120_FHSS_FCC_50 && CC1120_FHSS_ETSI_50
 #error Error: FHSS, both CC1120_FHSS_ETSI_50 and CC1120_FHSS_FCC_50 defined. Please set only one.

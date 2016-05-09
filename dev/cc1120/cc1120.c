@@ -175,7 +175,7 @@ const struct radio_driver cc1120_driver = {
 
 /* ------------------- Internal variables -------------------------------- */
 static volatile uint8_t ack_tx, current_channel, next_channel, packet_pending, broadcast, ack_seq, tx_seq, 
-				rx_rssi, rx_lqi, lbt_success, radio_pending, txfirst, txlast = 0;
+				rx_rssi, rx_lqi, lbt_success, radio_pending, txfirst, txlast, tx_err = 0;
 static uint8_t locked, lock_on, lock_off, radio_part;
 
 static uint8_t ack_buf[ACK_LEN];
@@ -336,7 +336,7 @@ cc1120_driver_transmit(unsigned short transmit_len)
 	
 	/* check if this is a retransmission */
 	txbytes = cc1120_read_txbytes();
-	if(txbytes == 0) {
+	if((txbytes == 0) && (txfirst != txlast)) {
 		PRINTFTX("\tRetransmit last packet.\n");
 
 		/* Retransmit last packet. */
@@ -507,6 +507,8 @@ cc1120_driver_transmit(unsigned short transmit_len)
 		if(radio_pending & CC1120_TX_FIFO_ERROR) {
 			/* TX FIFO has underflowed during TX.  Need to flush TX FIFO. */
 			cc1120_flush_tx();
+			txfirst = 0;
+			txlast = 0;
 			break;
 		}
 		
@@ -538,10 +540,52 @@ cc1120_driver_transmit(unsigned short transmit_len)
 	radio_pending &= ~(CC1120_TRANSMITTING);
 	t0 = RTIMER_NOW();
 		
-	if(cc1120_read_txbytes() > 0) {	
-		PRINTFTXERR("\tTX NOT OK %d, %d.\n",(radio_pending & CC1120_TX_COMPLETE), cc1120_read_txbytes() );	
-		cc1120_flush_tx();		/* Flush TX FIFO. */
-		cc1120_flush_rx();		/* Flush RX FIFO. */
+	if(cc1120_read_txbytes() > 0) {			
+		if(tx_err > CC1120_TX_ERR_COUNT) {
+			/* Reset the radio. */
+			PRINTFTXERR("\tTX !OK - Radio reset.\n");
+			cc1120_arch_reset();
+			radio_part = cc1120_spi_single_read(CC1120_ADDR_PARTNUMBER);
+			switch(radio_part) {
+				case CC1120_PART_NUM_CC1120:
+					cc1120_register_config();
+					cc1120_spi_single_write(CC1120_ADDR_PKT_CFG1, 0x05);
+					cc1120_spi_single_write(CC1120_ADDR_FIFO_CFG, 0x80);		
+					cc1120_spi_single_write(CC1120_ADDR_AGC_GAIN_ADJUST, (CC1120_RSSI_OFFSET));
+					cc1120_spi_single_write(CC1120_ADDR_AGC_CS_THR, (CC1120_CS_THRESHOLD));   	
+					break;
+				case CC1120_PART_NUM_CC1121:
+					break;
+				case CC1120_PART_NUM_CC1125:
+					break;
+				case CC1120_PART_NUM_CC1200:
+					cc1200_register_config();
+					cc1120_spi_single_write(CC1200_ADDR_PKT_CFG1, 0x03);		                    
+					cc1120_spi_single_write(CC1200_ADDR_FIFO_CFG, 0x80);		                    		
+					cc1120_spi_single_write(CC1200_ADDR_AGC_GAIN_ADJUST, (CC1120_RSSI_OFFSET));	
+					cc1120_spi_single_write(CC1200_ADDR_AGC_CS_THR, (CC1120_CS_THRESHOLD));   	
+					break;
+				case CC1120_PART_NUM_CC1201:
+					break;
+				default:	/* Not a supported chip or no chip present... */
+					printf("*** ERROR: No Radio ***\n");
+					while(1)	/* Spin ad infinitum as we cannot continue. */
+					{
+						watchdog_periodic();	/* Feed the dog to stop reboots. */
+					}
+					break;
+			}
+			cc1120_set_channel(next_channel);
+			tx_err = 0;
+			txfirst = 0;
+			txlast = 0;
+			
+		} else {
+			PRINTFTXERR("\tTX !OK %d.\n", cc1120_read_txbytes() );
+			tx_err++;	
+			cc1120_flush_tx();		/* Flush TX FIFO. */
+			cc1120_flush_rx();		/* Flush RX FIFO. */
+		}
 		radio_pending &= ~(CC1120_ACK_PENDING);
 		if(radio_pending & CC1120_RX_ON) {
 			on();
@@ -550,7 +594,8 @@ cc1120_driver_transmit(unsigned short transmit_len)
 		return RADIO_TX_ERR;
 	} else {
 		PRINTFTX("\tTX OK.\n");
-		
+		tx_err = 0;
+
 		cur_state = cc1120_get_state();
 		marc_state = cc1120_spi_single_read(CC1120_ADDR_MARCSTATE) & 0x1F;	
 		
@@ -884,7 +929,6 @@ cc1120_driver_channel_clear(void)
 	cur_state = cc1120_get_state();
 	
 	while((cur_state == CC1200_STATUS_CALIBRATE) || (cur_state == CC1200_STATUS_SETTLING)) {
-		printf("  S = 0x%2x", cur_state);
 		cur_state = cc1120_get_state();
 	}
 
@@ -1014,7 +1058,6 @@ cc1120_driver_off(void)
 		/* Radio is locked, indicate that we want to turn off. */
 		lock_off = 1;
 		lock_on = 0;
-		printf(" LF ");
 		return 1;
 	}
 	
