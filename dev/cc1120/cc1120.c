@@ -748,6 +748,8 @@ cc1120_driver_read_packet(void *buf, unsigned short buf_len)
 			/* Work out if we need to send an ACK. */
 			if(linkaddr_cmp(&dest, &linkaddr_node_addr)) {
 				PRINTFRX("\tSending ACK\n");
+
+
 				
 				cc1120_spi_disable();                                                
 				watchdog_periodic();	/* Feed the dog to stop reboots. */
@@ -756,7 +758,8 @@ cc1120_driver_read_packet(void *buf, unsigned short buf_len)
 				ack_buf[0] = ACK_FRAME_CONTROL_LSO;
 				ack_buf[1] = ACK_FRAME_CONTROL_MSO;
 				ack_buf[2] = ((uint8_t *)buf)[2];
-				
+
+				radio_pending |= CC1120_TRANSMITTING;				
 				radio_pending &= ~(CC1120_TX_COMPLETE);
 				
 				/* Make sure that the TX FIFO is empty & write ACK to it. */
@@ -809,6 +812,7 @@ cc1120_driver_read_packet(void *buf, unsigned short buf_len)
 					}
 				}
 				cc1120_flush_tx();			/* Make sure that the TX FIFO is empty. */
+				radio_pending &= ~(CC1120_TRANSMITTING);
 				
 				cc1120_arch_spi_enable();	/* Re-enable burst access to read remaining data. */
 				(void) cc1120_arch_spi_rw_byte(CC1120_FIFO_ACCESS | CC1120_BURST_BIT | CC1120_READ_BIT);
@@ -862,6 +866,11 @@ cc1120_driver_channel_clear(void)
 		PRINTF("SPI Locked\n");
 		return 0;
 	}
+
+	if(radio_pending & CC1120_TRANSMITTING) {
+		/* cannot be clear in TX. */
+		return 0;
+	}
 	
 	if(!(radio_pending & CC1120_RX_ON)) {
 		/* Radio is off for some reason. */
@@ -878,11 +887,13 @@ cc1120_driver_channel_clear(void)
 		printf("  S = 0x%2x", cur_state);
 		cur_state = cc1120_get_state();
 	}
-	
+
 	if(cur_state != CC1120_STATUS_RX ) {
 		/* Not in RX... */
-		printf("\nnRX%02x", cur_state);
+		//printf("\nnRX%02x", cur_state);
 		on();
+		//CC1120_RELEASE_SPI();
+		//return 0;
 	}
 	
 	if(cc1120_spi_single_read(CC1120_ADDR_MODEM_STATUS1) & CC1120_MODEM_STATUS1_SYNC_FOUND) {
@@ -890,9 +901,22 @@ cc1120_driver_channel_clear(void)
 		cca = 0;
 	} else {
 		/* Wait till the CARRIER_SENSE is valid. */
+		watchdog_periodic();
+		clock_wait(CLOCK_SECOND/200);	/* Wait for 5ms. */
 		rssi0 = cc1120_spi_single_read(CC1120_ADDR_RSSI0);
 		t0 = RTIMER_NOW();
 		while(!(rssi0 & CC1120_CARRIER_SENSE_VALID)) {
+			cur_state = cc1120_get_state();
+			if((radio_pending & CC1120_TRANSMITTING) || (cur_state == CC1120_STATUS_TX)) {
+				/* We have started a TX. cannot be clear in TX. */
+				CC1120_RELEASE_SPI();
+				return 0;
+			}	
+			if((cur_state == CC1200_STATUS_CALIBRATE) || (cur_state == CC1200_STATUS_SETTLING)) {
+				CC1120_RELEASE_SPI();
+				return 0;
+			}
+			
 			if(RTIMER_CLOCK_LT((t0 + RTIMER_SECOND/10), RTIMER_NOW())) {
 				printf("\t RSSI Timeout, RSSI0 = 0x%02x, state = 0x%02x.\n", rssi0, cc1120_get_state());		
 			
@@ -1760,7 +1784,7 @@ cc1120_interrupt_handler(void)
 	if(cc1120_arch_spi_enabled()) {
 		if(locked) {
 			radio_pending |= CC1120_INTERRUPT_PENDING;
-			printf(" D ");
+			//printf(" D ");
 			return 0;
 		} else {
 			cc1120_spi_disable();	
