@@ -174,9 +174,9 @@ const struct radio_driver cc1120_driver = {
 
 
 /* ------------------- Internal variables -------------------------------- */
-static volatile uint8_t ack_tx, current_channel, next_channel, packet_pending, broadcast, ack_seq, tx_seq, 
-				rx_rssi, rx_lqi, lbt_success, radio_pending, txfirst, txlast, tx_err = 0;
-static uint8_t locked, lock_on, lock_off, radio_part;
+static volatile uint8_t ack_tx, current_channel, next_channel, packet_pending, broadcast, ack_seq, tx_seq = 0;
+static volatile uint8_t rx_rssi, rx_lqi, lbt_success, radio_pending, txfirst, txlast, tx_err = 0;
+static volatile uint8_t locked, lock_on, lock_off, radio_part = 0;
 
 static uint8_t ack_buf[ACK_LEN];
 static uint8_t tx_buf[CC1120_MAX_PAYLOAD];
@@ -543,7 +543,7 @@ cc1120_driver_transmit(unsigned short transmit_len)
 	if(cc1120_read_txbytes() > 0) {			
 		if(tx_err > CC1120_TX_ERR_COUNT) {
 			/* Reset the radio. */
-			PRINTFTXERR("\tTX !OK - Radio reset.\n");
+			PRINTFTXERR("\tTX !OK - Radio reset... ");
 			cc1120_arch_reset();
 			radio_part = cc1120_spi_single_read(CC1120_ADDR_PARTNUMBER);
 			switch(radio_part) {
@@ -579,6 +579,7 @@ cc1120_driver_transmit(unsigned short transmit_len)
 			tx_err = 0;
 			txfirst = 0;
 			txlast = 0;
+			printf("OK!\n");
 			
 		} else {
 			PRINTFTXERR("\tTX !OK %d.\n", cc1120_read_txbytes() );
