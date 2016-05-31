@@ -5,6 +5,11 @@ They have been developed to run on the Zolertia z1 platform,
 but could be ported to other platforms.
 External sensors (such as an RTC) may be required.
 
+### Build environment
+on ubuntu16:
+copy the msp430 dir in /opt - which is version 4.7.2
+sudo apt-get install zlib1g:i386 binutils-msp430 msp430-libc msp430mcu mspdebug
+
 ### Applications
 
 #### `z1-coap`
