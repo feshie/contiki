@@ -8,7 +8,8 @@ External sensors (such as an RTC) may be required.
 ### Build environment
 on ubuntu16:
 copy the msp430 dir in /opt - which is version 4.7.2
-sudo apt-get install zlib1g:i386 binutils-msp430 msp430-libc msp430mcu mspdebug
+sudo apt-get install zlib1g:i386 
+still investigating how to use the latest of these as default packages fail somewhere: binutils-msp430 msp430-libc msp430mcu mspdebug
 
 ### Applications
 
