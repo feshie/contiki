@@ -59,7 +59,7 @@
 #else /* TSCH_LOG_LEVEL */
 #define DEBUG DEBUG_NONE
 #endif /* TSCH_LOG_LEVEL */
-#include "net/ip/uip-debug.h"
+#include "net/net-debug.h"
 
 /* TSCH debug macros, i.e. to set LEDs or GPIOs on various TSCH
  * timeslot events */
@@ -404,10 +404,10 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
     } else {
       /* packet payload */
       static void *packet;
-#if TSCH_SECURITY_ENABLED
+#if LLSEC802154_ENABLED
       /* encrypted payload */
       static uint8_t encrypted_packet[TSCH_PACKET_MAX_LEN];
-#endif /* TSCH_SECURITY_ENABLED */
+#endif /* LLSEC802154_ENABLED */
       /* packet payload length */
       static uint8_t packet_len;
       /* packet seqno */
@@ -434,7 +434,7 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
         packet_ready = 1;
       }
 
-#if TSCH_SECURITY_ENABLED
+#if LLSEC802154_ENABLED
       if(tsch_is_pan_secured) {
         /* If we are going to encrypt, we need to generate the output in a separate buffer and keep
          * the original untouched. This is to allow for future retransmissions. */
@@ -445,7 +445,7 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
           packet = encrypted_packet;
         }
       }
-#endif /* TSCH_SECURITY_ENABLED */
+#endif /* LLSEC802154_ENABLED */
 
       /* prepare packet to send: copy to radio buffer */
       if(packet_ready && NETSTACK_RADIO.prepare(packet, packet_len) == 0) { /* 0 means success */
@@ -493,9 +493,11 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
               uint8_t ack_hdrlen;
               frame802154_t frame;
 
+#if TSCH_HW_FRAME_FILTERING
               /* Entering promiscuous mode so that the radio accepts the enhanced ACK */
               NETSTACK_RADIO.get_value(RADIO_PARAM_RX_MODE, &radio_rx_mode);
               NETSTACK_RADIO.set_value(RADIO_PARAM_RX_MODE, radio_rx_mode & (~RADIO_RX_MODE_ADDRESS_FILTER));
+#endif /* TSCH_HW_FRAME_FILTERING */
               /* Unicast: wait for ack after tx: sleep until ack time */
               TSCH_SCHEDULE_AND_YIELD(pt, t, current_slot_start,
                   tsch_timing[tsch_ts_tx_offset] + tx_duration + tsch_timing[tsch_ts_rx_ack_delay] - RADIO_DELAY_BEFORE_RX, "TxBeforeAck");
@@ -506,7 +508,7 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
                   tx_start_time, tx_duration + tsch_timing[tsch_ts_rx_ack_delay] + tsch_timing[tsch_ts_ack_wait]);
               TSCH_DEBUG_TX_EVENT();
 
-              ack_start_time = RTIMER_NOW();
+              ack_start_time = RTIMER_NOW() - RADIO_DELAY_BEFORE_DETECT;
 
               /* Wait for ACK to finish */
               BUSYWAIT_UNTIL_ABS(!NETSTACK_RADIO.receiving_packet(),
@@ -514,9 +516,11 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
               TSCH_DEBUG_TX_EVENT();
               NETSTACK_RADIO.off();
 
+#if TSCH_HW_FRAME_FILTERING
               /* Leaving promiscuous mode */
               NETSTACK_RADIO.get_value(RADIO_PARAM_RX_MODE, &radio_rx_mode);
               NETSTACK_RADIO.set_value(RADIO_PARAM_RX_MODE, radio_rx_mode | RADIO_RX_MODE_ADDRESS_FILTER);
+#endif /* TSCH_HW_FRAME_FILTERING */
 
               /* Read ack frame */
               ack_len = NETSTACK_RADIO.read((void *)ackbuf, sizeof(ackbuf));
@@ -530,7 +534,7 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
                   ack_len = 0;
                 }
 
-#if TSCH_SECURITY_ENABLED
+#if LLSEC802154_ENABLED
                 if(ack_len != 0) {
                   if(!tsch_security_parse_frame(ackbuf, ack_hdrlen, ack_len - ack_hdrlen - tsch_security_mic_len(&frame),
                       &frame, &current_neighbor->addr, &current_asn)) {
@@ -544,7 +548,7 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
                       snprintf(log->message, sizeof(log->message),
                       "!failed to parse ACK"));
                 }
-#endif /* TSCH_SECURITY_ENABLED */
+#endif /* LLSEC802154_ENABLED */
               }
 
               if(ack_len != 0) {
@@ -604,7 +608,11 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
     log->tx.drift = drift_correction;
     log->tx.drift_used = is_drift_correction_used;
     log->tx.is_data = ((((uint8_t *)(queuebuf_dataptr(current_packet->qb)))[0]) & 7) == FRAME802154_DATAFRAME;
+#if LLSEC802154_ENABLED
     log->tx.sec_level = queuebuf_attr(current_packet->qb, PACKETBUF_ATTR_SECURITY_LEVEL);
+#else /* LLSEC802154_ENABLED */
+    log->tx.sec_level = 0;
+#endif /* LLSEC802154_ENABLED */
     log->tx.dest = TSCH_LOG_ID_FROM_LINKADDR(queuebuf_addr(current_packet->qb, PACKETBUF_ADDR_RECEIVER));
     );
 
@@ -708,7 +716,7 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
 
         packet_duration = TSCH_PACKET_DURATION(current_input->len);
 
-#if TSCH_SECURITY_ENABLED
+#if LLSEC802154_ENABLED
         /* Decrypt and verify incoming frame */
         if(frame_valid) {
           if(tsch_security_parse_frame(
@@ -727,13 +735,13 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
               "!failed to parse frame %u %u", header_len, current_input->len));
           frame_valid = 0;
         }
-#endif /* TSCH_SECURITY_ENABLED */
+#endif /* LLSEC802154_ENABLED */
 
         if(frame_valid) {
           if(linkaddr_cmp(&destination_address, &linkaddr_node_addr)
              || linkaddr_cmp(&destination_address, &linkaddr_null)) {
             int do_nack = 0;
-            estimated_drift = ((int32_t)expected_rx_time - (int32_t)rx_start_time);
+            estimated_drift = RTIMER_CLOCK_DIFF(expected_rx_time, rx_start_time);
 
 #if TSCH_TIMESYNC_REMOVE_JITTER
             /* remove jitter due to measurement errors */
@@ -761,12 +769,12 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
               ack_len = tsch_packet_create_eack(ack_buf, sizeof(ack_buf),
                   &source_address, frame.seq, (int16_t)RTIMERTICKS_TO_US(estimated_drift), do_nack);
 
-#if TSCH_SECURITY_ENABLED
+#if LLSEC802154_ENABLED
               if(tsch_is_pan_secured) {
                 /* Secure ACK frame. There is only header and header IEs, therefore data len == 0. */
                 ack_len += tsch_security_secure_frame(ack_buf, ack_buf, ack_len, 0, &current_asn);
               }
-#endif /* TSCH_SECURITY_ENABLED */
+#endif /* LLSEC802154_ENABLED */
 
               /* Copy to radio buffer */
               NETSTACK_RADIO.prepare((const void *)ack_buf, ack_len);
@@ -776,6 +784,7 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
                   packet_duration + tsch_timing[tsch_ts_tx_ack_delay] - RADIO_DELAY_BEFORE_TX, "RxBeforeAck");
               TSCH_DEBUG_RX_EVENT();
               NETSTACK_RADIO.transmit(ack_len);
+              NETSTACK_RADIO.off();
             }
 
             /* If the sender is a time source, proceed to clock drift compensation */
@@ -804,12 +813,6 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
               log->rx.is_data = frame.fcf.frame_type == FRAME802154_DATAFRAME;
               log->rx.sec_level = frame.aux_hdr.security_control.security_level;
               log->rx.estimated_drift = estimated_drift;
-            );
-          } else {
-            TSCH_LOG_ADD(tsch_log_message,
-                  snprintf(log->message, sizeof(log->message),
-                      "!not for us %x:%x",
-                      destination_address.u8[LINKADDR_SIZE - 2], destination_address.u8[LINKADDR_SIZE - 1]);
             );
           }
 

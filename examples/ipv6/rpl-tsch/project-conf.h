@@ -67,13 +67,19 @@
 #define TSCH_CALLBACK_JOINING_NETWORK tsch_rpl_callback_joining_network
 #define TSCH_CALLBACK_LEAVING_NETWORK tsch_rpl_callback_leaving_network
 
+/* Needed for CC2538 platforms only */
+/* For TSCH we have to use the more accurate crystal oscillator
+ * by default the RC oscillator is activated */
+#undef SYS_CTRL_CONF_OSC32K_USE_XTAL
+#define SYS_CTRL_CONF_OSC32K_USE_XTAL 1
+
 /* Needed for cc2420 platforms only */
 /* Disable DCO calibration (uses timerB) */
 #undef DCOSYNCH_CONF_ENABLED
-#define DCOSYNCH_CONF_ENABLED            0
+#define DCOSYNCH_CONF_ENABLED 0
 /* Enable SFD timestamps (uses timerB) */
 #undef CC2420_CONF_SFD_TIMESTAMPS
-#define CC2420_CONF_SFD_TIMESTAMPS       1
+#define CC2420_CONF_SFD_TIMESTAMPS 1
 
 /*******************************************************/
 /******************* Configure TSCH ********************/
@@ -100,8 +106,8 @@
 #if WITH_SECURITY
 
 /* Enable security */
-#undef LLSEC802154_CONF_SECURITY_LEVEL
-#define LLSEC802154_CONF_SECURITY_LEVEL 1
+#undef LLSEC802154_CONF_ENABLED
+#define LLSEC802154_CONF_ENABLED 1
 /* TSCH uses explicit keys to identify k1 and k2 */
 #undef LLSEC802154_CONF_USES_EXPLICIT_KEYS
 #define LLSEC802154_CONF_USES_EXPLICIT_KEYS 1
@@ -133,7 +139,7 @@
 #undef UIP_CONF_TCP
 #define UIP_CONF_TCP 0
 #undef QUEUEBUF_CONF_NUM
-#define QUEUEBUF_CONF_NUM 4
+#define QUEUEBUF_CONF_NUM 3
 #undef UIP_CONF_MAX_ROUTES
 #define UIP_CONF_MAX_ROUTES  8
 #undef NBR_TABLE_CONF_MAX_NEIGHBORS
@@ -153,7 +159,7 @@
 #define TSCH_SCHEDULE_CONF_DEFAULT_LENGTH 2
 /* Reduce log level to make space for security on z1 */
 #undef TSCH_LOG_CONF_LEVEL
-#define TSCH_LOG_CONF_LEVEL 1
+#define TSCH_LOG_CONF_LEVEL 0
 #endif /* WITH_SECURITY */
 
 #endif /* CONTIKI_TARGET_Z1 */

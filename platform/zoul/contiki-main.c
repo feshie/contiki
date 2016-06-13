@@ -70,6 +70,7 @@
 
 #include "sys/autostart.h"
 
+#include "soc.h"
 #include "cpu.h"
 #include "reg.h"
 #include "ieee-addr.h"
@@ -202,6 +203,9 @@ main(void)
 
   PUTS(CONTIKI_VERSION_STRING);
   PUTS(BOARD_STRING);
+#if STARTUP_CONF_VERBOSE
+  soc_print_info();
+#endif
 
   /* Initialise the H/W RNG engine. */
   random_init(0);
@@ -235,9 +239,9 @@ main(void)
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
   process_start(&sensors_process, NULL);
-
+#if PLATFORM_HAS_BUTTON
   SENSORS_ACTIVATE(button_sensor);
-
+#endif
   energest_init();
   ENERGEST_ON(ENERGEST_TYPE_CPU);
 
