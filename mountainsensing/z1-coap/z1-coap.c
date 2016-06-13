@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "z1-coap.h"
-#include "platform-conf.h"
+#include "contiki-conf.h"
 
 #include "store.h"
 #include "sampler.h"

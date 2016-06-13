@@ -14,7 +14,7 @@
 
 #include "z1-coap-config-defaults.h"
 
-#include "platform-conf.h"
+#include "contiki-conf.h"
 #include <stdbool.h>
 
 // Routing mode
