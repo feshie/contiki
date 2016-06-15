@@ -8,7 +8,7 @@
 #include <string.h>
 #include "rest-engine.h"
 #include "watchdog.h"
-#include "dev/reset-sensor.h"
+#include "reset-sensor.h"
 
 #define DEBUG_ON
 #include "debug.h"

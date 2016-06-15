@@ -3,7 +3,7 @@
 #include "contiki.h"
 #include "cfs/cfs.h"
 #include "cfs/cfs-coffee.h"
-#include "dev/reset-sensor.h"     // Include sensor driver
+#include "reset-sensor.h"     // Include sensor driver
 
 PROCESS(example_coffee_process, "Node Reset");
 AUTOSTART_PROCESSES(&example_coffee_process);
