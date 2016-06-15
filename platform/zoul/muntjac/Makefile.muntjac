@@ -1,0 +1,2 @@
+MOTELIST_ZOLERTIA = muntjac
+BOARD_SOURCEFILES += board.c
