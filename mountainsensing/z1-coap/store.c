@@ -8,8 +8,8 @@
 #include "pb_encode.h"
 
 #ifdef SPI_LOCKING
-    #include "dev/cc1120.h"
-    #include "dev/cc1120-arch.h"
+    #include "cc1120.h"
+    #include "cc1120-arch.h"
 #endif
 
 #define DEBUG_ON
