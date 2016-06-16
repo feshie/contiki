@@ -58,8 +58,12 @@
 #ifndef BOARD_H_
 #define BOARD_H_
 
+// Override the Coffee config to use the data flash and not program flash
+#define COFFEE_CONF_CUSTOM_PORT "muntjac/cfs-coffee-arch.h"
+
 #include "dev/gpio.h"
 #include "dev/nvic.h"
+
 /*---------------------------------------------------------------------------*/
 /** \name Connector headers
  *
@@ -340,39 +344,6 @@
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
- * \name Antenna switch configuration
- *
- * These values configure the required pin to drive the RF antenna switch, to
- * either enable the sub-1Ghz RF interface (power-up the CC1200) or the 2.4GHz
- * RF interface of the CC2538, both alternatively routed to a RP-SMA connector
- * to allow using an external antenna for both cases.
- *
- * Note it is also possible to enable both RF interfaces at the same time, by
- * switching On the sub-1GHz RF interface, and placing an 0Ohm resistor (R19),
- * to select between using a ceramic chip antenna (not mounted), or to connect
- * and external antenna over a pigtail to the U.Fl connector (not mounted).
- *
- * RF switch state:
- * - LOW: 2.4GHz RF interface on RP-SMA connector, CC1200 powered-off.
- * - HIGH: Sub-1GHz RF interface on RP-SMA connector.
- * @{
- */
-#define ANTENNA_RF_SW_PORT GPIO_D_NUM
-#define ANTENNA_RF_SW_PIN  2
-/** @} */
-/*---------------------------------------------------------------------------*/
-/**
- * \name Dual RF interface support
- *
- * Enables support for dual band operation (both CC1200 and 2.4GHz enabled).
- * The driver checks the selected Radio stack, and forces the antenna switch to
- * either position.  Enabling the definition below forces to skip this check.
- * @{
- */
-#define REMOTE_DUAL_RF_ENABLED 0
-/** @} */
-/*---------------------------------------------------------------------------*/
-/**
  * \name CC1200 configuration
  *
  * These values configure the required pins to drive the CC1200
@@ -413,54 +384,8 @@
 #define USD_MISO_PIN             SPI1_RX_PIN
 #define USD_CSN_PORT             GPIO_A_NUM
 #define USD_CSN_PIN              7
-#define USD_SEL_PORT             GPIO_A_NUM
-#define USD_SEL_PIN              6
-/** @} */
-/*---------------------------------------------------------------------------*/
-/**
- * \name Power management and shutdown mode
- *
- * The shutdown mode is an ultra-low power operation mode that effectively
- * powers-down the entire RE-Mote (CC2538, CC1200, attached sensors, etc) and
- * only keeps running a power gating timer (NanoTimer), the on-board RTC and
- * an ultra-low power consumption MCU (PIC12F635).  The Shutdown mode allows:
- *
- * - Put the RE-Mote in an ultra-low power sleep (shutdown) drawing <200nA avg.
- * - Periodically awake and execute tasks, being the shutdown period selectable
- *   via R47 resistor value (22KOhm as default for 1 minute shutdown period).
- * - Enter shutdown mode before the shutdown period expiration, by invoking the
- *   PM_SHUTDOWN_NOW macrp
- *
- * The shutdown mode can be disabled by hardware by short-circuiting or placing
- * an 0Ohm resistor across W1 pad.
- * @{
- */
-#define PM_DONE_PORT                GPIO_D_NUM
-#define PM_DONE_PIN                 0
-#define PM_CMD_PORT                 GPIO_D_NUM
-#define PM_CMD_PIN                  1
-/** @} */
-/*---------------------------------------------------------------------------*/
-/**
- * \name On-board RTC
- *
- * The shutdown mode can be disabled by hardware by short-circuiting or placing
- * an 0Ohm resistor across W1 pad.  As the RTC_INT1 pin is also shared with the
- * BUTTON_USER, so either disable or not use the user button, or upon receiving
- * an interrupt, poll the RTC.
- *
- * The RTC_INT1 can be used to exit the CC2538's LPM3 mode.
- * A second interruption pin is connected to the PIC12F635, for applications
- * requiring to put the PIC into deep-sleep and waking up at a certain time.
- * @{
- */
-#define RTC_SDA_PORT                I2C_SDA_PORT
-#define RTC_SDA_PIN                 I2C_SDA_PIN
-#define RTC_SCL_PORT                I2C_SCL_PORT
-#define RTC_SCL_PIN                 I2C_SCL_PIN
-#define RTC_INT1_PORT               GPIO_A_NUM
-#define RTC_INT1_PIN                4
-#define RTC_INT1_VECTOR             NVIC_INT_GPIO_PORT_A
+#define USD_PWR_PORT             GPIO_A_NUM
+#define USD_PWR_PIN              6
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
@@ -479,6 +404,17 @@
  */
 #define EXT_WDT_PORT                GPIO_D_NUM
 #define EXT_WDT_PIN                 5
+/** @} */
+/*---------------------------------------------------------------------------*/
+/**
+ * \name M25P80 Flash configuration
+ *
+ * Uses SSI1
+ * @{
+ */
+#define FLASH_CSN_PORT               GPIO_B_NUM
+#define FLASH_CSN_PIN				6
+#define FLASH_SPI_INSTANCE          1
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
