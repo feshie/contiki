@@ -2,12 +2,17 @@
  * Board-initialisation for the Muntjac
  */
 
+#include <stdio.h>
 #include "contiki-conf.h"
 #include "board.h"
 #include "spi-arch.h"
 #include "dev/xmem.h"
+#include "reset-sensor.h"
 
 void board_init() {
+    // Update and print reset sensor
+    printf("Reset count: %d\n", reset_sensor.configure(0,0));
+
     // TODO - setup all output pins as GPIO
 
     // Initialize and deselect SD CSN
