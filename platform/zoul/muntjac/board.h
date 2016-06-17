@@ -59,7 +59,7 @@
 #define BOARD_H_
 
 // Override the Coffee config to use the data flash and not program flash
-#define COFFEE_CONF_CUSTOM_PORT "muntjac/cfs-coffee-arch.h"
+#define COFFEE_CONF_CUSTOM_PORT "muntjac/muntjac-coffee-arch.h"
 
 #include "dev/gpio.h"
 #include "dev/nvic.h"
