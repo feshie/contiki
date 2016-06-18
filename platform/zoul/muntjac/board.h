@@ -406,9 +406,9 @@
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
- * \name MS1/MS2 control
+ * \name Misc Peripheral Control control
  *
- * These values configure the pins used to control peripherals on the MS1/MS2.
+ * These values configure the pins used to control peripherals on the Muntjac and MS1/MS2.
  * PWR_RADIO_EN is used to control power to the on-board CC1200.
  * PWR_SENSE_EN is used to control sensors/sensor power supplies.
  * RS485_TXEN is used to put the half-duplex RS485 transciever into TX.
@@ -416,8 +416,12 @@
  */
 #define PWR_RADIO_EN_PORT           GPIO_D_NUM
 #define PWR_RADIO_EN_PIN            2
+#define PWR_SD_EN_PORT             	GPIO_A_NUM
+#define PWR_SD_EN_PIN              	6
+
 #define PWR_SENSE_EN_PORT           GPIO_D_NUM
 #define PWR_SENSE_EN_PIN            1
+
 #define RS485_TXEN_PORT             GPIO_D_NUM 
 #define RS485_TXEN_PIN              0
 /** @} */
@@ -446,8 +450,6 @@
 #define USD_MISO_PIN             SPI1_RX_PIN
 #define USD_CSN_PORT             GPIO_A_NUM
 #define USD_CSN_PIN              7
-#define USD_PWR_PORT             GPIO_A_NUM
-#define USD_PWR_PIN              6
 #define USD_DETECT_PORT          GPIO_B_NUM
 #define USD_DETECT_PIN           7
 
