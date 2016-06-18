@@ -371,7 +371,7 @@
  */
  
  
-/* TODO Consolidate. */
+/* TODO Consolidate*/
 #define RADIO_SPI_CLK_PORT		SPI0_CLK_PORT
 #define RADIO_SPI_CLK_PIN		SPI0_CLK_PIN
 #define RADIO_SPI_MOSI_PORT		SPI0_TX_PORT
@@ -385,8 +385,7 @@
 #define RADIO_GPIO0_PORT		GPIO_B_NUM
 #define RADIO_GPIO0_PIN			4
 #define RADIO_GPIO2_PORT		GPIO_B_NUM
-#define RADIO_GPIO2_PIN			2
- 
+#define RADIO_GPIO2_PIN			0 
  
 #define CC1200_SPI_INSTANCE         0
 #define CC1200_SPI_SCLK_PORT        SPI0_CLK_PORT
@@ -404,6 +403,23 @@
 #define CC1200_RESET_PORT           GPIO_C_NUM
 #define CC1200_RESET_PIN            7
 #define CC1200_GPIOx_VECTOR         NVIC_INT_GPIO_PORT_B
+/** @} */
+/*---------------------------------------------------------------------------*/
+/**
+ * \name MS1/MS2 control
+ *
+ * These values configure the pins used to control peripherals on the MS1/MS2.
+ * PWR_RADIO_EN is used to control power to the on-board CC1200.
+ * PWR_SENSE_EN is used to control sensors/sensor power supplies.
+ * RS485_TXEN is used to put the half-duplex RS485 transciever into TX.
+ * @{
+ */
+#define PWR_RADIO_EN_PORT           GPIO_D_NUM
+#define PWR_RADIO_EN_PIN            2
+#define PWR_SENSE_EN_PORT           GPIO_D_NUM
+#define PWR_SENSE_EN_PIN            1
+#define RS485_TXEN_PORT             GPIO_D_NUM 
+#define RS485_TXEN_PIN              0
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
@@ -438,6 +454,7 @@
 #define FLASH_CSN_PORT           GPIO_B_NUM
 #define FLASH_CSN_PIN			 6
 #define FLASH_SPI_INSTANCE       1
+
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
