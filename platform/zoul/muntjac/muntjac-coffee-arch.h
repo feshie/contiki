@@ -45,9 +45,10 @@
 #include "contiki-conf.h"
 #include "dev/xmem.h"
 #include "reset-sensor.h"
+#include "flash.h"
 
 // Reserve space in the program flash for the reset sensor
-#define CC2538_FLASH_OFFSET RESET_SENSOR_SIZE
+#define FLASH_CONF_FW_ADDR CC2538_DEV_FLASH_ADDR + RESET_SENSOR_SIZE
 
 /*** M25P16 Memory Organization
 The memory is organized as: 
