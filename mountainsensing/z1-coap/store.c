@@ -184,7 +184,7 @@ bool store_delete_sample(uint16_t sample) {
 
         // Keep going until we reach a file that exists
         while (last_id != 0 && (fd = cfs_open(filename, CFS_READ)) < 0) {
-            DEBUG("Sample %d does not exist, continuing..\n", last_id);
+            //DEBUG("Sample %d does not exist, continuing..\n", last_id);
             last_id--;
             id_to_file(last_id, filename);
         }
@@ -363,6 +363,8 @@ uint16_t find_latest_sample(void) {
                 }
             }
         }
+        cfs_closedir(&dir);
+
         return max_num;
     }
     return 0;
