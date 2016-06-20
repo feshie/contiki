@@ -286,7 +286,7 @@ bool write_file(char *filename, uint8_t *buffer, uint8_t length) {
     int fd;
     int bytes;
 
-    if (cfs_coffee_reserve(filename, length) < 0) {
+    if (cfs_coffee_reserve(filename, length + sizeof(END_CANARY)) < 0) {
         DEBUG("Failed to reserve space for file %s\n", filename);
     }
 
