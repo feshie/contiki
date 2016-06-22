@@ -193,12 +193,14 @@ struct file_header {
   char name[COFFEE_NAME_LENGTH];
 };
 
+#if COFFEE_MICRO_LOGS
 /* This is needed because of a buggy compiler. */
 struct log_param {
   cfs_offset_t offset;
   char *buf;
   uint16_t size;
 };
+#endif /* COFFEE_MICRO_LOGS */
 
 /*
  * Variables that keep track of opened files and internal
@@ -572,11 +574,13 @@ remove_by_page(coffee_page_t page, int remove_log, int close_fds,
     return -1;
   }
 
+#if COFFEE_MICRO_LOGS
   if(remove_log && HDR_MODIFIED(hdr)) {
     if(remove_by_page(hdr.log_page, !REMOVE_LOG, !CLOSE_FDS, !ALLOW_GC) < 0) {
       return -1;
     }
   }
+#endif /* COFFEE_MICRO_LOGS */
 
   hdr.flags |= HDR_FLAG_OBSOLETE;
   write_header(&hdr, page);
@@ -817,7 +821,11 @@ merge_log(coffee_page_t file_page, int extend)
 
   offset = 0;
   do {
+#if COFFEE_MICRO_LOGS
     char buf[hdr.log_record_size == 0 ? COFFEE_PAGE_SIZE : hdr.log_record_size];
+#else
+    char buf[COFFEE_PAGE_SIZE];
+#endif /* COFFEE_MICRO_LOGS */
     n = cfs_read(fd, buf, sizeof(buf));
     if(n < 0) {
       remove_by_page(new_file->page, !REMOVE_LOG, !CLOSE_FDS, ALLOW_GC);
@@ -845,8 +853,10 @@ merge_log(coffee_page_t file_page, int extend)
 
   /* Copy the log configuration. */
   read_header(&hdr2, new_file->page);
+#if COFFEE_MICRO_LOGS
   hdr2.log_record_size = hdr.log_record_size;
   hdr2.log_records = hdr.log_records;
+#endif /* COFFEE_MICRO_LOGS */
   write_header(&hdr2, new_file->page);
 
   new_file->flags &= ~COFFEE_FILE_MODIFIED;
@@ -1308,6 +1318,7 @@ int
 cfs_coffee_configure_log(const char *filename, unsigned log_size,
                          unsigned log_record_size)
 {
+#if COFFEE_MICRO_LOGS
   struct file *file;
   struct file_header hdr;
 
@@ -1330,6 +1341,7 @@ cfs_coffee_configure_log(const char *filename, unsigned log_size,
   hdr.log_records = log_size / log_record_size;
   hdr.log_record_size = log_record_size;
   write_header(&hdr, file->page);
+#endif /* COFFEE_MICRO_LOGS */
 
   return 0;
 }
