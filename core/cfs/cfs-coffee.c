@@ -65,6 +65,16 @@
 #define COFFEE_MICRO_LOGS 1
 #endif
 
+/* Small headers reduces the size of file headers by removing the micro log
+   related parameters. */
+#ifndef COFFEE_SMALL_HEADERS
+#define COFFEE_SMALL_HEADERS 0
+#endif
+
+#if COFFEE_SMALL_HEADERS && COFFEE_MICRO_LOGS
+#error "Cannot have COFFEE_SMALL_HEADERS set when COFFEE_MICRO_LOGS is set."
+#endif
+
 /* If the files are expected to be appended to only, this parameter
    can be set to save some code space. */
 #ifndef COFFEE_APPEND_ONLY
@@ -184,11 +194,15 @@ struct file_desc {
 /* The file header structure mimics the representation of file headers
    in the physical storage medium. */
 struct file_header {
+#if !COFFEE_SMALL_HEADERS
   coffee_page_t log_page;
   uint16_t log_records;
   uint16_t log_record_size;
+#endif /* !COFFEE_SMALL_HEADERS */
   coffee_page_t max_pages;
+#if !COFFEE_SMALL_HEADERS
   uint8_t deprecated_eof_hint;
+#endif /* !COFFEE_SMALL_HEADERS */
   uint8_t flags;
   char name[COFFEE_NAME_LENGTH];
 };
