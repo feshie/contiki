@@ -1,11 +1,14 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
 #include "store.h"
-#include "stdio.h"
-#include "stdlib.h"
 #include "contiki.h"
 #include "cfs/cfs.h"
 #include "cfs/cfs-coffee.h"
+#include "cfs-coffee-arch.h"
 #include "pb_decode.h"
 #include "pb_encode.h"
+#include "math.h"
 
 #ifdef SPI_LOCKING
     #include "cc1120.h"
@@ -16,19 +19,27 @@
 #include "debug.h"
 
 /**
- * Single char prefix to use for filenames
- */
-#define FILENAME_PREFIX "r"
-
-/**
  * Filename of the config file
  */
-#define CONFIG_FILENAME "config"
+#define CONFIG_FILENAME "conf"
 
 /**
- * Maximum length of a file name
+ * Maximum length of a file name is Coffee's max length (including null terminator)
  */
-#define FILENAME_LENGTH 8
+#define FILENAME_LENGTH COFFEE_NAME_LENGTH
+
+// Ensure that filenames are long enough to store the config
+// FILENAME_LENGTH - 1 to include null terminator
+_Static_assert(strlen(CONFIG_FILENAME) <= (FILENAME_LENGTH - 1), "FILENAME_LENGTH too small to store config filename");
+
+// Ensure that filenames are long enough to store the highest amount of samples we can have (1 per page)
+// pow(10.0, x) is 1 more than the max value that fits in x digits
+_Static_assert((COFFEE_SIZE / COFFEE_PAGE_SIZE) <= (pow(10.0, (double) FILENAME_LENGTH - 1) - 1), "FILENAME_LENGTH too small to store all samples");
+
+/**
+ * Directory we store things in. Coffee only supports one directory
+ */
+#define DIRECTORY "/"
 
 /**
  * Magic value we append to all files we write.
@@ -78,6 +89,13 @@ static bool write_file(char *filename, uint8_t *buffer, uint8_t length);
  * @return The pointer to filename(usefull for avoiding temp vars).
  */
 static char* id_to_file(uint16_t id, char* filename);
+
+/**
+ * Convert a filename to a sample id.
+ * @param id Pointer to write the parsed id to. Only used when the filename is a sample id.
+ * @return True if the filename is a sample id, false otherwise.
+ */
+static bool file_to_id(char *filename, uint16_t *id);
 
 uint16_t store_save_sample(Sample *sample) {
     pb_ostream_t pb_ostream;
@@ -347,33 +365,53 @@ void radio_release(void) {
 uint16_t find_latest_sample(void) {
     struct cfs_dirent dirent;
     struct cfs_dir dir;
-    uint16_t file_num;
-    uint16_t max_num;
+    uint16_t max_id = 0;
 
-    max_num = 0;
     DEBUG("Refreshing filename cache\n");
 
     if (cfs_opendir(&dir, "/") == 0) {
-        DEBUG("\tOpened folder\n");
 
         while (cfs_readdir(&dir, &dirent) != -1) {
-            if (strncmp(dirent.name, FILENAME_PREFIX, 1) == 0) {
-                file_num = atoi(dirent.name + 1);
-                //DEBUG("Filename %d found\n", file_num);
-                //DEBUG("\tMax: %d Filenum: %d\n", max_num, file_num);
-                if(file_num > max_num) {
-                    max_num = file_num;
+            uint16_t file_id;
+
+            if (file_to_id(dirent.name, &file_id)) {
+
+                if(file_id > max_id) {
+                    max_id = file_id;
                 }
+
+                //DEBUG("File %s has sample id %u (Max id %u)\n", dirent.name, file_id, max_id);
             }
         }
-        cfs_closedir(&dir);
 
-        return max_num;
+        cfs_closedir(&dir);
     }
-    return 0;
+
+    return max_id;
 }
 
 char* id_to_file(uint16_t id, char* filename) {
-    sprintf(filename, FILENAME_PREFIX "%d", id);
+    sprintf(filename, "%u", id);
     return filename;
+}
+
+bool file_to_id(char *filename, uint16_t *id) {
+    if (strlen(filename) <= 0) {
+        return false;
+    }
+
+    bool is_sample = true;
+
+    // Check all the characters are digits
+    int i;
+    for (i = 0; i < strlen(filename); i++) {
+        // isdigit() returns > 0 on success (but not 1)
+        is_sample &= (isdigit((unsigned char) filename[i]) > 0);
+    }
+
+    if (is_sample) {
+        *id = atoi(filename);
+    }
+
+    return is_sample;
 }
