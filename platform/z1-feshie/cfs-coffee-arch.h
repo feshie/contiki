@@ -67,6 +67,7 @@ sector or bulk erasable (bits are erased from 0 to 1) but not page erasable
 #define COFFEE_LOG_SIZE			1024
 
 #define COFFEE_MICRO_LOGS		0
+#define COFFEE_IO_SEMANTICS     1
 
 /* Flash operations. */
 #define COFFEE_WRITE(buf, size, offset)				\

@@ -297,6 +297,9 @@ bool write_file(char *filename, uint8_t *buffer, uint8_t length) {
         return false;
     }
 
+    // Instruct coffee to never extend a file - we've always reserved enough space
+    cfs_coffee_set_io_semantics(fd, CFS_COFFEE_IO_FIRM_SIZE);
+
     bytes = cfs_write(fd, buffer, length);
 
     if (bytes != length) {
