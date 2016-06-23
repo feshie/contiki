@@ -12,6 +12,12 @@
 #include "readings.pb.h"
 
 /**
+ * Value that should be returned for dummy / erronous data.
+ * This should be used to ensure data is always set on error.
+ */
+#define ERROR_VALUE 12345
+
+/**
  * The parent process. Usefull for doing a context switch in order to use timers / wait for events.
  */
 void sampler_init(void);
