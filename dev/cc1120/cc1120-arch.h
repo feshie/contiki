@@ -63,6 +63,11 @@ void cc1120_arch_interrupt_acknowledge(void);
 
 void cc1120_arch_pin_init(void);
 
+#if CC1120_DEBUG_PINS
+void cc1120_debug_pin_cca(uint8_t val);
+void cc1120_debug_pin_rx(uint8_t val);
+#endif
+
 #if CC1120_CCA_PIN_PRESENT
 uint8_t cc1120_arch_read_cca(void);
 #endif

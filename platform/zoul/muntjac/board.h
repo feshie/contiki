@@ -44,8 +44,9 @@
  * temperature sensor, M25P16 2MB flash, SD card and dedicated antenna outputs for 868MHz (SMA)
  * and 2.4GHz (U.FL). Unlike the Z1, separate SPI buses are used for the radio and storage.
  *
- * This file provides connectivity information on LEDs, Buttons, UART and
- * other Muntjac, MS1/MS2 peripherals and sensors.
+ * This file provides connectivity information on LEDs, Buttons, UART and other Muntjac, 
+ * MS1/MS2 peripherals and sensors. With the Muntjac, D1 and D2 I/O on the MS1/MS2 are not 
+ * used due to pin count limitations. 
  *
  * This file can be used as the basis to configure other platforms using the
  * cc2538 SoC.

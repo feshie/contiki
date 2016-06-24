@@ -610,10 +610,11 @@ typedef uint32_t rtimer_clock_t;
 //#define C1120PROCESSDEBUG	1
 //#define CC1120ARCHDEBUG		1
 //#define CC1120STATEDEBUG	1
+#define CC1120_DEBUG_PINS	1
 
 #define RF_CHANNEL				42
 
-#define CC1120_CS_THRESHOLD		0xA1	/*-100dBm */
+#define CC1120_CS_THRESHOLD		0xA6	/*-100dBm */
 
 /* Other possible sensible values:
  * 0xC4	-60dBm.

@@ -108,6 +108,10 @@
 #define CC1120_RSSI_OFFSET		0x9A
 #endif
 
+#ifndef CC1200_RSSI_OFFSET
+#define CC1200_RSSI_OFFSET		0x9D
+#endif
+
 #define CC1120_ACK_PENDING				0x01			
 #define CC1120_RX_FIFO_OVER				0x02
 #define CC1120_RX_FIFO_UNDER			0x04
@@ -184,7 +188,6 @@ static uint8_t tx_buf[CC1120_MAX_PAYLOAD];
 static uint8_t tx_len;
 
 /* ------------------- Radio Driver Functions ---------------------------- */
-
 int 
 cc1120_driver_init(void)
 {
@@ -205,10 +208,10 @@ cc1120_driver_init(void)
 			printf("CC1120");
 			cc1120_register_config();
       
-      cc1120_spi_single_write(CC1120_ADDR_PKT_CFG1, 0x05);		                    /* Set PKT_CFG1 - CRC Configured as 01 and status bytes appended, No data whitening, address check or byte swap.*/
-      cc1120_spi_single_write(CC1120_ADDR_FIFO_CFG, 0x80);		                    /* Set RX FIFO CRC Auto flush. */		
-      cc1120_spi_single_write(CC1120_ADDR_AGC_GAIN_ADJUST, (CC1120_RSSI_OFFSET));	/* Set the RSSI Offset. This is a two's compliment number. */
-      cc1120_spi_single_write(CC1120_ADDR_AGC_CS_THR, (CC1120_CS_THRESHOLD));   	/* Set Carrier Sense Threshold. This is a two's compliment number. */
+      		cc1120_spi_single_write(CC1120_ADDR_PKT_CFG1, 0x05);		                    /* Set PKT_CFG1 - CRC Configured as 01 and status bytes appended, No data whitening, address check or byte swap.*/
+      		cc1120_spi_single_write(CC1120_ADDR_FIFO_CFG, 0x80);		                    /* Set RX FIFO CRC Auto flush. */		
+      		cc1120_spi_single_write(CC1120_ADDR_AGC_GAIN_ADJUST, (CC1120_RSSI_OFFSET));	/* Set the RSSI Offset. This is a two's compliment number. */
+      		cc1120_spi_single_write(CC1120_ADDR_AGC_CS_THR, (CC1120_CS_THRESHOLD));   	/* Set Carrier Sense Threshold. This is a two's compliment number. */
 
 			break;
 		case CC1120_PART_NUM_CC1121:
@@ -221,10 +224,10 @@ cc1120_driver_init(void)
 			printf("CC1200");
 			cc1200_register_config();
       
-      cc1120_spi_single_write(CC1200_ADDR_PKT_CFG1, 0x03);		                    /* Set PKT_CFG1 - CRC Configured as 01 and status bytes appended, No data whitening, address check or byte swap.*/
-	    cc1120_spi_single_write(CC1200_ADDR_FIFO_CFG, 0x80);		                    /* Set RX FIFO CRC Auto flush. */		
-      cc1120_spi_single_write(CC1200_ADDR_AGC_GAIN_ADJUST, (CC1120_RSSI_OFFSET));	/* Set the RSSI Offset. This is a two's compliment number. */
-      cc1120_spi_single_write(CC1200_ADDR_AGC_CS_THR, (CC1120_CS_THRESHOLD));   	/* Set Carrier Sense Threshold. This is a two's compliment number. */
+      		cc1120_spi_single_write(CC1200_ADDR_PKT_CFG1, 0x03);		                    /* Set PKT_CFG1 - CRC Configured as 01 and status bytes appended, No data whitening, address check or byte swap.*/
+	  		cc1120_spi_single_write(CC1200_ADDR_FIFO_CFG, 0x80);		                    /* Set RX FIFO CRC Auto flush. */		
+      		cc1120_spi_single_write(CC1200_ADDR_AGC_GAIN_ADJUST, (CC1200_RSSI_OFFSET));	/* Set the RSSI Offset. This is a two's compliment number. */
+      		cc1120_spi_single_write(CC1200_ADDR_AGC_CS_THR, (CC1120_CS_THRESHOLD));   	/* Set Carrier Sense Threshold. This is a two's compliment number. */
 
 			break;
 		case CC1120_PART_NUM_CC1201:
@@ -907,14 +910,23 @@ cc1120_driver_channel_clear(void)
 	rtimer_clock_t t0;
 	
 	was_off = 0;
+#if CC1120_DEBUG_PINS
+	cc1120_debug_pin_cca(1);
+#endif
 
 	if(locked) {
 		PRINTF("SPI Locked\n");
+#if CC1120_DEBUG_PINS
+		cc1120_debug_pin_cca(0);
+#endif		
 		return 0;
 	}
 
 	if(radio_pending & CC1120_TRANSMITTING) {
 		/* cannot be clear in TX. */
+#if CC1120_DEBUG_PINS
+		cc1120_debug_pin_cca(0);
+#endif
 		return 0;
 	}
 	
@@ -954,10 +966,12 @@ cc1120_driver_channel_clear(void)
 			cur_state = cc1120_get_state();
 			if((radio_pending & CC1120_TRANSMITTING) || (cur_state == CC1120_STATUS_TX)) {
 				/* We have started a TX. cannot be clear in TX. */
+				printf("\ttx\t");
 				CC1120_RELEASE_SPI();
 				return 0;
 			}	
 			if((cur_state == CC1200_STATUS_CALIBRATE) || (cur_state == CC1200_STATUS_SETTLING)) {
+				printf("\tcal\t");
 				CC1120_RELEASE_SPI();
 				return 0;
 			}
@@ -981,13 +995,25 @@ cc1120_driver_channel_clear(void)
 		}
 	}
 	
+#if CC1120_DEBUG_PINS
+	cc1120_debug_pin_cca(cca);
+	//uint16_t rssi = cc1120_spi_single_read(CC1120_ADDR_RSSI1) << 4;
+	//rssi |= (rssi0 >> 3);
+	//if(rssi & 0x0800) {
+		//Pad for 2s-complement.
+	//	rssi |= 0xF000;
+	//}
+	
+	//printf("%04x\n\r", rssi);
+#endif
+	
 	CC1120_RELEASE_SPI();
 	
 	if(was_off){
 		/* If we were off, turn radio back off.*/
 		off();
 	}
-	
+
 	return cca;
 }
 
@@ -1257,6 +1283,9 @@ off(void)
   
 	cur_state = cc1120_set_state(CC1120_STATE_IDLE);		/* Set state to IDLE.  This will flush the RX FIFO if there is an error. */
 	
+#if CC1120_DEBUG_PINS
+	cc1120_debug_pin_rx(0);
+#endif
 	
 	radio_pending &= ~(CC1120_RX_ON);
 	ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
@@ -1371,6 +1400,9 @@ cc1120_set_state(uint8_t state)
 									|| (cur_state == CC1120_STATUS_FSTXON)
 									|| (cur_state == CC1120_STATUS_TX)) {
 									/* Return RX state. */
+#if CC1120_DEBUG_PINS
+									cc1120_debug_pin_rx(1);
+#endif
 									return cc1120_set_rx();
 								} else {
 									/* We are in a state that will end up in IDLE, FSTXON or TX. Wait till we are there. */
@@ -1453,7 +1485,20 @@ cc1120_set_state(uint8_t state)
 uint8_t
 cc1120_get_state(void)
 {
-	return (cc1120_spi_cmd_strobe(CC1120_STROBE_SNOP) & CC1120_STATUS_STATE_MASK);
+	uint8_t state;
+	state = cc1120_spi_cmd_strobe(CC1120_STROBE_SNOP);
+	state &= CC1120_STATUS_STATE_MASK;
+	
+#if CC1120_DEBUG_PINS
+	if(state == CC1120_STATUS_RX) {
+		cc1120_debug_pin_rx(1);
+	} else {
+		cc1120_debug_pin_rx(0);
+	}
+#endif
+	
+	return state;
+	//return (cc1120_spi_cmd_strobe(CC1120_STROBE_SNOP) & CC1120_STATUS_STATE_MASK);
 }
 
 
