@@ -59,14 +59,16 @@ sector or bulk erasable (bits are erased from 0 to 1) but not page erasable
 #define COFFEE_PAGE_SIZE		128UL
 #define COFFEE_START			COFFEE_SECTOR_SIZE*2
 #define COFFEE_SIZE			(COFFEE_XMEM_TOTAL_SIZE_KB * 1024UL - COFFEE_START)
-#define COFFEE_NAME_LENGTH		16
-#define COFFEE_MAX_OPEN_FILES		2
-#define COFFEE_FD_SET_SIZE		2
-#define COFFEE_LOG_TABLE_LIMIT		256
+#define COFFEE_NAME_LENGTH		6
+#define COFFEE_MAX_OPEN_FILES	1 // Low on RAM - don't bother caching any files
+#define COFFEE_FD_SET_SIZE		1 // We only open 1 file at a time
+#define COFFEE_LOG_TABLE_LIMIT	0
 #define COFFEE_DYN_SIZE			120
-#define COFFEE_LOG_SIZE			1024
+#define COFFEE_LOG_SIZE			0
 
 #define COFFEE_MICRO_LOGS		0
+#define COFFEE_SMALL_HEADERS    1
+#define COFFEE_IO_SEMANTICS     1
 
 /* Flash operations. */
 #define COFFEE_WRITE(buf, size, offset)				\
