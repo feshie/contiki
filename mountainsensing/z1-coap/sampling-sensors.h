@@ -8,6 +8,7 @@
 #define SAMPLING_SENSORS_H
 
 #include <stdbool.h>
+#include <stdint.h>
 #include "settings.pb.h"
 #include "readings.pb.h"
 
@@ -18,7 +19,8 @@
 #define ERROR_VALUE 12345
 
 /**
- * The parent process. Usefull for doing a context switch in order to use timers / wait for events.
+ * Initialize any hardware required for sampling.
+ * (This does not imply anything is enabled).
  */
 void sampler_init(void);
 
@@ -31,16 +33,19 @@ int16_t sampler_get_acc_z(void);
 
 /**
  * Get the current time.
- * @return  The number of seconds since the Unix epoch, or 0 in case of error.
- * @note	Unix epoch is taken as 1970-01-01 00:00:00 UTC.
+ * @param seconds Pointer to write the number of seconds since the Unix epoch.
+ * @return True on success, False otherwise
+ *
+ * @note Unix epoch is taken as 1970-01-01 00:00:00 UTC.
  */
-uint32_t sampler_get_time(void);
+bool sampler_get_time(uint32_t *seconds);
 
 /**
  * Set the current time.
- * @param   seconds The number of seconds since the Unix epoch
- * @return  True on success, false otherwise
- * @note	Unix epoch is taken as 1970-01-01 00:00:00 UTC.
+ * @param seconds The number of seconds since the Unix epoch.
+ * @return True on success, False otherwise
+ *
+ * @note Unix epoch is taken as 1970-01-01 00:00:00 UTC.
  */
 bool sampler_set_time(uint32_t seconds);
 

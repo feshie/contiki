@@ -38,18 +38,20 @@ int16_t sampler_get_acc_z(void) {
     return ERROR_VALUE;
 }
 
-uint32_t sampler_get_time(void) {
+bool sampler_get_time(uint32_t *seconds) {
     struct tm t;
+
     if (ds3231_get_time(&t) != 0) {
-		DEBUG("Error reading time from DS3231\n");
-		return (uint32_t) ERROR_VALUE;
+		*seconds = ERROR_VALUE;
+		return false;
 	}
 
-    uint32_t seconds = (uint32_t) mktime(&t);
+    *seconds = (uint32_t) mktime(&t);
 
 	//DEBUG("years %d, months %d, days %d, hours %d, minutes %d, seconds %d\n", t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
 	//DEBUG("epoch is %" PRIu32 "\n", seconds);
-	return seconds;
+
+	return true;
 }
 
 bool sampler_set_time(uint32_t seconds) {

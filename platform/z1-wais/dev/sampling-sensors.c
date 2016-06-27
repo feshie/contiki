@@ -53,8 +53,9 @@ int16_t get_acc(enum ADXL345_AXIS axis) {
     return acc;
 }
 
-uint32_t sampler_get_time(void) {
-    return (uint32_t) clock_seconds();
+bool sampler_get_time(uint32_t *seconds) {
+    *seconds = (uint32_t) clock_seconds();
+    return true;
 }
 
 bool sampler_set_time(uint32_t seconds) {
