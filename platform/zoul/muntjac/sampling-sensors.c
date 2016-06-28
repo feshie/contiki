@@ -9,40 +9,21 @@
 #define DEBUG_ON
 #include "debug.h"
 
+/**
+ * Read the temperature.
+ * @param temp Pointer to write them tmep to.
+ * @return True on success, False otherwise.
+ */
+static bool get_temp(float *temp);
+
 void sampler_init(void) {
-}
-
-float sampler_get_temp(void) {
-    int temp;
-
-    if (ds3231_get_temperature(&temp) != 0) {
-        return ERROR_VALUE;
-    }
-
-    return ((float) temp) / 100;
-}
-
-float sampler_get_batt(void) {
-    return ERROR_VALUE;
-}
-
-int16_t sampler_get_acc_x(void) {
-    return ERROR_VALUE;
-}
-
-int16_t sampler_get_acc_y(void) {
-    return ERROR_VALUE;
-}
-
-int16_t sampler_get_acc_z(void) {
-    return ERROR_VALUE;
 }
 
 bool sampler_get_time(uint32_t *seconds) {
     struct tm t;
 
     if (ds3231_get_time(&t) != 0) {
-		*seconds = ERROR_VALUE;
+		*seconds = ERROR_EPOCH;
 		return false;
 	}
 
@@ -69,5 +50,20 @@ bool sampler_set_time(uint32_t seconds) {
 }
 
 bool sampler_get_extra(Sample *sample, SensorConfig *config) {
+
+    sample->has_temp = get_temp(&sample->temp);
+
+    // Everything completed synchronously
+    return true;
+}
+
+bool get_temp(float *temp) {
+    int centi_temp;
+
+    if (ds3231_get_temperature(&centi_temp) != 0) {
+        return false;
+    }
+
+    *temp = ((float) centi_temp) / 100;
     return true;
 }

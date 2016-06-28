@@ -83,12 +83,6 @@ PROCESS_THREAD(sample_process, ev, data) {
 
             sampler_get_time(&sample.time);
 
-            sample.batt = sampler_get_batt();
-            sample.has_batt = true;
-
-            sample.temp = sampler_get_temp();
-            sample.has_temp = true;
-
 #ifndef FESHIE_NO_ACC
             sample.accX = sampler_get_acc_x();
             sample.has_accX = true;

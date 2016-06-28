@@ -9,6 +9,21 @@
 #include "debug.h"
 
 /**
+ * Get the battery volatge.
+ */
+float get_batt(void);
+
+/**
+ * Get the temp in C
+ */
+float get_temp(void);
+
+/**
+ * Get the humidity in %
+ */
+float get_humid(void);
+
+/**
  * Get the accelerometer reading from a single axis.
  * This will enable and disable i2c as required.
  */
@@ -18,7 +33,7 @@ void sampler_init(void) {
     // We don't need to do anything
 }
 
-float sampler_get_temp(void) {
+float get_temp(void) {
     float temp;
     SENSORS_ACTIVATE(sht25);
     temp = ((float) sht25.value(SHT25_VAL_TEMP)) / 100;
@@ -26,24 +41,19 @@ float sampler_get_temp(void) {
     return temp;
 }
 
-float sampler_get_batt(void) {
+float get_humid(void) {
+    float humid;
+    SENSORS_ACTIVATE(sht25);
+    humid = ((float) sht25.value(SHT25_VAL_HUM)) / 100;
+    SENSORS_DEACTIVATE(sht25);
+}
+
+float get_batt(void) {
     float bat_ret;
     SENSORS_ACTIVATE(battery_sensor);
     bat_ret =  (float) battery_sensor.value(0);
     SENSORS_DEACTIVATE(battery_sensor);
     return bat_ret;
-}
-
-int16_t sampler_get_acc_x(void) {
-    return get_acc(X_AXIS);
-}
-
-int16_t sampler_get_acc_y(void) {
-    return get_acc(Y_AXIS);
-}
-
-int16_t sampler_get_acc_z(void) {
-    return get_acc(Z_AXIS);
 }
 
 int16_t get_acc(enum ADXL345_AXIS axis) {
@@ -64,9 +74,21 @@ bool sampler_set_time(uint32_t seconds) {
 }
 
 bool sampler_get_extra(Sample *sample, SensorConfig *config) {
-    SENSORS_ACTIVATE(sht25);
-    sample->humid = ((float) sht25.value(SHT25_VAL_HUM)) / 100;
+    sample->batt = get_batt();
+    sample->has_batt = true;
+
+    sample->temp = get_temp();
+    sample->has_temp = true;
+
+    sample->humid = get_humid();
     sample->has_humid = true;
-    SENSORS_DEACTIVATE(sht25);
+
+    sample->accX = get_acc(X_AXIS);
+    sample->has_accX = true;
+    sample->accY = get_acc(Y_AXIS);
+    sample->has_accY = true;
+    sample->accZ = get_acc(Z_AXIS);
+    sample->has_accZ = true;
+
     return true;
 }
