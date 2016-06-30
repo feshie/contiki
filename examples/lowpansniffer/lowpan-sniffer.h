@@ -33,42 +33,10 @@
  * 
  * This file is part of a generic sniffer implementation for contiki.
  * See Readme.txt for more details.
- * 
- * This code implements a fake rdc_driver. 
- * When it gets a packet from the radio driver, it calls sniffer_callback().
  */
+ 
+#ifndef __SNIFFER_H__
+#define __SNIFFER_H__
 
-#include "z1-sniffer.h"
-#include "net/netstack.h"
-
-static void send_packet(mac_callback_t sent, void *ptr) {
-	(void)sent; (void)ptr; // avoid compiler warnings
-}
-static void send_list(mac_callback_t sent, void *ptr, struct rdc_buf_list *buf_list) {
-	(void)sent; (void)ptr; (void)buf_list; // avoid compiler warnings
-}
-static void packet_input(void) {
-	sniffer_callback();
-}
-static int radio_on(void) {
-  return NETSTACK_RADIO.on();
-}
-static int radio_off(int keep_radio_on) {
-  return NETSTACK_RADIO.on();
-}
-static unsigned short channel_check_interval(void) {
-  return 0;
-}
-static void init(void) {
-  radio_on();
-}
-const struct rdc_driver sniffer_fake_rdc_driver = {
-  "sniffer_fake_rdc",
-  init,
-  send_packet,
-  send_list,
-  packet_input,
-  radio_on,
-  radio_off,
-  channel_check_interval,
-};
+extern void sniffer_callback();
+#endif /* __SNIFFER_H__ */
