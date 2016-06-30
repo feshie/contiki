@@ -1,5 +1,4 @@
-all: z1-sniffer
-TARGET = z1-wais
+all: lowpan-sniffer
 
 CONTIKI=../../
 
@@ -19,9 +18,12 @@ SMALL=1
 
 CONTIKI_SOURCEFILES +=
 
+SNIFFVIEWER = "lowpansniff-viewer/LoWPANSniffer.jar"
+
 include $(CONTIKI)/Makefile.include
 
-install: z1-sniffer.upload
+install: 
+	lowpan-sniffer.upload
 
 slip2pcap: slip2pcap.c
 	@gcc -o slip2pcap slip2pcap.c
@@ -33,6 +35,14 @@ sniff: slip2pcap
 sniff-raw: slip2pcap
 	@sudo echo # ask for the password first (make login may require it)
 	@make login | ./slip2pcap
+
+view:
+	@if [ ! -f $(SNIFFVIEWER) ]; then \ # check if sniffview exists, make it if it doesn't
+		cd lowpansniff-viewer; \
+		$(MAKE); \
+	fi
+	@echo Opening LoWPanSniffer...
+	@java -jar $(SNIFFVIEWER) $(MOTES) # open sniffview on port we just programmed
 
 
 CUSTOM_RULE_LINK=1
