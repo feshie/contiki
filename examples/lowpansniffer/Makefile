@@ -18,7 +18,7 @@ SMALL=1
 
 CONTIKI_SOURCEFILES +=
 
-SNIFFVIEWER = "lowpansniff-viewer/LoWPANSniffer.jar"
+SNIFFVIEWER = lowpansniff-viewer/LoWPANSniffer.jar
 
 include $(CONTIKI)/Makefile.include
 
@@ -37,12 +37,12 @@ sniff-raw: slip2pcap
 	@make login | ./slip2pcap
 
 view:
-	@if [ ! -f $(SNIFFVIEWER) ]; then \ # check if sniffview exists, make it if it doesn't
+	@if [ ! -f $(SNIFFVIEWER) ]; then \
 		cd lowpansniff-viewer; \
 		$(MAKE); \
 	fi
 	@echo Opening LoWPanSniffer...
-	@java -jar $(SNIFFVIEWER) $(MOTES) # open sniffview on port we just programmed
+	@java -jar $(SNIFFVIEWER) $(MOTES)
 
 
 CUSTOM_RULE_LINK=1
