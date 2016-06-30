@@ -5,6 +5,10 @@
  */
 package org.mountainsensing.lowpansniffer;
 
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import javax.swing.JFrame;
+import javax.swing.JList;
 import javax.swing.ListSelectionModel;
 
 /**
@@ -25,6 +29,16 @@ public class SerialChooser extends javax.swing.JFrame {
         initComponents();
         portList.setListData(ports);
         portList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        portList.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent evt) {
+                if (evt.getClickCount() == 2) {
+                    if (!portList.isSelectionEmpty()) {
+                        dispose();
+                        LoWPANSniffer.init(portList.getSelectedValue());
+                    }
+                }
+            }
+        });
     }
 
     /**
@@ -41,7 +55,7 @@ public class SerialChooser extends javax.swing.JFrame {
         confirmButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("Feshie Mapper");
+        setTitle("LoWPAN Sniffer");
 
         jScrollPane1.setViewportView(portList);
 
