@@ -10,6 +10,7 @@
 #include "utc_time.h"
 #include "dev/avr-handler.h"
 #include "sampler.h"
+#include "contiki-conf.h"
 
 #define DEBUG_ON
 #include "debug.h"
@@ -34,11 +35,6 @@
 //#define NO_RTC
 
 /**
- * If defined, do not attempt to read the acceleration from the acelerometer
- */
-//#define NO_ACC
-
-/**
  * Pointer to the sample we're currently working on.
  * Used by the extra callback.
  */
@@ -51,6 +47,16 @@ static struct avr_data data = {
     // Size of the buffer is the size of the buffer in the Sample
     .size = sizeof(((Sample_AVR_t *)0)->bytes)
 };
+
+/**
+ * Get the temperature in C
+ */
+static float get_temp(void);
+
+/**
+ * Get the battery voltage.
+ */
+static float get_batt(void);
 
 /**
  *
@@ -86,11 +92,11 @@ void sampler_init(void) {
     avr_set_callback(&extra_callback);
 }
 
-float sampler_get_temp(void) {
+float get_temp(void) {
     return ((float) ds3231_temperature()) / 100;
 }
 
-float sampler_get_batt(void) {
+float get_batt(void) {
     ms1_sense_on();
     float bat_ret;
     rtimer_clock_t t0;
@@ -105,44 +111,21 @@ float sampler_get_batt(void) {
     return bat_ret;
 }
 
-int16_t sampler_get_acc_x(void) {
-#ifdef NO_ACC
-    #warning "ACC disabled"
-    return 12345;
-#else
-    return accm_read_axis(X_AXIS);
-#endif
-}
 
-int16_t sampler_get_acc_y(void) {
-#ifdef NO_ACC
-    return 12345;
-#else
-    return accm_read_axis(Y_AXIS);
-#endif
-}
-
-int16_t sampler_get_acc_z(void) {
-#ifdef NO_ACC
-    return 12345;
-#else
-    return accm_read_axis(Z_AXIS);
-#endif
-}
-
-uint32_t sampler_get_time(void) {
+bool sampler_get_time(uint32_t *seconds) {
 #ifdef NO_RTC
     #warning "RTC disabled"
-    return (uint32_t)12345;
+	*seconds = ERROR_VALUE;
+	return false;
 #else
     struct tm t;
     ds3231_get_time(&t);
 
-    uint32_t seconds = (uint32_t) tm_to_epoch(&t);
+    *seconds = (uint32_t) tm_to_epoch(&t);
 
 	//DEBUG("years %d, months %d, days %d, hours %d, minutes %d, seconds %d\n", t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
 	//DEBUG("epoch is %" PRIu32 "\n", seconds);
-	return seconds;
+	return true;
 #endif // ifdef NO_RTC
 }
 
@@ -168,6 +151,21 @@ bool sampler_get_extra(Sample *sample, SensorConfig *config) {
     sample_extra = sample;
 
     ms1_sense_on();
+
+    sample->batt = get_batt();
+    sample->has_batt = true;
+
+    sample->temp = get_temp();
+    sample->has_temp = true;
+
+#ifndef FESHIE_NO_ACC
+/*    sample->accX = accm_read_axis(X_AXIS);
+    sample->has_accX = true;
+    sample->accY = accm_read_axis(Y_AXIS);
+    sample->has_accY = true;
+    sample->accZ = accm_read_axis(Z_AXIS);
+    sample->has_accZ = true; */
+#endif // #ifndef FESHIE_NO_ACC
 
     if (config->hasADC1) {
         sample->has_ADC1 = true;

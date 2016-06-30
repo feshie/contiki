@@ -19,12 +19,14 @@
 #include "debug.h"
 
 static void res_get_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
-    char message[13];
-    int length;
+    uint32_t time;
 
-	/* read RTC and get Epoch (int_32) */
-    length = sprintf(message, "%" PRIu32, sampler_get_time());
-    memcpy(buffer, message, length);
+    if (!sampler_get_time(&time)) {
+        REST.set_response_status(response, REST.status.SERVICE_UNAVAILABLE);
+        return;
+    }
+
+    int length = snprintf((char *)buffer, preferred_size, "%" PRIu32, time);
 
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
     REST.set_response_payload(response, buffer, length);
@@ -62,7 +64,7 @@ static void res_post_put_handler(void *request, void *response, uint8_t *buffer,
 
     if (!sampler_set_time(seconds)) {
         DEBUG("Failed to set epoch\n");
-        REST.set_response_status(response, REST.status.INTERNAL_SERVER_ERROR);
+        REST.set_response_status(response, REST.status.SERVICE_UNAVAILABLE);
         return;
     }
 

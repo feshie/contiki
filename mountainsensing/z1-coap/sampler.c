@@ -56,7 +56,6 @@ static void print_sensor_config(SensorConfig *conf);
 PROCESS_THREAD(sample_process, ev, data) {
     static struct etimer sample_timer;
     static Sample sample;
-    int16_t id;
 
     PROCESS_BEGIN();
 
@@ -66,7 +65,12 @@ PROCESS_THREAD(sample_process, ev, data) {
 
     while(true) {
 
-        etimer_set(&sample_timer, CLOCK_SECOND * (sensor_config.interval - (sampler_get_time() % sensor_config.interval)));
+        {
+            uint32_t time;
+            sampler_get_time(&time);
+            etimer_set(&sample_timer, CLOCK_SECOND * (sensor_config.interval - (time % sensor_config.interval)));
+        }
+
         PROCESS_WAIT_EVENT();
 
         // If it's time to sample
@@ -77,13 +81,7 @@ PROCESS_THREAD(sample_process, ev, data) {
             // Clear the previous sample, as it may have leftover things set we don't anticipate
             memset(&sample, 0, sizeof(sample));
 
-            sample.time = sampler_get_time();
-
-            sample.batt = sampler_get_batt();
-            sample.has_batt = true;
-
-            sample.temp = sampler_get_temp();
-            sample.has_temp = true;
+            sampler_get_time(&sample.time);
 
 #ifndef FESHIE_NO_ACC
             sample.accX = sampler_get_acc_x();
@@ -102,7 +100,7 @@ PROCESS_THREAD(sample_process, ev, data) {
             }
 
         } else if (ev == SAMPLER_EVENT_EXTRA_PERFORMED) {
-            id = store_save_sample(&sample);
+            int16_t id = store_save_sample(&sample);
 
             if (id) {
                 DEBUG("Sample saved with id %d\n", id);

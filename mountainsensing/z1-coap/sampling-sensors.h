@@ -1,58 +1,57 @@
 /**
- * Standard interface between z1-coap and the varios supported platforms.
- * Supports getting / setting the time, and provides functions for getting readings
- * from various sensors.
+ * Standard interface between z1-coap and the various supported platforms.
+ *
+ * Required readings / sensors are implemented as functions (eg get_time()),
+ * whilst all optional readings should be filled in the sampler_get_extra.
  */
 
 #ifndef SAMPLING_SENSORS_H
 #define SAMPLING_SENSORS_H
 
 #include <stdbool.h>
+#include <stdint.h>
 #include "settings.pb.h"
 #include "readings.pb.h"
 
 /**
- * Value that should be returned for dummy / erronous data.
- * This should be used to ensure data is always set on error.
+ * Epoch value indicating it is not a valid epoch.
  */
-#define ERROR_VALUE 12345
+#define ERROR_EPOCH 12345
 
 /**
- * The parent process. Usefull for doing a context switch in order to use timers / wait for events.
+ * Initialize any hardware required for sampling.
+ * (This does not imply anything is enabled).
  */
 void sampler_init(void);
 
-// Required sensors.
-float sampler_get_temp(void);
-float sampler_get_batt(void);
-int16_t sampler_get_acc_x(void);
-int16_t sampler_get_acc_y(void);
-int16_t sampler_get_acc_z(void);
-
 /**
  * Get the current time.
- * @return  The number of seconds since the Unix epoch, or 0 in case of error.
- * @note	Unix epoch is taken as 1970-01-01 00:00:00 UTC.
+ * @param seconds Pointer to write the number of seconds since the Unix epoch. On error, ERROR_EPOCH will be written to it.
+ * @return True on success, False otherwise
+ *
+ * @note Unix epoch is taken as 1970-01-01 00:00:00 UTC.
  */
-uint32_t sampler_get_time(void);
+bool sampler_get_time(uint32_t *seconds);
 
 /**
  * Set the current time.
- * @param   seconds The number of seconds since the Unix epoch
- * @return  True on success, false otherwise
- * @note	Unix epoch is taken as 1970-01-01 00:00:00 UTC.
+ * @param seconds The number of seconds since the Unix epoch.
+ * @return True on success, False otherwise
+ *
+ * @note Unix epoch is taken as 1970-01-01 00:00:00 UTC.
  */
 bool sampler_set_time(uint32_t seconds);
 
 /**
  * Get any extra platform specific readings.
  * These should be directly inserted into the sample struct.
+ *
  * @return True if all the operations were completed synchronously,
- * false if some operations are being completed asychronously (in this case
+ * False if some operations are being completed asychronously (in this case
  * sampler_extra_performed() should be called to notify the sampler when
  * the processing is complete).
  *
- * NOTE: config may change once sampler_get_extra returns,
+ * @note: config may change once sampler_get_extra returns,
  * the config should not be used in any asynchronous operations without
  * first copying it somewhere safe.
  */
