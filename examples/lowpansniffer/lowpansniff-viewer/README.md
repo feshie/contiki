@@ -1,7 +1,15 @@
 # LoWPANSniffer
 
-LoWPANSniffer is a sniffer application to fully map and analyse a network of 6LoWPAN devices using RPL and CoAP.
+LoWPANSniffer is an application to fully map and analyse a network of 6LoWPAN devices using RPL and CoAP.
 
-To be used with the *lowpansniffer* example under the [Feshie Project Repo](http://github.com/feshie/contiki).
+To be used with the z1-sniffer node in the [Feshie Contiki Repo](http://github.com/feshie/contiki).
 
-[Ed Crampin](http://edcrampin.co.uk) // [Feshie Project Repo](http://github.com/feshie) // [University of Southampton](http://soton.ac.uk)
+### Features
+
+* Sniffer packet table displaying all RPL and CoAP packets obtained by the sniffer node
+* Directed graph displaying network traffic between nodes
+
+### Building
+To build the executable jar, simply run *make*. The file will be built as **LoWPANSniffer.jar**.
+
+By [Ed Crampin](http://edcrampin.co.uk) for the [Feshie project](http://github.com/feshie).

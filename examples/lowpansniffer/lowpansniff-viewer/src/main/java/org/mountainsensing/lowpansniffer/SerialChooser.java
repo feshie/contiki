@@ -1,5 +1,5 @@
 /**
- * RPL Sniffing Control Application
+ * 6LoWPAN Sniffer
  * Edward Crampin, University of Southampton, 2016
  * mountainsensing.org
  */
@@ -8,8 +8,9 @@ package org.mountainsensing.lowpansniffer;
 import javax.swing.ListSelectionModel;
 
 /**
- * A class extending JFrame allowing a user to select a SerialPort to use from
- * a list.
+ * A class extending JFrame allowing a user to select a SerialPort to use from a
+ * list.
+ *
  * @author Ed Crampin
  * @see JFrame
  */
@@ -17,6 +18,7 @@ public class SerialChooser extends javax.swing.JFrame {
 
     /**
      * Creates new SerialChooser
+     *
      * @param ports list of ports that should be displayed for selection
      */
     public SerialChooser(String[] ports) {
@@ -77,11 +79,12 @@ public class SerialChooser extends javax.swing.JFrame {
     /**
      * When the confirm button is pressed, dispose of the view and init the rest
      * of the application
+     *
      * @param evt the event object
      * @see java.awt.event.ActionEvent
      */
     private void confirmButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_confirmButtonActionPerformed
-        if(!portList.isSelectionEmpty()) {
+        if (!portList.isSelectionEmpty()) {
             dispose();
             LoWPANSniffer.init(portList.getSelectedValue());
         }

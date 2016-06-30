@@ -1,5 +1,5 @@
 /**
- * RPL Sniffing Control Application
+ * 6LoWPAN Sniffer
  * Edward Crampin, University of Southampton, 2016
  * mountainsensing.org
  */
@@ -13,22 +13,24 @@ import jssc.SerialPortException;
 
 /**
  * The listener used for our SerialPort, listening for SerialPortEvents
+ *
  * @author Ed Crampin
  */
 public class SerialPacketListener implements SerialPortEventListener {
- 
+
     private final SerialPort serialPort;
     private final PacketTableHandler packetTable;
     private final NodeHandler nodeHandler;
-    
+
     private final ArrayList<Packet> packetList;
-    
+
     /**
      * Our constructor class, creates new SerialPacketListener
+     *
      * @param sp
      * @param pt
      * @param pl
-     * @param nh 
+     * @param nh
      */
     public SerialPacketListener(SerialPort sp, PacketTableHandler pt, ArrayList<Packet> pl, NodeHandler nh) {
         super();
@@ -37,9 +39,10 @@ public class SerialPacketListener implements SerialPortEventListener {
         this.packetTable = pt;
         this.nodeHandler = nh;
     }
-    
+
     /**
      * The function called when a SerialEvent is triggered
+     *
      * @param event the SerialPortEvent object
      * @see jssc.SerialPortEvent
      */
@@ -49,7 +52,7 @@ public class SerialPacketListener implements SerialPortEventListener {
             byte[] output = serialPort.readBytes();
             PacketHandler ph = new PacketHandler();
             Packet p = ph.parsePacket(output);
-            if(p != null && p.checksumConf) {
+            if (p != null && p.checksumConf) {
                 packetTable.addPacket(p);
                 packetList.add(p);
                 nodeHandler.registerPacket(p);
@@ -57,6 +60,5 @@ public class SerialPacketListener implements SerialPortEventListener {
         } catch (SerialPortException | UnsupportedOperationException | StringIndexOutOfBoundsException e) {
         }
     }
-    
-    
+
 }
