@@ -395,14 +395,17 @@ public class PacketHandler {
             case "01":
                 finalPacket.subtype = Packet.RPL_DODAG_INFO;
                 // CHECKSUM (4) | RPLInstanceID (2) | VERSION (2) | Rank (4) |
-                // FLAGS (2) | DATSN (2) | FLAGS (2) | RESERVED (2) | DODAG ID (16) |
-                // DODAG CONFIG (16) | PREFIX INFO (32)
+                // FLAGS (2) | DATSN (2) | FLAGS (2) | RESERVED (2) | DODAG ID (32) |
+                // DODAG CONFIG (32) | PREFIX INFO (64)
+                String dodagId = icmpPacket.substring(20, 52);
+                String dodagConfig = icmpPacket.substring(52, 84);
+                String prefixInfo = icmpPacket.substring(84, 148);
                 break;
             // Destination Advertisement Object
             case "02":
                 finalPacket.subtype = Packet.RPL_DEST_ADVERT;
                 // CHECKSUM (4) | RPLInstanceID (2) | FLAGS (2) | RESERVED (2) | 
-                // DAO Sequence (2) | DODAG ID (16) | RPL TARGET (20) |
+                // DAO Sequence (2) | DODAG ID (32) | RPL TARGET (variable) |
                 // TRANSMIT INFO (6)
                 break;
         }
