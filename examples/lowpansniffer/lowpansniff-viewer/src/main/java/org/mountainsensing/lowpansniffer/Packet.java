@@ -51,6 +51,16 @@ public class Packet {
     public static final int ACK = 7;
 
     /**
+     * Denotes when a CoAP Packet is a GET request.
+     */
+    public static final int COAP_GET = 8;
+    
+    /**
+     * Denotes when a CoAP Packet contains content.
+     */
+    public static final int COAP_CONTENT = 9;
+    
+    /**
      * Raw bytes of the packet.
      */
     public byte[] raw;
@@ -208,7 +218,14 @@ public class Packet {
      */
     public String info() {
         if (this.type == TYPE_COAP) {
-            return "Constrained Application Protocol";
+            switch(this.subtype) {
+                case COAP_GET:
+                    return "Constrained Application Protocol (GET)";
+                case COAP_CONTENT:
+                    return "Constrained Application Protocol (CONTENT)";
+                default:
+                    return "Constrained Application Protocol";
+            }
         }
         switch (this.subtype) {
             case RPL_DODAG_INFO:

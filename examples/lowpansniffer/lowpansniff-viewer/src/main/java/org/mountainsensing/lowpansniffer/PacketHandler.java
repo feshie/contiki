@@ -202,7 +202,6 @@ public class PacketHandler {
             // If 00, next header is Hop by Hop options
             if (nextHeaderType == 0) {
                 index += 2;
-                //System.out.println("COAP");
                 finalPacket.type = Packet.TYPE_COAP;
                 if (hopLimit == 0) {
                     finalPacket.hopLimit = hexToDec(packetHex.substring(index, index + 2));
@@ -226,7 +225,7 @@ public class PacketHandler {
 
                 index += 2;
                 //Skip RPL Option part
-                index += 12;
+                index += 14;
 
                 //UDP Header
                 int udpSrcPort = hexToDec(packetHex.substring(index, index + 4));
@@ -249,9 +248,9 @@ public class PacketHandler {
                 String coapToken = packetHex.substring(index, index + 8);
                 index += 8;
                 if (coapCode == 69) {
-                    //Content 
+                    finalPacket.subtype = Packet.COAP_CONTENT;
                 } else if (coapCode == 1) {
-                    //GET
+                    finalPacket.subtype = Packet.COAP_GET;
                 }
 
                 return finalPacket;
