@@ -2,8 +2,7 @@
 #include <stdio.h>
 #include <inttypes.h>
 #include "contiki.h"
-#include "sampling-sensors.h"
-#include "sampler.h"
+#include "ms-io.h"
 #include "ds3231-sensor.h"
 
 #define DEBUG_ON
@@ -16,10 +15,19 @@
  */
 static bool get_temp(float *temp);
 
-void sampler_init(void) {
+void ms_init(void) {
+    // TODO
 }
 
-bool sampler_get_time(uint32_t *seconds) {
+void ms_sense_on(void) {
+	// TODO
+}
+
+void ms_sense_off(void) {
+    // TODO
+}
+
+bool ms_get_time(uint32_t *seconds) {
     struct tm t;
 
     if (ds3231_get_time(&t) != 0) {
@@ -35,7 +43,7 @@ bool sampler_get_time(uint32_t *seconds) {
 	return true;
 }
 
-bool sampler_set_time(uint32_t seconds) {
+bool ms_set_time(uint32_t seconds) {
     if (seconds < EARLIEST_EPOCH) {
         return false;
     }
@@ -49,7 +57,7 @@ bool sampler_set_time(uint32_t seconds) {
     return ds3231_set_time(&t) == 0;
 }
 
-bool sampler_get_extra(Sample *sample, SensorConfig *config) {
+bool ms_get_extra(Sample *sample, SensorConfig *config) {
 
     sample->has_temp = get_temp(&sample->temp);
 

@@ -1,5 +1,5 @@
 #include "clock.h"
-#include "sampling-sensors.h"
+#include "ms-io.h"
 #include "dev/sht25.h"
 #include "dev/battery-sensor.h"
 #include "i2cmaster.h"
@@ -29,7 +29,15 @@ float get_humid(void);
  */
 static int16_t get_acc(enum ADXL345_AXIS axis);
 
-void sampler_init(void) {
+void ms_init(void) {
+    // We don't need to do anything
+}
+
+void ms_sense_on(void) {
+    // We don't need to do anything
+}
+
+void ms_sense_off(void) {
     // We don't need to do anything
 }
 
@@ -46,6 +54,7 @@ float get_humid(void) {
     SENSORS_ACTIVATE(sht25);
     humid = ((float) sht25.value(SHT25_VAL_HUM)) / 100;
     SENSORS_DEACTIVATE(sht25);
+    return humid;
 }
 
 float get_batt(void) {
@@ -63,17 +72,17 @@ int16_t get_acc(enum ADXL345_AXIS axis) {
     return acc;
 }
 
-bool sampler_get_time(uint32_t *seconds) {
+bool ms_get_time(uint32_t *seconds) {
     *seconds = (uint32_t) clock_seconds();
     return true;
 }
 
-bool sampler_set_time(uint32_t seconds) {
+bool ms_set_time(uint32_t seconds) {
     clock_set_seconds((unsigned long) seconds);
     return true;
 }
 
-bool sampler_get_extra(Sample *sample, SensorConfig *config) {
+bool ms_get_extra(Sample *sample, SensorConfig *config) {
     sample->batt = get_batt();
     sample->has_batt = true;
 

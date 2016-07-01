@@ -6,7 +6,7 @@
 #include "store.h"
 
 // Sensors
-#include "sampling-sensors.h"
+#include "ms-io.h"
 
 // Config
 #include "settings.pb.h"
@@ -61,13 +61,13 @@ PROCESS_THREAD(sample_process, ev, data) {
 
     refresh_config();
 
-    sampler_init();
+    ms_init();
 
     while(true) {
 
         {
             uint32_t time;
-            sampler_get_time(&time);
+            ms_get_time(&time);
             etimer_set(&sample_timer, CLOCK_SECOND * (sensor_config.interval - (time % sensor_config.interval)));
         }
 
@@ -81,19 +81,10 @@ PROCESS_THREAD(sample_process, ev, data) {
             // Clear the previous sample, as it may have leftover things set we don't anticipate
             memset(&sample, 0, sizeof(sample));
 
-            sampler_get_time(&sample.time);
-
-#ifndef FESHIE_NO_ACC
-            sample.accX = sampler_get_acc_x();
-            sample.has_accX = true;
-            sample.accY = sampler_get_acc_y();
-            sample.has_accY = true;
-            sample.accZ = sampler_get_acc_z();
-            sample.has_accZ = true;
-#endif // FESHIE_NO_ACC
+            ms_get_time(&sample.time);
 
             // If get_extra requires some asynch things, wait until they're completed
-            if(!sampler_get_extra(&sample, &sensor_config)) {
+            if(!ms_get_extra(&sample, &sensor_config)) {
                 DEBUG("Yielding for sampling_sensors_extra\n");
             } else {
                 process_post(&sample_process, SAMPLER_EVENT_EXTRA_PERFORMED, NULL);
