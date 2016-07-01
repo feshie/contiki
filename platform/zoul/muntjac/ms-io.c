@@ -101,8 +101,6 @@ bool ms_get_extra(Sample *sample, SensorConfig *config) {
         return true;
     }
 
-    GPIO_SET_PIN(GPIO_PORT_TO_BASE(PWR_SENSE_EN_PORT), GPIO_PIN_MASK(PWR_SENSE_EN_PIN));
-
     uint8_t avr_id = (uint8_t) config->avrIDs[0];
 
     // Use the buffer in the sample directly
@@ -118,12 +116,15 @@ bool ms_get_extra(Sample *sample, SensorConfig *config) {
         ms_sense_off();
         return true;
     }
+
+    /*if (config->has_powerID) {
+        // TODO - handle power board
+        avr_get_data(sample->power); // Need to get a tiny buffer in Sample to implement this
+    }*/
 }
 
 void extra_callback(bool isSuccess) {
     DEBUG("Sampled from avr. Success: %d\n", isSuccess);
-
-    GPIO_CLR_PIN(GPIO_PORT_TO_BASE(PWR_SENSE_EN_PORT), GPIO_PIN_MASK(PWR_SENSE_EN_PIN));
 
     sample_extra->has_AVR = isSuccess;
 
