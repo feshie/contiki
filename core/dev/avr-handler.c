@@ -240,7 +240,7 @@ PROCESS_THREAD(avr_process, ev, data_ptr) {
 #ifdef DEBUG_ON
                 int i;
                 for (i = 0; i < *incm_data->len; i++) {
-                    printf("%02x,", incm_data->len[i]);
+                    printf("%02x,", incm_data->data[i]);
                 }
                 printf("\n");
 #endif
