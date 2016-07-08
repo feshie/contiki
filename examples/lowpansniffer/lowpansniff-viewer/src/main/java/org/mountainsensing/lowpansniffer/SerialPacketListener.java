@@ -6,6 +6,7 @@
 package org.mountainsensing.lowpansniffer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import jssc.SerialPort;
 import jssc.SerialPortEvent;
 import jssc.SerialPortEventListener;
@@ -21,8 +22,9 @@ public class SerialPacketListener implements SerialPortEventListener {
     private final SerialPort serialPort;
     private final PacketTableHandler packetTable;
     private final NodeHandler nodeHandler;
-
+    private final PacketHandler ph;
     private final ArrayList<Packet> packetList;
+    private static final byte PACKET_DELIMITER = (byte) 0xC0;
 
     /**
      * Our constructor class, creates new SerialPacketListener
@@ -38,6 +40,7 @@ public class SerialPacketListener implements SerialPortEventListener {
         this.serialPort = sp;
         this.packetTable = pt;
         this.nodeHandler = nh;
+        this.ph = new PacketHandler();
     }
 
     /**
@@ -50,15 +53,36 @@ public class SerialPacketListener implements SerialPortEventListener {
     public void serialEvent(SerialPortEvent event) {
         try {
             byte[] output = serialPort.readBytes();
-            PacketHandler ph = new PacketHandler();
-            Packet p = ph.parsePacket(output);
-            if (p != null && p.checksumConf) {
-                packetTable.addPacket(p);
-                packetList.add(p);
-                nodeHandler.registerPacket(p);
+            ArrayList<byte[]> packets = splitPackets(output);
+            for(byte[] packet : packets) {
+                Packet p = ph.parsePacket(packet);
+                if (p != null && p.checksumConf) {
+                    packetTable.addPacket(p);
+                    packetList.add(p);
+                    nodeHandler.registerPacket(p);
+                }
             }
         } catch (SerialPortException | UnsupportedOperationException | StringIndexOutOfBoundsException e) {
         }
     }
-
+    
+    /**
+     * This function is used to separate packets based on the start/end delimiter
+     * set by PACKET_DELIMITER.
+     * 
+     * @param bytes
+     * @return array of packet bytes 
+     */
+    public ArrayList<byte[]> splitPackets(byte[] bytes) {
+        
+        ArrayList<byte[]> r = new ArrayList<>();
+        int ptr = 0;
+        for(int i = 0; i < bytes.length; i++) {
+            if(bytes[i] == PACKET_DELIMITER && (i == bytes.length - 1 || bytes[i + 1] == PACKET_DELIMITER)) {
+                r.add(Arrays.copyOfRange(bytes, ptr, i));
+                ptr = i + 1;
+            }
+        }
+        return r;
+    }
 }
