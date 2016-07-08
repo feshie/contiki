@@ -56,7 +56,7 @@ public class SerialPacketListener implements SerialPortEventListener {
             ArrayList<byte[]> packets = splitPackets(output);
             for(byte[] packet : packets) {
                 Packet p = ph.parsePacket(packet);
-                if (p != null && p.checksumConf) {
+                if (p != null) {
                     packetTable.addPacket(p);
                     packetList.add(p);
                     nodeHandler.registerPacket(p);

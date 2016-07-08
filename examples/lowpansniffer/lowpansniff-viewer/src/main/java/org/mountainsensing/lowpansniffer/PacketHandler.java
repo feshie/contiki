@@ -373,8 +373,8 @@ public class PacketHandler {
 
         //Check for ICMP?
         String checksumMsg = packetHex.substring(index, index + 4) + "0000" + packetHex.substring(index + 8);
-        // No idea why we have to subtract 76 to get correct checksum?
-        String checkLength = Integer.toHexString(checksumMsg.length() - 76);
+        // No idea why we have to subtract 74 to get correct checksum? Doesn't work for some packets..
+        String checkLength = Integer.toHexString(checksumMsg.length() - 74);
         while (checkLength.length() < 8) {
             checkLength = "0" + checkLength;
         }
@@ -388,6 +388,7 @@ public class PacketHandler {
             // DODAG Information Solicitation
             // Source is requesting DODAG Information Object from Target
             case "00":
+                finalPacket.type = Packet.TYPE_ICMP;
                 finalPacket.subtype = Packet.RPL_DODAG_SOLICIT;
                 // CHECKSUM (4) | FLAGS (2) | RESERVED (2)
                 break;
@@ -412,6 +413,9 @@ public class PacketHandler {
         finalPacket.checksum = icmpPacket.substring(2, 6);
         long checksum = (long) hexToDec(finalPacket.checksum);
         finalPacket.checksumConf = (checksum == checksumL);
+        if(!finalPacket.checksumConf) {
+            //System.out.println("CHECKSUM FAILED: " + checksum + " | " + checksumL);
+        }
 
         return finalPacket;
     }

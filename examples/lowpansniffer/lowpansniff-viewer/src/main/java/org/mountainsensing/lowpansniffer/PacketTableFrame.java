@@ -135,7 +135,7 @@ public class PacketTableFrame extends javax.swing.JFrame {
         packetInfo += "Destination PAN:\t" + p.dstPan + "\r\n";
         packetInfo += "Sequence Number:\t" + p.seqNo + "\r\n";
         packetInfo += "Hop Limit:\t\t" + p.hopLimit + "\r\n";
-        packetInfo += "Checksum:\t\t" + p.checksum();
+        //packetInfo += "Checksum:\t\t" + p.checksum();
         rawPacketText.setText(packetInfo);
     }
 
