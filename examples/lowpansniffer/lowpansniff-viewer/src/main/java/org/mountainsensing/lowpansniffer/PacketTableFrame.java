@@ -71,7 +71,7 @@ public class PacketTableFrame extends javax.swing.JFrame {
                         case "ICMPv6":
                             setBackground(new Color(254, 237, 255));
                             break;
-                        case "COAP":
+                        case "CoAP":
                             setBackground(new Color(237, 247, 255));
                             break;
                         case "IEEE 802.15.4":
