@@ -57,7 +57,7 @@ public class NodeHandler {
                 src.addPacket(p);
                 nodeMapper.addVertex(src.getAddress());
             }
-            if (!pdst.equals(Node.getPrefix() + "::1")) {
+            if (!pdst.equals(Node.getPrefix() + "::1") && !pdst.equals("ff02::1a")) {
                 if (nodes.contains(pdst)) {
                     dst = nodes.get(pdst);
                 } else {
