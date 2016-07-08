@@ -202,7 +202,7 @@ public class Packet {
             case TYPE_ICMP:
                 return "ICMPv6";
             case TYPE_COAP:
-                return "COAP";
+                return "CoAP";
             case TYPE_IEEE802154:
                 return "IEEE 802.15.4";
             default:
@@ -220,11 +220,11 @@ public class Packet {
         if (this.type == TYPE_COAP) {
             switch(this.subtype) {
                 case COAP_GET:
-                    return "Constrained Application Protocol (GET)";
+                    return "CoAP (GET)";
                 case COAP_CONTENT:
-                    return "Constrained Application Protocol (CONTENT)";
+                    return "CoAP (CONTENT)";
                 default:
-                    return "Constrained Application Protocol";
+                    return "CoAP";
             }
         }
         switch (this.subtype) {
