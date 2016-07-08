@@ -55,7 +55,6 @@
 #include "dev/adxl345.h"
 #include "sys/clock.h"
 #include "dev/uart1_i2c_master.h"
-#include "dev/ms1-io.h"
 #include "dev/reset-sensor.h"
 #include "dev/spi.h"
 #if NETSTACK_CONF_WITH_IPV6
@@ -207,7 +206,6 @@ main(int argc, char **argv)
    */
   msp430_cpu_init();
   clock_init();
-  ms1_io_init(); 
   i2c_enable();
   
 

@@ -22,7 +22,17 @@
  * Initialize any hardware required for sampling.
  * (This does not imply anything is enabled).
  */
-void sampler_init(void);
+void ms_init(void);
+
+/**
+ * Turn on power to external sensors.
+ */
+void ms_sense_on(void);
+
+/**
+ * Turn off power to external sensors.
+ */
+void ms_sense_off(void);
 
 /**
  * Get the current time.
@@ -31,7 +41,7 @@ void sampler_init(void);
  *
  * @note Unix epoch is taken as 1970-01-01 00:00:00 UTC.
  */
-bool sampler_get_time(uint32_t *seconds);
+bool ms_get_time(uint32_t *seconds);
 
 /**
  * Set the current time.
@@ -40,7 +50,7 @@ bool sampler_get_time(uint32_t *seconds);
  *
  * @note Unix epoch is taken as 1970-01-01 00:00:00 UTC.
  */
-bool sampler_set_time(uint32_t seconds);
+bool ms_set_time(uint32_t seconds);
 
 /**
  * Get any extra platform specific readings.
@@ -55,6 +65,6 @@ bool sampler_set_time(uint32_t seconds);
  * the config should not be used in any asynchronous operations without
  * first copying it somewhere safe.
  */
-bool sampler_get_extra(Sample *sample, SensorConfig *config);
+bool ms_get_extra(Sample *sample, SensorConfig *config);
 
 #endif // ifndef SAMPLING_SENSORS_H

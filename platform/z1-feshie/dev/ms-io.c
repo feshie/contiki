@@ -1,16 +1,18 @@
 #include "dev/uart1_i2c_master.h"
-#include "ms1-io.h"
 #include "dev/ds3231-sensor.h" 	// Clock
 #include "dev/adc1-sensor.h" 	// ADC 1
 #include "dev/adc2-sensor.h" 	// ADC 2
 #include "dev/batv-sensor.h" // Batt
 #include "adxl345.h" 		// Accel
 #include "dev/event-sensor.h"	//event sensor (rain)
-#include "sampling-sensors.h"
+#include "ms-io.h"
 #include "utc_time.h"
 #include "dev/avr-handler.h"
 #include "sampler.h"
 #include "contiki-conf.h"
+#include "contiki.h"
+#include "dev/reset-sensor.h"
+#include "platform-conf.h"
 
 #define DEBUG_ON
 #include "debug.h"
@@ -48,6 +50,8 @@ static struct avr_data data = {
     .size = sizeof(((Sample_AVR_t *)0)->bytes)
 };
 
+static void ms_radio_on(void);
+static void ms_radio_off(void);
 /**
  * Get the temperature in C
  */
@@ -78,9 +82,31 @@ static uint16_t get_ADC1(void);
  */
 static uint16_t get_ADC2(void);
 
-void sampler_init(void) {
+void ms_init(void) {
+    // Set up sense control pin
+    SENSE_EN_PORT(SEL) &= ~BV(SENSE_EN_PIN);
+    SENSE_EN_PORT(DIR) |= BV(SENSE_EN_PIN);
+    SENSE_EN_PORT(REN) &= ~BV(SENSE_EN_PIN);
+    SENSE_EN_PORT(OUT) &= ~BV(SENSE_EN_PIN);
+
+    //Make sure all analogue input pins are inputs.
+    P6DIR = 0x00;
+    P6SEL = 0x00;
+
+    /* Ensure that rain bucket is input. */
+    P2DIR &= ~BV(0);
+
+    // Set up radio control pin
+    RADIO_EN_PORT(SEL) &= ~BV(RADIO_EN_PIN);
+    RADIO_EN_PORT(DIR) |= BV(RADIO_EN_PIN);
+    RADIO_EN_PORT(REN) &= ~BV(RADIO_EN_PIN);
+    DEBUG("\tTurning on radio\n");
+    //Turn on by default
+    ms_radio_on();
+    ms_sense_off(); //turn off sensors by default
+
 #ifdef SENSE_ON
-    ms1_sense_on();
+    ms_sense_on();
     DEBUG("Sensor power permanently on\n");
 #endif
 
@@ -92,12 +118,32 @@ void sampler_init(void) {
     avr_set_callback(&extra_callback);
 }
 
+void ms_radio_on(void) {
+	DEBUG("Turning on radio\n");
+	RADIO_EN_PORT(OUT) |= BV(RADIO_EN_PIN);
+}
+
+void ms_radio_off(void) {
+	DEBUG("Turning off radio\n");
+	RADIO_EN_PORT(OUT) &= ~BV(RADIO_EN_PIN);
+}
+
+void ms_sense_on(void){
+	DEBUG("Turning on sense\n");
+	SENSE_EN_PORT(OUT) |= BV(SENSE_EN_PIN);
+}
+
+void ms_sense_off(void){
+	DEBUG("Turning off sense\n");
+	SENSE_EN_PORT(OUT) &= ~BV(SENSE_EN_PIN);
+}
+
 float get_temp(void) {
     return ((float) ds3231_temperature()) / 100;
 }
 
 float get_batt(void) {
-    ms1_sense_on();
+    ms_sense_on();
     float bat_ret;
     rtimer_clock_t t0;
     SENSORS_ACTIVATE(batv_sensor);
@@ -106,13 +152,12 @@ float get_batt(void) {
     bat_ret =  (float)(batv_sensor.value(0)) / 273.067;
     SENSORS_DEACTIVATE(batv_sensor);
 #ifndef SENSE_ON
-    ms1_sense_off();
+    ms_sense_off();
 #endif
     return bat_ret;
 }
 
-
-bool sampler_get_time(uint32_t *seconds) {
+bool ms_get_time(uint32_t *seconds) {
 #ifdef NO_RTC
     #warning "RTC disabled"
 	*seconds = ERROR_VALUE;
@@ -129,7 +174,7 @@ bool sampler_get_time(uint32_t *seconds) {
 #endif // ifdef NO_RTC
 }
 
-bool sampler_set_time(uint32_t seconds) {
+bool ms_set_time(uint32_t seconds) {
 #ifdef NO_RTC
     return true;
 #else
@@ -147,10 +192,10 @@ bool sampler_set_time(uint32_t seconds) {
 #endif // ifdef NO_RTC
 }
 
-bool sampler_get_extra(Sample *sample, SensorConfig *config) {
+bool ms_get_extra(Sample *sample, SensorConfig *config) {
     sample_extra = sample;
 
-    ms1_sense_on();
+    ms_sense_on();
 
     sample->batt = get_batt();
     sample->has_batt = true;
@@ -185,7 +230,7 @@ bool sampler_get_extra(Sample *sample, SensorConfig *config) {
     // If there are no avrs, we're done
     if (config->avrIDs_count < 1) {
 #ifndef SENSE_ON
-        ms1_sense_off();
+        ms_sense_off();
 #endif
         // No need to wait on anything else
         return true;
@@ -203,7 +248,7 @@ bool sampler_get_extra(Sample *sample, SensorConfig *config) {
         return false;
     } else {
 #ifndef SENSE_ON
-        ms1_sense_off();
+        ms_sense_off();
 #endif
         return true;
     }
@@ -215,7 +260,7 @@ static void extra_callback(bool isSuccess) {
     sample_extra->has_AVR = isSuccess;
 
 #ifndef SENSE_ON
-    ms1_sense_off();
+    ms_sense_off();
 #endif
     sampler_extra_performed();
 }

@@ -13,7 +13,7 @@
 #include "rest-engine.h"
 #include <errno.h>
 #include <inttypes.h>
-#include "sampling-sensors.h"
+#include "ms-io.h"
 
 #define DEBUG_ON
 #include "debug.h"
@@ -21,7 +21,7 @@
 static void res_get_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
     uint32_t time;
 
-    if (!sampler_get_time(&time)) {
+    if (!ms_get_time(&time)) {
         REST.set_response_status(response, REST.status.SERVICE_UNAVAILABLE);
         return;
     }
@@ -62,7 +62,7 @@ static void res_post_put_handler(void *request, void *response, uint8_t *buffer,
 
     DEBUG("Requested time is %" PRIu32 "\n", seconds);
 
-    if (!sampler_set_time(seconds)) {
+    if (!ms_set_time(seconds)) {
         DEBUG("Failed to set epoch\n");
         REST.set_response_status(response, REST.status.SERVICE_UNAVAILABLE);
         return;
