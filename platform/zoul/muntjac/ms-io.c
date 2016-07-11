@@ -8,6 +8,7 @@
 #include "ds3231-sensor.h"
 #include "dev/avr-handler.h"
 #include "lpm.h"
+#include "dev/adc-zoul.h"
 
 #define DEBUG_ON
 #include "debug.h"
@@ -41,6 +42,9 @@ static bool get_temp(float *temp);
 void ms_init(void) {
     // Set the AVR callback
     avr_set_callback(&extra_callback);
+
+    // Initialize the ADCs
+    adc_zoul.configure(SENSORS_HW_INIT, ZOUL_SENSORS_ADC1 + ZOUL_SENSORS_ADC2);
 }
 
 void ms_sense_on(void) {
@@ -92,6 +96,16 @@ bool ms_get_extra(Sample *sample, SensorConfig *config) {
 	sample_extra = sample;
 
     ms_sense_on();
+
+    if (config->hasADC1) {
+        sample->has_ADC1 = true;
+        sample->ADC1 = adc_zoul.value(ZOUL_SENSORS_ADC1);
+    }
+
+    if (config->hasADC2) {
+        sample->has_ADC2 = true;
+        sample->ADC2 = adc_zoul.value(ZOUL_SENSORS_ADC2);
+    }
 
     sample->has_temp = get_temp(&sample->temp);
 
