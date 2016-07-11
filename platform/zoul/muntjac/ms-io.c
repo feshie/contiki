@@ -98,6 +98,7 @@ bool ms_get_extra(Sample *sample, SensorConfig *config) {
     // If there are no avrs, we're done
     if (config->avrIDs_count < 1) {
         // No need to wait on anything else
+        ms_sense_off();
         return true;
     }
 
