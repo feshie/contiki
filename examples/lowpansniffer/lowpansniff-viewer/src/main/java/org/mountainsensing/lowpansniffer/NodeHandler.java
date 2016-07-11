@@ -34,41 +34,37 @@ public class NodeHandler {
      */
     public void registerPacket(Packet p) {
         if (!p.multicast && !p.src().equals("") && !p.dst().equals("")) {
+            if(p.type == Packet.TYPE_COAP) return;
 
             String psrc = p.src();
-            if (psrc.startsWith("aaaa")) {
-                psrc = Node.getPrefix() + psrc.substring(4);
-            }
+            
             String pdst = p.dst();
-            if (pdst.startsWith("aaaa")) {
-                pdst = Node.getPrefix() + pdst.substring(4);
-            }
-
+            
             Node src = null;
             Node dst = null;
 
-            if (!psrc.equals(Node.getPrefix() + "::1")) {
+            if (!psrc.endsWith("::1")) {
                 if (nodes.contains(psrc)) {
                     src = nodes.get(psrc);
                 } else {
-                    src = new Node(psrc.substring(4));
+                    src = new Node(psrc);
                     nodes.add(src);
                 }
                 src.addPacket(p);
                 nodeMapper.addVertex(src.getAddress());
             }
-            if (!pdst.equals(Node.getPrefix() + "::1") && !pdst.equals("ff02::1a")) {
+            if (!pdst.endsWith("::1") && !pdst.endsWith("::1a")) {
                 if (nodes.contains(pdst)) {
                     dst = nodes.get(pdst);
                 } else {
-                    dst = new Node(pdst.substring(4));
+                    dst = new Node(pdst);
                     nodes.add(dst);
                 }
                 dst.addPacket(p);
                 nodeMapper.addVertex(dst.getAddress());
             }
 
-            if (!pdst.equals(Node.getPrefix() + "::1") && !psrc.equals(Node.getPrefix() + "::1")) {
+            if (!pdst.endsWith("::1") && !psrc.endsWith("::1") && !pdst.endsWith("::1a")) {
                 nodeMapper.addEdge(src.getAddress(), dst.getAddress());
             }
 
@@ -76,15 +72,13 @@ public class NodeHandler {
         if (p.multicast) {
 
             String psrc = p.src();
-            if (psrc.startsWith("aaaa")) {
-                psrc = Node.getPrefix() + psrc.substring(4);
-            }
+            
             Node src = null;
-            if (!psrc.equals(Node.getPrefix() + "::1")) {
+            if (!psrc.endsWith("::1")) {
                 if (nodes.contains(psrc)) {
                     src = nodes.get(psrc);
                 } else {
-                    src = new Node(psrc.substring(4));
+                    src = new Node(psrc);
                     nodes.add(src);
                 }
                 src.addPacket(p);
