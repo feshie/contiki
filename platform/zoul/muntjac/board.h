@@ -209,6 +209,11 @@
 #define UART1_CTS_PIN            (-1)
 #define UART1_RTS_PORT           (-1)
 #define UART1_RTS_PIN            (-1)
+
+#define RS485_UART               1
+#define RS485_UART_BASE          UART_1_BASE
+#undef UART1_CONF_BAUD_RATE
+#define UART1_CONF_BAUD_RATE     9600
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**

@@ -1,5 +1,5 @@
 /**
- * RPL Sniffing Control Application
+ * 6LoWPAN Sniffer
  * Edward Crampin, University of Southampton, 2016
  * mountainsensing.org
  */
@@ -11,31 +11,34 @@ import jssc.SerialPortList;
 
 /**
  * Class to handle the serial port that is used to obtain packets.
+ *
  * @author Ed Crampin
  */
 public class SerialHandler {
-    
+
     private SerialPort serialPort;
-    
+
     /**
      * Returns the names of all serial ports.
+     *
      * @return string array of all available port names
      */
     public String[] getPortNames() {
         String[] portNames = SerialPortList.getPortNames();
         return portNames;
     }
-    
+
     /**
      * Opens the serial port specified with baudrate specified
+     *
      * @param name the name of the port to open
      * @param bauds the baudrate of which to use
      * @return a SerialPort object of the opened SerialPort
      * @see jssc.SerialPort
      */
     public SerialPort openSerialPort(String name, int bauds) {
-        
-        serialPort = new SerialPort(name); 
+
+        serialPort = new SerialPort(name);
         try {
             serialPort.openPort();
             serialPort.setParams(bauds, 8, 1, 0);
@@ -46,10 +49,9 @@ public class SerialHandler {
             int mask = SerialPort.MASK_RXCHAR;
             //Set the prepared mask
             serialPort.setEventsMask(mask);
-            
+
             return serialPort;
-        }
-        catch (SerialPortException ex) {
+        } catch (SerialPortException ex) {
             ex.printStackTrace();
             return null;
         }

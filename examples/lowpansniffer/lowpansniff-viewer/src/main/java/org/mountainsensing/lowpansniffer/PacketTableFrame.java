@@ -1,5 +1,5 @@
 /**
- * RPL Sniffing Control Application
+ * 6LoWPAN Sniffer
  * Edward Crampin, University of Southampton, 2016
  * mountainsensing.org
  */
@@ -9,24 +9,19 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Point;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
-import javax.swing.AbstractAction;
-import javax.swing.Action;
 import javax.swing.ActionMap;
+import javax.swing.JFrame;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 
 /**
  * The main table view for the application, displaying all packets detected by
  * the sniffer and interpreted by the application.
+ *
  * @author Ed Crampin
  * @see JFrame
  */
@@ -34,17 +29,18 @@ public class PacketTableFrame extends javax.swing.JFrame {
 
     private ArrayList<Packet> packetList;
     private NodeList nodeList;
-    
+
     /**
      * Creates new RPLMapperFrame
+     *
      * @param packetList the list of packets that are displayed by the table
      */
     public PacketTableFrame(ArrayList<Packet> packetList) {
-        
+
         this.packetList = packetList;
-        
+
         initComponents();
-        
+
         packetTable.getColumnModel().getColumn(0).setPreferredWidth(20);
         packetTable.getColumnModel().getColumn(1).setPreferredWidth(50);
         packetTable.getColumnModel().getColumn(2).setPreferredWidth(120);
@@ -52,41 +48,41 @@ public class PacketTableFrame extends javax.swing.JFrame {
         packetTable.getColumnModel().getColumn(4).setPreferredWidth(60);
         packetTable.getColumnModel().getColumn(5).setPreferredWidth(30);
         packetTable.getColumnModel().getColumn(6).setPreferredWidth(180);
-        
-        packetTable.setDefaultRenderer(Object.class, new DefaultTableCellRenderer(){
+
+        packetTable.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table,
                     Object value, boolean isSelected, boolean hasFocus, int row, int col) {
 
                 super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
-                
-                int packetrow = (int)table.getValueAt(row, 0) - 1;
-                
+
+                int packetrow = (int) table.getValueAt(row, 0) - 1;
+
                 String protocol = packetList.get(packetrow).protocol();
-                if(isSelected) {
+                if (isSelected) {
                     setForeground(Color.WHITE);
                     setBackground(Color.BLACK);
                 } else {
                     setForeground(Color.BLACK);
-                    switch(protocol) {
+                    switch (protocol) {
                         default:
                             setBackground(Color.WHITE);
                             break;
                         case "ICMPv6":
-                            setBackground(new Color(254,237,255));
+                            setBackground(new Color(254, 237, 255));
                             break;
-                        case "COAP":
-                            setBackground(new Color(237,247,255));
+                        case "CoAP":
+                            setBackground(new Color(237, 247, 255));
                             break;
                         case "IEEE 802.15.4":
-                            setBackground( new Color(238,255,237));
+                            setBackground(new Color(238, 255, 237));
                             break;
 
                     }
                 }
                 setBorder(noFocusBorder);
                 return this;
-            }   
+            }
         });
         packetTable.setDefaultRenderer(Number.class, packetTable.getDefaultRenderer(Object.class));
         packetTable.setDefaultRenderer(Double.class, packetTable.getDefaultRenderer(Object.class));
@@ -96,36 +92,38 @@ public class PacketTableFrame extends javax.swing.JFrame {
         packetTable.getTableHeader().setReorderingAllowed(false);
         packetTable.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent me) {
-                JTable table =(JTable) me.getSource();
+                JTable table = (JTable) me.getSource();
                 Point p = me.getPoint();
                 int row = table.rowAtPoint(p);
                 int col = table.columnAtPoint(p);
-                int packetrow = (int)table.getValueAt(row, 0) - 1;
+                int packetrow = (int) table.getValueAt(row, 0) - 1;
                 Packet packet = packetList.get(packetrow);
                 packetSelected(packet);
             }
         });
-        
+
         ActionMap am = packetTable.getActionMap();
         am.put("selectPreviousRow", new TableKeyAction("up", this));
         am.put("selectNextRow", new TableKeyAction("down", this));
-        
+
         rawPacketField.setEditable(false);
         rawPacketText.setEditable(false);
-        
+
     }
-    
+
     /**
      * Sets the list of nodes in the application
+     *
      * @param nl the NodeList
      */
     public void setNodeList(NodeList nl) {
         this.nodeList = nl;
     }
-    
+
     /**
      * When a packet is selected in the table, update the text fields to display
      * information about the packet
+     *
      * @param p the packet that was selected
      */
     public void packetSelected(Packet p) {
@@ -137,7 +135,7 @@ public class PacketTableFrame extends javax.swing.JFrame {
         packetInfo += "Destination PAN:\t" + p.dstPan + "\r\n";
         packetInfo += "Sequence Number:\t" + p.seqNo + "\r\n";
         packetInfo += "Hop Limit:\t\t" + p.hopLimit + "\r\n";
-        packetInfo += "Checksum:\t\t" + p.checksum();
+        //packetInfo += "Checksum:\t\t" + p.checksum();
         rawPacketText.setText(packetInfo);
     }
 
@@ -161,7 +159,7 @@ public class PacketTableFrame extends javax.swing.JFrame {
         jLabel2 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("Feshie Mapper");
+        setTitle("LoWPAN Sniffer");
 
         jScrollPane1.setBackground(new java.awt.Color(254, 254, 254));
 
@@ -262,14 +260,16 @@ public class PacketTableFrame extends javax.swing.JFrame {
 
     /**
      * Returns the JTable
+     *
      * @return the reference to the JTable
      */
     public JTable getTable() {
         return this.packetTable;
     }
-    
+
     /**
      * Returns the packet list of the class.
+     *
      * @return an ArrayList of Packets
      */
     public ArrayList<Packet> getPacketList() {
