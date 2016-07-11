@@ -17,7 +17,6 @@ public class Node {
 
     private final String address;
     private final ArrayList<Packet> packets;
-    private static final String LINK_LOCAL_PREFIX = "fe80";
 
     /**
      * Constructor class for a node.
@@ -48,30 +47,22 @@ public class Node {
     }
 
     /**
-     * Returns IPv6 address of the node, prefixed with LINK_LOCAL_PREFIX.
+     * Returns IPv6 address of the node
      *
-     * @return link local prefixed IPv6 address of node.
+     * @return IPv6 address of the node
      */
     public String getAddress() {
-        return LINK_LOCAL_PREFIX + this.address;
-    }
-
-    /**
-     * Return prefix used with getAddress
-     *
-     * @return LINK_LOCAL_PREFIX defined for nodes.
-     */
-    public static String getPrefix() {
-        return LINK_LOCAL_PREFIX;
+        return this.address;
     }
 
     /**
      * Return raw address of node.
      *
-     * @return address Node was initialised with, without the LINK_LOCAL_PREFIX
+     * @deprecated will now return getAddress()
+     * @see getAddress
      */
     public String getRawAddress() {
-        return this.address;
+        return this.getAddress();
     }
 
     /**

@@ -37,19 +37,11 @@ public class PacketHandler {
         packetHex = packetHex.replace(" ", "");
         int packetLength = packetBytes.length;
 
-        //TODO: Improve this
-        if (packetHex.contains("c0c00200")) {
-            //Corrupt packet
-            return null;
-        }
-
         if (packetHex.startsWith("0200")) {
             finalPacket.type = Packet.TYPE_IEEE802154;
             finalPacket.subtype = Packet.ACK;
             finalPacket.src = "";
             finalPacket.dst = "";
-            //System.out.println("ACK");
-            //ACK, ignore.
             return finalPacket;
         }
 

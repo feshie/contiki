@@ -14,6 +14,7 @@ public class NodeHandler {
 
     private final NodeList nodes;
     private final NodeMapper nodeMapper;
+    private static final String COAP_PREFIX = "aaaa";
 
     /**
      * Constructor, instantiates NodeList and takes input of NodeMapper view.
@@ -28,7 +29,7 @@ public class NodeHandler {
     /**
      * Registers a packet by extracting the source and destination addresses,
      * creating Nodes if they don't already exist and adding any edge/vertex to
-     * the NodeMapper. Ignores destination IP if it is a multicast address
+     * the NodeMapper. Ignores destination IP if it is a multicast address.
      *
      * @param p the Packet that is to be registered.
      */
@@ -36,59 +37,54 @@ public class NodeHandler {
         if (!p.multicast && !p.src().equals("") && !p.dst().equals("")) {
 
             String psrc = p.src();
-            if (psrc.startsWith("aaaa")) {
-                psrc = Node.getPrefix() + psrc.substring(4);
-            }
+            
             String pdst = p.dst();
-            if (pdst.startsWith("aaaa")) {
-                pdst = Node.getPrefix() + pdst.substring(4);
-            }
-
+            
             Node src = null;
             Node dst = null;
 
-            if (!psrc.equals(Node.getPrefix() + "::1")) {
+            if (!psrc.endsWith("::1") && !psrc.startsWith(COAP_PREFIX)) {
                 if (nodes.contains(psrc)) {
                     src = nodes.get(psrc);
                 } else {
-                    src = new Node(psrc.substring(4));
+                    src = new Node(psrc);
                     nodes.add(src);
                 }
                 src.addPacket(p);
-                nodeMapper.addVertex(src.getAddress());
+                nodeMapper.addVertex(src.getRawAddress());
             }
-            if (!pdst.equals(Node.getPrefix() + "::1") && !pdst.equals("ff02::1a")) {
+            if (!pdst.endsWith("::1") && !pdst.endsWith("::1a") && !pdst.startsWith(COAP_PREFIX)) {
                 if (nodes.contains(pdst)) {
                     dst = nodes.get(pdst);
                 } else {
-                    dst = new Node(pdst.substring(4));
+                    dst = new Node(pdst);
                     nodes.add(dst);
                 }
                 dst.addPacket(p);
-                nodeMapper.addVertex(dst.getAddress());
+                nodeMapper.addVertex(dst.getRawAddress());
             }
 
-            if (!pdst.equals(Node.getPrefix() + "::1") && !psrc.equals(Node.getPrefix() + "::1")) {
-                nodeMapper.addEdge(src.getAddress(), dst.getAddress());
+            if (!pdst.endsWith("::1") && !psrc.endsWith("::1") && 
+                    !pdst.endsWith("::1a") && !pdst.startsWith(COAP_PREFIX)
+                     && !psrc.startsWith(COAP_PREFIX)) {
+                nodeMapper.addEdge(src.getRawAddress(), dst.getRawAddress());
             }
 
         }
         if (p.multicast) {
 
             String psrc = p.src();
-            if (psrc.startsWith("aaaa")) {
-                psrc = Node.getPrefix() + psrc.substring(4);
-            }
+            
             Node src = null;
-            if (!psrc.equals(Node.getPrefix() + "::1")) {
+            if (!psrc.endsWith("::1") && !psrc.startsWith(COAP_PREFIX)) {
                 if (nodes.contains(psrc)) {
                     src = nodes.get(psrc);
                 } else {
-                    src = new Node(psrc.substring(4));
+                    src = new Node(psrc);
                     nodes.add(src);
                 }
                 src.addPacket(p);
-                nodeMapper.addVertex(src.getAddress());
+                nodeMapper.addVertex(src.getRawAddress());
             }
         }
     }
