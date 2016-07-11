@@ -28,7 +28,9 @@ public class NodeHandler {
     /**
      * Registers a packet by extracting the source and destination addresses,
      * creating Nodes if they don't already exist and adding any edge/vertex to
-     * the NodeMapper. Ignores destination IP if it is a multicast address
+     * the NodeMapper. Ignores destination IP if it is a multicast address. Also
+     * ignores packet if it is a CoAP packet, meaning no CoAP nodes are added to
+     * our node map.
      *
      * @param p the Packet that is to be registered.
      */
