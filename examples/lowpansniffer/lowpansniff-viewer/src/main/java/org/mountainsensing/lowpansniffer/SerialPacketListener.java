@@ -79,7 +79,7 @@ public class SerialPacketListener implements SerialPortEventListener {
         int ptr = 0;
         for(int i = 0; i < bytes.length; i++) {
             if(bytes[i] == PACKET_DELIMITER && (i == bytes.length - 1 || bytes[i + 1] == PACKET_DELIMITER)) {
-                r.add(Arrays.copyOfRange(bytes, ptr, i));
+                r.add(Arrays.copyOfRange(bytes, ptr, i + 1));
                 ptr = i + 1;
             }
         }
