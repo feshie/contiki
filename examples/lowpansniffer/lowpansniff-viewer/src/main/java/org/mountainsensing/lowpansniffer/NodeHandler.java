@@ -14,6 +14,7 @@ public class NodeHandler {
 
     private final NodeList nodes;
     private final NodeMapper nodeMapper;
+    private static final String COAP_PREFIX = "aaaa";
 
     /**
      * Constructor, instantiates NodeList and takes input of NodeMapper view.
@@ -42,7 +43,7 @@ public class NodeHandler {
             Node src = null;
             Node dst = null;
 
-            if (!psrc.endsWith("::1")) {
+            if (!psrc.endsWith("::1") && !psrc.startsWith(COAP_PREFIX)) {
                 if (nodes.contains(psrc)) {
                     src = nodes.get(psrc);
                 } else {
@@ -52,7 +53,7 @@ public class NodeHandler {
                 src.addPacket(p);
                 nodeMapper.addVertex(src.getRawAddress());
             }
-            if (!pdst.endsWith("::1") && !pdst.endsWith("::1a")) {
+            if (!pdst.endsWith("::1") && !pdst.endsWith("::1a") && !pdst.startsWith(COAP_PREFIX)) {
                 if (nodes.contains(pdst)) {
                     dst = nodes.get(pdst);
                 } else {
@@ -63,7 +64,9 @@ public class NodeHandler {
                 nodeMapper.addVertex(dst.getRawAddress());
             }
 
-            if (!pdst.endsWith("::1") && !psrc.endsWith("::1") && !pdst.endsWith("::1a")) {
+            if (!pdst.endsWith("::1") && !psrc.endsWith("::1") && 
+                    !pdst.endsWith("::1a") && !pdst.startsWith(COAP_PREFIX)
+                     && !psrc.startsWith(COAP_PREFIX)) {
                 nodeMapper.addEdge(src.getRawAddress(), dst.getRawAddress());
             }
 
@@ -73,7 +76,7 @@ public class NodeHandler {
             String psrc = p.src();
             
             Node src = null;
-            if (!psrc.endsWith("::1")) {
+            if (!psrc.endsWith("::1") && !psrc.startsWith(COAP_PREFIX)) {
                 if (nodes.contains(psrc)) {
                     src = nodes.get(psrc);
                 } else {
