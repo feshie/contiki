@@ -28,15 +28,12 @@ public class NodeHandler {
     /**
      * Registers a packet by extracting the source and destination addresses,
      * creating Nodes if they don't already exist and adding any edge/vertex to
-     * the NodeMapper. Ignores destination IP if it is a multicast address. Also
-     * ignores packet if it is a CoAP packet, meaning no CoAP nodes are added to
-     * our node map.
+     * the NodeMapper. Ignores destination IP if it is a multicast address.
      *
      * @param p the Packet that is to be registered.
      */
     public void registerPacket(Packet p) {
         if (!p.multicast && !p.src().equals("") && !p.dst().equals("")) {
-            if(p.type == Packet.TYPE_COAP) return;
 
             String psrc = p.src();
             
@@ -53,7 +50,7 @@ public class NodeHandler {
                     nodes.add(src);
                 }
                 src.addPacket(p);
-                nodeMapper.addVertex(src.getAddress());
+                nodeMapper.addVertex(src.getRawAddress());
             }
             if (!pdst.endsWith("::1") && !pdst.endsWith("::1a")) {
                 if (nodes.contains(pdst)) {
@@ -63,11 +60,11 @@ public class NodeHandler {
                     nodes.add(dst);
                 }
                 dst.addPacket(p);
-                nodeMapper.addVertex(dst.getAddress());
+                nodeMapper.addVertex(dst.getRawAddress());
             }
 
             if (!pdst.endsWith("::1") && !psrc.endsWith("::1") && !pdst.endsWith("::1a")) {
-                nodeMapper.addEdge(src.getAddress(), dst.getAddress());
+                nodeMapper.addEdge(src.getRawAddress(), dst.getRawAddress());
             }
 
         }
@@ -84,7 +81,7 @@ public class NodeHandler {
                     nodes.add(src);
                 }
                 src.addPacket(p);
-                nodeMapper.addVertex(src.getAddress());
+                nodeMapper.addVertex(src.getRawAddress());
             }
         }
     }
