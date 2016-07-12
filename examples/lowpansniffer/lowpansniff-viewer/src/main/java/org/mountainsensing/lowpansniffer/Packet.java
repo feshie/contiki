@@ -6,6 +6,9 @@
 package org.mountainsensing.lowpansniffer;
 
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 
 /**
  * An implementation of a Packet model to hold IEEE 802.15.4 based packets.
@@ -220,7 +223,7 @@ public class Packet {
         if (this.type == TYPE_COAP) {
             switch(this.subtype) {
                 case COAP_GET:
-                    return "CoAP (GET)";
+                    return "CoAP (GET /" + this.coapURL() + ")";
                 case COAP_CONTENT:
                     return "CoAP (CONTENT)";
                 default:
@@ -280,5 +283,48 @@ public class Packet {
      */
     public long getCreated() {
         return this.created;
+    }
+    
+    /**
+     * If packet is a CoAP GET request, returns the URL that was requested.
+     * Otherwise will return an empty string.
+     * 
+     * @return String of URL requested, or empty string.
+     */
+    public String coapURL() {
+        
+        if(this.subtype != Packet.COAP_GET) {
+            return "";
+        }
+        
+        String hex = this.hex(false);
+        String[] hexArr = hex.split("b6");
+        String hexUrl = hexArr[hexArr.length - 1];
+        String url = "";
+        
+        for(int i = 0; i < hexUrl.length(); i += 2) {
+            String b = hexUrl.substring(i, i + 2);
+            url += hexToAscii(b);
+        }
+        
+        return url;
+    }
+    
+    /**
+     * Convert a hex string of ASCII encoded characters into a UTF-8 encoded
+     * String object.
+     * 
+     * @param hex the hex we should convert
+     * @return a UTF-8 string
+     */
+    private static String hexToAscii(String hex) {
+        ByteBuffer buff = ByteBuffer.allocate(hex.length()/2);
+        for (int i = 0; i < hex.length(); i+=2) {
+            buff.put((byte)Integer.parseInt(hex.substring(i, i+2), 16));
+        }
+        buff.rewind();
+        Charset cs = Charset.forName("UTF-8"); 
+        CharBuffer cb = cs.decode(buff);
+        return cb.toString();
     }
 }
