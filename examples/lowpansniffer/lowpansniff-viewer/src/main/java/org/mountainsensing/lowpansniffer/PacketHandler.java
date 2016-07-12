@@ -42,6 +42,9 @@ public class PacketHandler {
             finalPacket.subtype = Packet.ACK;
             finalPacket.src = "";
             finalPacket.dst = "";
+            
+            finalPacket.seqNo = hexToDec(packetHex.substring(4));
+            
             return finalPacket;
         }
 
