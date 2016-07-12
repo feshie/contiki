@@ -312,7 +312,8 @@ public class Packet {
     
     /**
      * Convert a hex string of ASCII encoded characters into a UTF-8 encoded
-     * String object.
+     * String object. Credit to:
+     * http://stackoverflow.com/questions/15749475/java-string-hex-to-string-ascii-with-accentuation
      * 
      * @param hex the hex we should convert
      * @return a UTF-8 string
