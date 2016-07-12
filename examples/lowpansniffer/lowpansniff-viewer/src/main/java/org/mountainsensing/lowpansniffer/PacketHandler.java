@@ -241,11 +241,12 @@ public class PacketHandler {
                 int coapMsgId = hexToDec(packetHex.substring(index, index + 4));
                 index += 4;
                 String coapToken = packetHex.substring(index, index + 8);
-                index += 8;
+                index += 10;
                 if (coapCode == 69) {
                     finalPacket.subtype = Packet.COAP_CONTENT;
                 } else if (coapCode == 1) {
                     finalPacket.subtype = Packet.COAP_GET;
+                    finalPacket.coapUrl = Packet.hexToAscii(packetHex.substring(index));
                 }
 
                 return finalPacket;

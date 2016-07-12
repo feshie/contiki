@@ -93,7 +93,11 @@ public class Packet {
      * The subtype of the packet.
      */
     public int subtype;
-    private int length;
+    
+    /**
+     * Length of the packet.
+     */
+    private final int length;
 
     /**
      * The sequence number of the packet.
@@ -120,6 +124,11 @@ public class Packet {
      * The checksum provided in the packet.
      */
     public String checksum;
+    
+    /**
+     * The URL of the CoAP request, if the Packet is CoAP GET.
+     */
+    public String coapUrl;
 
     private long created;
 
@@ -144,6 +153,7 @@ public class Packet {
         this.checksumConf = true;
         this.checksum = "";
         this.created = System.currentTimeMillis();
+        this.coapUrl = "";
     }
 
     /**
@@ -292,22 +302,7 @@ public class Packet {
      * @return String of URL requested, or empty string.
      */
     public String coapURL() {
-        
-        if(this.subtype != Packet.COAP_GET) {
-            return "";
-        }
-        
-        String hex = this.hex(false);
-        String[] hexArr = hex.split("b6");
-        String hexUrl = hexArr[hexArr.length - 1];
-        String url = "";
-        
-        for(int i = 0; i < hexUrl.length(); i += 2) {
-            String b = hexUrl.substring(i, i + 2);
-            url += hexToAscii(b);
-        }
-        
-        return url;
+        return this.coapUrl;
     }
     
     /**
@@ -318,7 +313,7 @@ public class Packet {
      * @param hex the hex we should convert
      * @return a UTF-8 string
      */
-    private static String hexToAscii(String hex) {
+    public static String hexToAscii(String hex) {
         ByteBuffer buff = ByteBuffer.allocate(hex.length()/2);
         for (int i = 0; i < hex.length(); i+=2) {
             buff.put((byte)Integer.parseInt(hex.substring(i, i+2), 16));
