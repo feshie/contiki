@@ -129,8 +129,16 @@ public class Packet {
      * The URL of the CoAP request, if the Packet is CoAP GET.
      */
     public String coapUrl;
+    
+    /**
+     * The content of a CoAP request, if the Packet is CoAP content.
+     */
+    public String coapContent;
 
-    private long created;
+    /**
+     * The time in milliseconds that the Packet was created.
+     */
+    private final long created;
 
     /**
      * Constructor for packet model, sets default values for the Packet.
@@ -154,6 +162,7 @@ public class Packet {
         this.checksum = "";
         this.created = System.currentTimeMillis();
         this.coapUrl = "";
+        this.coapContent = "";
     }
 
     /**
@@ -306,6 +315,16 @@ public class Packet {
     }
     
     /**
+     * If the packet is a CoAP content packet, returns the content of the packet.
+     * Otherwise will return empty string.
+     * 
+     * @return The content of the CoAP packet. 
+     */
+    public String coapContent() {
+        return this.coapContent;
+    }
+    
+    /**
      * Convert a hex string of ASCII encoded characters into a UTF-8 encoded
      * String object. Credit to:
      * http://stackoverflow.com/questions/15749475/java-string-hex-to-string-ascii-with-accentuation
@@ -313,7 +332,7 @@ public class Packet {
      * @param hex the hex we should convert
      * @return a UTF-8 string
      */
-    public static String hexToAscii(String hex) {
+    public static String hexToString(String hex) {
         ByteBuffer buff = ByteBuffer.allocate(hex.length()/2);
         for (int i = 0; i < hex.length(); i+=2) {
             buff.put((byte)Integer.parseInt(hex.substring(i, i+2), 16));
