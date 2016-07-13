@@ -235,22 +235,26 @@ public class PacketHandler {
                 //COAP Packet
                 String coapOptions = hexToBin(packetHex.substring(index, index + 2));
                 index += 2;
+                
+                int tokenLength = binToDec(coapOptions.substring(4));
 
                 int coapCode = hexToDec(packetHex.substring(index, index + 2));
                 index += 2;
                 int coapMsgId = hexToDec(packetHex.substring(index, index + 4));
                 index += 4;
-                String coapToken = packetHex.substring(index, index + 8);
-                index += 8;
+                String coapToken = packetHex.substring(index, index + (tokenLength * 2));
+                index += (tokenLength * 2);
                 if (coapCode == 69) {
                     finalPacket.subtype = Packet.COAP_CONTENT;
                     index += 10;
                     finalPacket.coapContent = packetHex.substring(index);
                 } else if (coapCode == 1) {
                     finalPacket.subtype = Packet.COAP_GET;
+                    int uriLength = hexToDec(packetHex.substring(index + 1, index + 2)) * 2;
                     index += 2;
-                    finalPacket.coapUrl = Packet.hexToString(packetHex.substring(index));
+                    finalPacket.coapUrl = Packet.hexToString(packetHex.substring(index, index + uriLength));
                 }
+                System.out.println();
 
                 return finalPacket;
             } else if (nextHeaderType != 58) {
