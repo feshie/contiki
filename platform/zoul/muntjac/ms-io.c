@@ -109,21 +109,19 @@ bool ms_get_extra(Sample *sample, SensorConfig *config) {
 
     sample->has_temp = get_temp(&sample->temp);
 
-    // If there are no avrs, we're done
-    if (config->avrIDs_count < 1) {
+    // If we have no avr, we're done
+    if (!config->has_avrID) {
         // No need to wait on anything else
         ms_sense_off();
         return true;
     }
 
-    uint8_t avr_id = (uint8_t) config->avrIDs[0];
-
     // Use the buffer in the sample directly
     data.data = sample->AVR.bytes;
     data.len = &sample->AVR.size;
-    data.id = avr_id;
+    data.id = config->avrID;
 
-    DEBUG("Getting data from avr %x\n", avr_id);
+    DEBUG("Getting data from avr %x\n", config->avrID);
 
 	if (avr_get_data(&data)) {
         return false;
