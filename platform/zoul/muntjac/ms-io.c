@@ -9,28 +9,75 @@
 #include "dev/avr-handler.h"
 #include "lpm.h"
 #include "dev/adc-zoul.h"
+#include "event-sensor.h"
+#include "pb_decode.h"
+#include "power.pb.h"
 
 #define DEBUG_ON
 #include "debug.h"
 
 /**
- * Pointer to the sample we're currently working on.
- * Used by the extra callback.
+ * True if the AVRs have been handled and we should do the PowerBoards now, False otherwise.
  */
-static Sample *sample_extra;
+static bool is_avr_complete;
+
+/**
+ * Buffer to store incomming Power board data.
+ * We can't use the Sample struct directly, as we need to decode the incomming data.
+ */
+static uint8_t power_data[PowerInfo_size];
+
+/**
+ * Length (not size) use of the power_data buffer.
+ */
+static uint8_t power_len;
+
+/**
+ * Pointer to the sample we're currently working on.
+ * Used by the avr callback.
+ */
+static Sample *current_sample;
+
+/**
+ * Pointer to the config that was set when we starting sampling.
+ * Used by the avr callback.
+ */
+static SensorConfig *current_config;
 
 /**
  * Struct used to get data from an AVR
  */
-static struct avr_data data = {
-    // Size of the buffer is the size of the buffer in the Sample
-    .size = sizeof(((Sample_AVR_t *)0)->bytes)
-};
+static struct avr_data data;
 
 /**
- *
+ * Callback invoked by the avr-handler.
+ * @param isSuccess True if data was succesfully received, false otherwise.
  */
-static void extra_callback(bool isSuccess);
+static void avr_callback(bool isSuccess);
+
+/**
+ * Start receiving data from an AVR.
+ * @return True if the get-data operation was succesfully initiated, false otherwise.
+ */
+static bool start_avr(void);
+
+/**
+ * Finalize our state when we are done receiving data from an AVR.
+ * @param isSuccess True if data was succesfully received, false otherwise.
+ */
+static void end_avr(bool isSuccess);
+
+/**
+ * Start receiving data from a power board.
+ * @return True if the get-data operation was succesfully initiated, false otherwise.
+ */
+static bool start_power(void);
+
+/**
+ * Finalize our state when we are done receiving data from a power board.
+ * @param isSuccess True if data was succesfully received, false otherwise.
+ */
+static void end_power(bool isSuccess);
 
 /**
  * Read the temperature.
@@ -41,7 +88,7 @@ static bool get_temp(float *temp);
 
 void ms_init(void) {
     // Set the AVR callback
-    avr_set_callback(&extra_callback);
+    avr_set_callback(&avr_callback);
 
     // Initialize the ADCs
     adc_zoul.configure(SENSORS_HW_INIT, ZOUL_SENSORS_ADC1 + ZOUL_SENSORS_ADC2);
@@ -93,7 +140,8 @@ bool ms_set_time(uint32_t seconds) {
 }
 
 bool ms_get_extra(Sample *sample, SensorConfig *config) {
-	sample_extra = sample;
+	current_sample = sample;
+    current_config = config;
 
     ms_sense_on();
 
@@ -107,43 +155,106 @@ bool ms_get_extra(Sample *sample, SensorConfig *config) {
         sample->ADC2 = adc_zoul.value(ZOUL_SENSORS_ADC2);
     }
 
+    if (config->hasRain) {
+        sample->has_rain = true;
+        sample->rain = get_rain();
+    }
+
     sample->has_temp = get_temp(&sample->temp);
 
-    // If we have no avr, we're done
-    if (!config->has_avrID) {
-        // No need to wait on anything else
+    // If we have no AVR, consider it done
+    is_avr_complete = !config->has_avrID;
+
+    // No avr
+    if (is_avr_complete) {
+        // If we have a power board, and it has been queud successfully for getting data,
+        // Let the sampler know we'll call it back
+        if (config->has_powerID && start_power()) {
+            return false;
+        }
+
+        // Otherwise we're done
         ms_sense_off();
         return true;
     }
 
-    // Use the buffer in the sample directly
-    data.data = sample->AVR.bytes;
-    data.len = &sample->AVR.size;
-    data.id = config->avrID;
-
-    DEBUG("Getting data from avr %x\n", config->avrID);
-
-	if (avr_get_data(&data)) {
+    // If we have an AVR, and it has been queud successfully for getting data,
+    // Let the sampler know we'll call it back
+    if (config->has_avrID && start_avr()) {
         return false;
-    } else {
-        ms_sense_off();
-        return true;
     }
 
-    /*if (config->has_powerID) {
-        // TODO - handle power board
-        avr_get_data(sample->power); // Need to get a tiny buffer in Sample to implement this
-    }*/
+    // Otherwise we're done
+    ms_sense_off();
+    return true;
 }
 
-void extra_callback(bool isSuccess) {
-    DEBUG("Sampled from avr. Success: %d\n", isSuccess);
+void avr_callback(bool isSuccess) {
+    // If the avr isn't done yet, this must be the end of it
+    if (!is_avr_complete) {
+        end_avr(isSuccess);
+        is_avr_complete = true;
 
-    sample_extra->has_AVR = isSuccess;
+        // If we have a power board and we've succesfully queued a get data, wait until we get called again
+        if (current_config->has_powerID && start_power()) {
+            return;
+        }
+
+    // Otherwise it must be the end of the power board
+    } else {
+        end_power(isSuccess);
+    }
+
+    DEBUG("Stuff over\n");
 
     ms_sense_off();
-
     sampler_extra_performed();
+}
+
+bool start_avr(void) {
+    // Use the buffer in the sample directly
+    data.data = current_sample->AVR.bytes;
+    data.len = &current_sample->AVR.size;
+    data.id = current_config->avrID;
+    // Size of the buffer is the size of the buffer in the Sample
+    data.size = sizeof(current_sample->AVR.bytes);
+
+    DEBUG("Getting data from avr 0x%02X\n", current_config->avrID);
+
+    return avr_get_data(&data);
+}
+
+void end_avr(bool isSuccess) {
+    DEBUG("Sampled from avr. Success: %d\n", isSuccess);
+    current_sample->has_AVR = isSuccess;
+}
+
+bool start_power(void) {
+    // Use the power_data buffer
+    data.data = power_data;
+    data.len = &power_len;
+    data.id = current_config->powerID;
+    data.size = sizeof(power_data);
+
+    DEBUG("Getting data from power 0x%02X\n", current_config->powerID);
+
+    return avr_get_data(&data);
+}
+
+void end_power(bool isSuccess) {
+    DEBUG("Sampled from power board. Success: %d\n", isSuccess);
+
+    if (!isSuccess) {
+        return;
+    }
+
+    pb_istream_t istream = pb_istream_from_buffer(data.data, *data.len);
+    if (!pb_decode(&istream, PowerInfo_fields, &current_sample->power)) {
+        return;
+    }
+
+    current_sample->which_battery = Sample_power_tag;
+    return;
 }
 
 bool get_temp(float *temp) {
