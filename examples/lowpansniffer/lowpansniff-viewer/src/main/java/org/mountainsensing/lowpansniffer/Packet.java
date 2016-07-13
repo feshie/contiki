@@ -6,6 +6,9 @@
 package org.mountainsensing.lowpansniffer;
 
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 
 /**
  * An implementation of a Packet model to hold IEEE 802.15.4 based packets.
@@ -90,7 +93,11 @@ public class Packet {
      * The subtype of the packet.
      */
     public int subtype;
-    private int length;
+    
+    /**
+     * Length of the packet.
+     */
+    private final int length;
 
     /**
      * The sequence number of the packet.
@@ -117,8 +124,21 @@ public class Packet {
      * The checksum provided in the packet.
      */
     public String checksum;
+    
+    /**
+     * The URL of the CoAP request, if the Packet is CoAP GET.
+     */
+    public String coapUrl;
+    
+    /**
+     * The content of a CoAP request, if the Packet is CoAP content.
+     */
+    public String coapContent;
 
-    private long created;
+    /**
+     * The time in milliseconds that the Packet was created.
+     */
+    private final long created;
 
     /**
      * Constructor for packet model, sets default values for the Packet.
@@ -141,6 +161,8 @@ public class Packet {
         this.checksumConf = true;
         this.checksum = "";
         this.created = System.currentTimeMillis();
+        this.coapUrl = "";
+        this.coapContent = "";
     }
 
     /**
@@ -220,7 +242,7 @@ public class Packet {
         if (this.type == TYPE_COAP) {
             switch(this.subtype) {
                 case COAP_GET:
-                    return "CoAP (GET)";
+                    return "CoAP (GET /" + this.coapURL() + ")";
                 case COAP_CONTENT:
                     return "CoAP (CONTENT)";
                 default:
@@ -280,5 +302,44 @@ public class Packet {
      */
     public long getCreated() {
         return this.created;
+    }
+    
+    /**
+     * If packet is a CoAP GET request, returns the URL that was requested.
+     * Otherwise will return an empty string.
+     * 
+     * @return String of URL requested, or empty string.
+     */
+    public String coapURL() {
+        return this.coapUrl;
+    }
+    
+    /**
+     * If the packet is a CoAP content packet, returns the content of the packet.
+     * Otherwise will return empty string.
+     * 
+     * @return The content of the CoAP packet. 
+     */
+    public String coapContent() {
+        return this.coapContent;
+    }
+    
+    /**
+     * Convert a hex string of ASCII encoded characters into a UTF-8 encoded
+     * String object. Credit to:
+     * http://stackoverflow.com/questions/15749475/java-string-hex-to-string-ascii-with-accentuation
+     * 
+     * @param hex the hex we should convert
+     * @return a UTF-8 string
+     */
+    public static String hexToString(String hex) {
+        ByteBuffer buff = ByteBuffer.allocate(hex.length()/2);
+        for (int i = 0; i < hex.length(); i+=2) {
+            buff.put((byte)Integer.parseInt(hex.substring(i, i+2), 16));
+        }
+        buff.rewind();
+        Charset cs = Charset.forName("UTF-8"); 
+        CharBuffer cb = cs.decode(buff);
+        return cb.toString();
     }
 }

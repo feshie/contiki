@@ -42,6 +42,9 @@ public class PacketHandler {
             finalPacket.subtype = Packet.ACK;
             finalPacket.src = "";
             finalPacket.dst = "";
+            
+            finalPacket.seqNo = hexToDec(packetHex.substring(4));
+            
             return finalPacket;
         }
 
@@ -241,8 +244,12 @@ public class PacketHandler {
                 index += 8;
                 if (coapCode == 69) {
                     finalPacket.subtype = Packet.COAP_CONTENT;
+                    index += 10;
+                    finalPacket.coapContent = packetHex.substring(index);
                 } else if (coapCode == 1) {
                     finalPacket.subtype = Packet.COAP_GET;
+                    index += 2;
+                    finalPacket.coapUrl = Packet.hexToString(packetHex.substring(index));
                 }
 
                 return finalPacket;

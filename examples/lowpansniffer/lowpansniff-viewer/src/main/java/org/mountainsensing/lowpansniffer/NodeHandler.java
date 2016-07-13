@@ -51,7 +51,7 @@ public class NodeHandler {
                     nodes.add(src);
                 }
                 src.addPacket(p);
-                nodeMapper.addVertex(src.getRawAddress());
+                nodeMapper.addVertex(src.getAddress());
             }
             if (!pdst.endsWith("::1") && !pdst.endsWith("::1a") && !pdst.startsWith(COAP_PREFIX)) {
                 if (nodes.contains(pdst)) {
@@ -67,7 +67,7 @@ public class NodeHandler {
             if (!pdst.endsWith("::1") && !psrc.endsWith("::1") && 
                     !pdst.endsWith("::1a") && !pdst.startsWith(COAP_PREFIX)
                      && !psrc.startsWith(COAP_PREFIX)) {
-                nodeMapper.addEdge(src.getRawAddress(), dst.getRawAddress());
+                nodeMapper.addEdge(src.getAddress(), dst.getAddress());
             }
 
         }
@@ -84,7 +84,7 @@ public class NodeHandler {
                     nodes.add(src);
                 }
                 src.addPacket(p);
-                nodeMapper.addVertex(src.getRawAddress());
+                nodeMapper.addVertex(src.getAddress());
             }
         }
     }
