@@ -84,7 +84,7 @@ bool ms_set_time(uint32_t seconds) {
 
 bool ms_get_extra(Sample *sample, SensorConfig *config) {
     sample->batt = get_batt();
-    sample->has_batt = true;
+    sample->which_battery = Sample_batt_tag;
 
     sample->temp = get_temp();
     sample->has_temp = true;

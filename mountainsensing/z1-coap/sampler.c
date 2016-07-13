@@ -125,17 +125,18 @@ static void refresh_config(void) {
 }
 
 void print_sensor_config(SensorConfig *conf) {
-    static uint8_t i;
     DEBUG("\tInterval = %d\n", (unsigned int)conf->interval);
 
     DEBUG("\tADC1: %s\n", conf->hasADC1 ? "yes" : "no");
     DEBUG("\tADC2: %s\n", conf->hasADC2 ? "yes" : "no");
     DEBUG("\tRain: %s\n", conf->hasRain ? "yes" : "no");
 
-    DEBUG("\t%d AVRs\n", conf->avrIDs_count);
-    for (i = 0; i < conf->avrIDs_count; i++) {
-        // uint32_t is not necessarilly an unsigned int. Cast it to an int, and mask out the sign bits.
-        DEBUG("\t\t AVR %d: %02x\n", i, (int)conf->avrIDs[i] & 0xFF);
+    if (conf->has_avrID) {
+        DEBUG("\tAVR: %02X\n", conf->avrID);
+    }
+
+    if (conf->has_powerID) {
+        DEBUG("\tPower: %02X\n", conf->powerID);
     }
 
     DEBUG("\tRoutingMode: %d\n", conf->routingMode);
