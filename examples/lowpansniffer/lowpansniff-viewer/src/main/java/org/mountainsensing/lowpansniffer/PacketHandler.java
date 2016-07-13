@@ -254,7 +254,6 @@ public class PacketHandler {
                     index += 2;
                     finalPacket.coapUrl = Packet.hexToString(packetHex.substring(index, index + uriLength));
                 }
-                System.out.println();
 
                 return finalPacket;
             } else if (nextHeaderType != 58) {
