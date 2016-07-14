@@ -65,6 +65,9 @@
 // Override the Coffee config to use the data flash and not program flash
 #define COFFEE_CONF_CUSTOM_PORT "muntjac/muntjac-coffee-arch.h"
 
+// Set our clock rate to 32Mhz
+#define SYS_CTRL_CONF_SYS_DIV        SYS_CTRL_CLOCK_CTRL_SYS_DIV_32MHZ
+
 #include "dev/gpio.h"
 #include "dev/nvic.h"
 
