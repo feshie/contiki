@@ -1,5 +1,11 @@
+# build the nothing code
+# for feshie muntjac cc1120 use:
+# make TARGET=zoul BOARD=muntjac RADIO=cc1120
 all: z1-nothing
-TARGET = z1-feshie
+#TARGET = z1-feshie
+TARGET=zoul
+BOARD=muntjac
+RADIO=cc1120
 
 CONTIKI=../../
 
