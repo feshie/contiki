@@ -205,8 +205,6 @@ void avr_callback(bool isSuccess) {
         end_power(isSuccess);
     }
 
-    DEBUG("Stuff over\n");
-
     ms_sense_off();
     sampler_extra_performed();
 }
