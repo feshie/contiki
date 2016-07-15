@@ -9,7 +9,6 @@
 #include "dev/avr-handler.h"
 #include "lpm.h"
 #include "dev/adc-zoul.h"
-#include "event-sensor.h"
 #include "pb_decode.h"
 #include "power.pb.h"
 
@@ -153,11 +152,6 @@ bool ms_get_extra(Sample *sample, SensorConfig *config) {
     if (config->hasADC2) {
         sample->has_ADC2 = true;
         sample->ADC2 = adc_zoul.value(ZOUL_SENSORS_ADC2);
-    }
-
-    if (config->hasRain) {
-        sample->has_rain = true;
-        sample->rain = get_rain();
     }
 
     sample->has_temp = get_temp(&sample->temp);
