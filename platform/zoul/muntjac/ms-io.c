@@ -7,7 +7,7 @@
 #include "sampler.h"
 #include "ds3231-sensor.h"
 #include "dev/avr-handler.h"
-#include "lpm.h"
+#include "power-sheriff.h"
 #include "dev/adc-zoul.h"
 #include "pb_decode.h"
 #include "power.pb.h"
@@ -94,15 +94,14 @@ void ms_init(void) {
 }
 
 void ms_sense_on(void) {
-    lpm_set_max_pm(LPM_PM0);
+    power_sheriff_high_power();
 
     // Enable sense
     GPIO_SET_PIN(GPIO_PORT_TO_BASE(PWR_SENSE_EN_PORT), GPIO_PIN_MASK(PWR_SENSE_EN_PIN));
 }
 
 void ms_sense_off(void) {
-    // TODO - Save and restore the max_pm in ms_sense_on
-    //lpm_set_max_pm(LPM_CONF_MAX_PM);
+    power_sheriff_low_power();
 
     // Disable sense
     GPIO_CLR_PIN(GPIO_PORT_TO_BASE(PWR_SENSE_EN_PORT), GPIO_PIN_MASK(PWR_SENSE_EN_PIN));

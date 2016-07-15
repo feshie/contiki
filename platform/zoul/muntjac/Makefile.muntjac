@@ -1,2 +1,2 @@
 MOTELIST_ZOLERTIA = muntjac
-BOARD_SOURCEFILES += board.c reset-sensor.c xmem.c ds3231-sensor.c
+BOARD_SOURCEFILES += board.c reset-sensor.c xmem.c ds3231-sensor.c power-sheriff.c
