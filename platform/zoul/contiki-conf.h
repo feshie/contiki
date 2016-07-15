@@ -404,8 +404,7 @@ typedef uint32_t rtimer_clock_t;
  * 0 for PM0, 1 for PM1 and 2 for PM2
  */
 #ifndef LPM_CONF_MAX_PM
-#define LPM_CONF_MAX_PM       0
-//#define LPM_CONF_MAX_PM       2
+#define LPM_CONF_MAX_PM       2
 #endif
 
 #ifndef LPM_CONF_STATS
