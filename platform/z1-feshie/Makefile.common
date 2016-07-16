@@ -20,7 +20,8 @@ ARCH=msp430.c leds.c watchdog.c xmem.c \
      battery-sensor.c sky-sensors.c tmp102.c temperature-sensor.c\
      ds3231-sensor.c batv-sensor.c adc1-sensor.c adc2-sensor.c\
      uart1-putchar.c reset-sensor.c\
-     epoch_to_tm.c tm_to_epoch.c
+     epoch_to_tm.c tm_to_epoch.c \
+	 ms-io-arch.c
 
 CONTIKI_TARGET_DIRS = . dev apps net
 ifndef CONTIKI_TARGET_MAIN
