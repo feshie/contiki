@@ -317,6 +317,10 @@ main(int argc, char **argv)
 
   PRINTF(CONTIKI_VERSION_STRING " started. ");
 
+  //update reset counter
+  reset_sensor.configure(SENSORS_ACTIVE,1);           //update reet counter
+  printf("Reset Count %d \n",reset_sensor.value(0));  //print rurrent reset count
+
   if(node_id) {
     PRINTF("Node id is set to %u.\n", node_id);
   } else {
@@ -439,10 +443,6 @@ main(int argc, char **argv)
 
   energest_init();
   ENERGEST_ON(ENERGEST_TYPE_CPU);
-
-  //update reset counter
-  reset_sensor.configure(SENSORS_ACTIVE,1);           //update reet counter
-  printf("Reset Count %d \n",reset_sensor.value(0));  //print rurrent reset count
 
   print_processes(autostart_processes);
   autostart_start(autostart_processes);
