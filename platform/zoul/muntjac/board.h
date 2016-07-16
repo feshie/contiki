@@ -315,6 +315,17 @@
 #define PLATFORM_HAS_BUTTON  1
 /** @} */
 /*---------------------------------------------------------------------------*/
+/** \name Muntjac RAIN_INT configuration
+ *
+ * The RAIN_INT is connected to the USD_DETECT as a bodge becausewe forgot to
+ * hook up the real pin and are now out.
+ * @{
+ */
+#define RAIN_INT_PORT 		USD_DETECT_PORT
+#define RAIN_INT_PIN 		USD_DETECT_PIN
+#define RAIN_INT_VECTOR 	NVIC_INT_GPIO_PORT_B
+/** @} */
+/*---------------------------------------------------------------------------*/
 /**
  * \name SPI (SSI0) configuration
  *

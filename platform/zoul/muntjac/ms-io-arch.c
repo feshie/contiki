@@ -7,6 +7,7 @@
 #include "ds3231-sensor.h"
 #include "power-sheriff.h"
 #include "dev/adc-zoul.h"
+#include "event-sensor.h"
 
 #define DEBUG_ON
 #include "mountainsensing/common/debug.h"
@@ -17,6 +18,9 @@ void ms_init(void) {
 
     // Turn sense off by default
     ms_sense_off();
+
+    // Enable the rain sensor
+    SENSORS_ACTIVATE(event_sensor);
 }
 
 void ms_sense_on(void) {
@@ -96,8 +100,9 @@ bool ms_get_adc2(uint32_t *adc2) {
 }
 
 bool ms_get_rain(uint32_t *rain) {
-    // TODO - not implemented yet
-    return false;
+    // Reset the value so we only get the delta every time
+    *rain = event_sensor.value(true);
+    return true;
 }
 
 bool ms_get_acc(int32_t *x, int32_t *y, int32_t *z) {
