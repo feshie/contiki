@@ -64,7 +64,9 @@ bool ms_set_time(uint32_t seconds) {
 }
 
 bool ms_get_batt(float *batt) {
-    return false;
+    // Batt sensor is on ADC3
+    *batt = adc_zoul.value(ZOUL_SENSORS_ADC3);
+    return true;
 }
 
 bool ms_get_temp(float *temp) {
