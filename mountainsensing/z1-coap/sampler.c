@@ -158,6 +158,11 @@ PROCESS_THREAD(sample_process, ev, data) {
 
             sample.has_accX = sample.has_accY = sample.has_accZ = ms_get_acc(&sample.accX, &sample.accY, &sample.accZ);
 
+            // If we don't have a power board, use good old batt volts
+            if (!config.has_powerID && ms_get_batt(&sample.batt)) {
+                sample.which_battery = Sample_batt_tag;
+            }
+
             // If we have no AVR, consider it done
             is_avr_complete = !config.has_avrID;
 
