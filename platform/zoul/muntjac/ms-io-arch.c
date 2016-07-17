@@ -5,16 +5,32 @@
 #include "contiki.h"
 #include "mountainsensing/common/ms-io.h"
 #include "ds3231-sensor.h"
-#include "power-sheriff.h"
+#include "lpm.h"
 #include "dev/adc-zoul.h"
 #include "event-sensor.h"
 
 #define DEBUG_ON
 #include "mountainsensing/common/debug.h"
 
+/**
+ * True if senser power is on, false otherwise
+ */
+static bool is_sense_on = false;
+
+/**
+ * Callback allowing / disallowing the CC2538 to enter LPM{1,2}
+ */
+static bool lpm_permit_pm1(void) {
+    // LPM{1,2} are only allowed if we're not sensing
+    return !is_sense_on;
+}
+
 void ms_init(void) {
     // Initialize the ADCs
     adc_zoul.configure(SENSORS_HW_INIT, ZOUL_SENSORS_ADC1 + ZOUL_SENSORS_ADC2);
+
+    // Register our lpm_permit callback so we can stay in LPM0 during sensing
+    lpm_register_peripheral(&lpm_permit_pm1);
 
     // Turn sense off by default
     ms_sense_off();
@@ -24,14 +40,14 @@ void ms_init(void) {
 }
 
 void ms_sense_on(void) {
-    power_sheriff_high_power();
+    is_sense_on = true;
 
     // Enable sense
     GPIO_SET_PIN(GPIO_PORT_TO_BASE(PWR_SENSE_EN_PORT), GPIO_PIN_MASK(PWR_SENSE_EN_PIN));
 }
 
 void ms_sense_off(void) {
-    power_sheriff_low_power();
+    is_sense_on = false;
 
     // Disable sense
     GPIO_CLR_PIN(GPIO_PORT_TO_BASE(PWR_SENSE_EN_PORT), GPIO_PIN_MASK(PWR_SENSE_EN_PIN));
