@@ -75,10 +75,8 @@ static int configure(int type, int c) {
 
         case SENSORS_ACTIVE:
             // If enabling has been requested, and we're not already active
-            if (c /*&& !status(SENSORS_ACTIVE)*/) {
+            if (c && !status(SENSORS_ACTIVE)) {
 
-                printf("Setting up ISR\n");
-			
 				// Set up a rising edge interrupt
 				GPIO_SOFTWARE_CONTROL(GPIO_PORT_TO_BASE(EVENT_PORT), GPIO_PIN_MASK(EVENT_PIN));
 				GPIO_SET_INPUT(GPIO_PORT_TO_BASE(EVENT_PORT), GPIO_PIN_MASK(EVENT_PIN));
