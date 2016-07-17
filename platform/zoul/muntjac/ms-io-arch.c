@@ -8,6 +8,7 @@
 #include "lpm.h"
 #include "dev/adc-zoul.h"
 #include "event-sensor.h"
+#include "reset-sensor.h"
 
 #define DEBUG_ON
 #include "mountainsensing/common/debug.h"
@@ -124,4 +125,15 @@ bool ms_get_rain(uint32_t *rain) {
 bool ms_get_acc(int32_t *x, int32_t *y, int32_t *z) {
     // Not supported
     return false;
+}
+
+bool ms_get_reboot(uint16_t *reboot) {
+    // Param is ignored by the reset sensor
+    *reboot = reset_sensor.value(0);
+    return true;
+}
+
+bool ms_reset_reboot(void) {
+    reset_counter_reset();
+    return true;
 }

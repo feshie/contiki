@@ -97,4 +97,16 @@ bool ms_get_rain(uint32_t *rain);
  */
 bool ms_get_acc(int32_t *x, int32_t *y, int32_t *z);
 
+/**
+ * Get the number of reboot counts.
+ * Depending on the implementation, this could either be the
+ * number of reboots since flash, or since ms_reset_reboot was called.
+ */
+bool ms_get_reboot(uint16_t *reboot);
+
+/**
+ * Reset the reboot counter.
+ */
+bool ms_reset_reboot(void);
+
 #endif // #ifndef MS_IO_ARCH_H

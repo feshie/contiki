@@ -3,6 +3,8 @@ ifndef TARGET
 TARGET=z1-feshie
 endif
 
+PROJECTDIRS += ../common
+
 all: node-setup
 
 %.tgz: %.ihex

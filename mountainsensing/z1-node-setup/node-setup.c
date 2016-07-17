@@ -3,7 +3,7 @@
 #include "contiki.h"
 #include "cfs/cfs.h"
 #include "cfs/cfs-coffee.h"
-#include "reset-sensor.h"     // Include sensor driver
+#include "ms-io.h"
 
 PROCESS(example_coffee_process, "Node Reset");
 AUTOSTART_PROCESSES(&example_coffee_process);
@@ -51,8 +51,10 @@ PROCESS_THREAD(example_coffee_process, ev, data)
     printf("dir test failed\n");
   }
 
-  reset_counter_reset();
-  printf ("COUNT = %d\n", reset_sensor.value(0));
+  ms_reset_reboot();
+  uint16_t reboots = 0;
+  ms_get_reboot(&reboots);
+  printf ("COUNT = %d\n", reboots);
 
   printf("Node reset complete");
 

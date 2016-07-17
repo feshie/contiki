@@ -147,3 +147,14 @@ bool ms_get_humid(float *humid) {
     // Unsupported
     return false;
 }
+
+bool ms_get_reboot(uint16_t *reboot) {
+    // Param is ignored by the reset sensor
+    *reboot = reset_sensor.value(0);
+    return true;
+}
+
+bool ms_reset_reboot(void) {
+    reset_counter_reset();
+    return true;
+}

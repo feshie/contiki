@@ -8,17 +8,22 @@
 #include <string.h>
 #include "rest-engine.h"
 #include "watchdog.h"
-#include "reset-sensor.h"
+#include "ms-io.h"
 
 #define DEBUG_ON
 #include "debug.h"
 
 static void res_get_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset) {
-    char message[10];
-    int length;
+    uint16_t reboots;
+    // Max value of uint16_t is 5 chars + 1 null terminator
+    char message[6];
 
-	/* read RTC and get Epoch (int_32) */
-    length = sprintf(message, "%d", reset_sensor.value(0));
+    if (!ms_get_reboot(&reboots)) {
+        REST.set_response_status(response, REST.status.SERVICE_UNAVAILABLE);
+        return;
+    }
+
+    int length = snprintf(message, sizeof(message), "%u", reboots);
     memcpy(buffer, message, length);
 
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);

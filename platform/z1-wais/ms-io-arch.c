@@ -4,6 +4,7 @@
 #include "dev/battery-sensor.h"
 #include "i2cmaster.h"
 #include "adxl345.h"
+#include "dev/reset-sensor.h"
 
 //#define DEBUG_ON
 #include "mountainsensing/common/debug.h"
@@ -81,4 +82,15 @@ bool ms_get_adc2(uint32_t *adc2) {
 
 bool ms_get_rain(uint32_t *rain) {
     return false;
+}
+
+bool ms_get_reboot(uint16_t *reboot) {
+    // Param is ignored by the reset sensor
+    *reboot = reset_sensor.value(0);
+    return true;
+}
+
+bool ms_reset_reboot(void) {
+    reset_counter_reset();
+    return true;
 }
