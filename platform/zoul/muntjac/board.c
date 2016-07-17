@@ -12,6 +12,8 @@
 #include "reset-sensor.h"
 #include "dev/uart.h"
 #include "dev/avr-handler.h"
+#include "dev/gpio.h"
+#include "dev/ioc.h"
 
 static void avr_write_bytes(uint8_t *buf, int length) {
     // The RS485 adapter are half-duplex - enable TX mode when we're sending
@@ -65,11 +67,13 @@ void board_init() {
     GPIO_SOFTWARE_CONTROL(GPIO_PORT_TO_BASE(PWR_SENSE_EN_PORT), GPIO_PIN_MASK(PWR_SENSE_EN_PIN));
     GPIO_SET_OUTPUT(GPIO_PORT_TO_BASE(PWR_SENSE_EN_PORT), GPIO_PIN_MASK(PWR_SENSE_EN_PIN));
     GPIO_CLR_PIN(GPIO_PORT_TO_BASE(PWR_SENSE_EN_PORT), GPIO_PIN_MASK(PWR_SENSE_EN_PIN));
+    ioc_set_over(PWR_SENSE_EN_PORT, PWR_SENSE_EN_PIN, IOC_OVERRIDE_OE);
 
 	/* Ensure that RS485 TXEN is DISABLED. */
 	GPIO_SOFTWARE_CONTROL(GPIO_PORT_TO_BASE(RS485_TXEN_PORT), GPIO_PIN_MASK(RS485_TXEN_PIN));
     GPIO_SET_OUTPUT(GPIO_PORT_TO_BASE(RS485_TXEN_PORT), GPIO_PIN_MASK(RS485_TXEN_PIN));
     GPIO_CLR_PIN(GPIO_PORT_TO_BASE(RS485_TXEN_PORT), GPIO_PIN_MASK(RS485_TXEN_PIN));
+    ioc_set_over(RS485_TXEN_PORT, RS485_TXEN_PIN, IOC_OVERRIDE_OE);
 
     /* Setup I2C */
     i2c_init(I2C_SDA_PORT, I2C_SDA_PIN, I2C_SCL_PORT, I2C_SCL_PIN, I2C_SCL_NORMAL_BUS_SPEED);
