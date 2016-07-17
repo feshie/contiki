@@ -365,8 +365,12 @@ typedef uint32_t rtimer_clock_t;
 #endif /* NETSTACK_CONF_FRAMER */
 
 /* This can be overriden to use the cc1200_driver instead */
-#ifndef NETSTACK_CONF_RADIO
-#define NETSTACK_CONF_RADIO         cc2538_rf_driver
+#if ZOUL_RADIO == 1120
+    #define NETSTACK_CONF_RADIO         cc1120_driver
+#elif ZOUL_RADIO == 1200
+    #define NETSTACK_CONF_RADIO         cc1200_driver
+#else
+    #define NETSTACK_CONF_RADIO         cc2538_rf_driver
 #endif
 
 /*
