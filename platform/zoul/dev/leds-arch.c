@@ -44,6 +44,7 @@
 #include "contiki.h"
 #include "reg.h"
 #include "dev/leds.h"
+#include "dev/ioc.h"
 #include "dev/gpio.h"
 /*---------------------------------------------------------------------------*/
 #define LEDS_GPIO_PIN_MASK   LEDS_ALL
@@ -52,6 +53,13 @@ void
 leds_arch_init(void)
 {
   GPIO_SET_OUTPUT(GPIO_D_BASE, LEDS_GPIO_PIN_MASK);
+
+  int i;
+  for (i = 0; i < 8; i++) {
+    if (LEDS_GPIO_PIN_MASK & (1 << i)) {
+      ioc_set_over(GPIO_D_NUM, i, IOC_OVERRIDE_OE);
+    }
+  }
 }
 /*---------------------------------------------------------------------------*/
 unsigned char
