@@ -249,7 +249,9 @@ spix_init(uint8_t spi)
   /* Disable any pull ups or the like */
   ioc_set_over(regs->clk.port, regs->clk.pin, IOC_OVERRIDE_OE);
   ioc_set_over(regs->tx.port, regs->tx.pin, IOC_OVERRIDE_OE);
+  // Set a pull up so RX doesn't float
   ioc_set_over(regs->rx.port, regs->rx.pin, IOC_OVERRIDE_DIS);
+  ioc_set_over(regs->rx.port, regs->rx.pin, IOC_OVERRIDE_PDE);
 
   /* Configure the clock */
   REG(regs->base + SSI_CPSR) = regs->ssi_cprs_cpsdvsr;
