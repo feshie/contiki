@@ -82,10 +82,10 @@ cc1120_arch_init(void)
 	/* Set CC1120 to a rising edge interrupt. */
 	CC1120_GDO0_PORT(IES) &= ~BV(CC1120_GDO0_PIN);
 	
-#ifdef CC1120_GPIO2_FUNC	
-	CC1120_GDO2_PORT(SEL) &= ~BV(CC1120_GDO2_PIN);
-	CC1120_GDO2_PORT(DIR) &= ~BV(CC1120_GDO2_PIN);
-#endif
+//#ifdef CC1120_GPIO2_FUNC	
+//	CC1120_GDO2_PORT(SEL) &= ~BV(CC1120_GDO2_PIN);
+//	CC1120_GDO2_PORT(DIR) &= ~BV(CC1120_GDO2_PIN);
+//#endif
 
 
 	CC1120_GDO3_PORT(SEL) &= ~BV(CC1120_GDO3_PIN);
@@ -259,7 +259,14 @@ cc1120_arch_read_cca(void)
 uint8_t
 cc1120_arch_read_gpio2(void)
 {
-	return 0;
+	if(CC1120_GDO3_PORT(IN) & BV(CC1120_GDO3_PIN))
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
 }
 
 uint8_t
