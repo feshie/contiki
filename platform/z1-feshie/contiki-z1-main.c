@@ -208,6 +208,9 @@ main(int argc, char **argv)
   clock_init();
   i2c_enable();
   
+  RADIO_EN_PORT(DIR) |= BV(RADIO_EN_PIN);
+  RADIO_EN_PORT(OUT) |= BV(RADIO_EN_PIN);	/* Set Radio high to ensure radio is on */
+  
 
   cc1120_arch_pin_init();	/* Configure CC1120 SPI pins to prevent SPI conflicts. */
   
