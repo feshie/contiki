@@ -35,6 +35,11 @@ PROCESS(sample_process, "Sample Process");
 #define SAMPLER_EVENT_RELOAD_CONFIG 2
 
 /**
+ * Delay required for the AVR to reply over RS485 after booting
+ */
+#define AVR_ACTIVATE_DELAY (RTIMER_SECOND / 10)
+
+/**
  * The current sensor config being used.
  */
 static SensorConfig config;
@@ -270,6 +275,10 @@ void avr_callback(bool isSuccess) {
 }
 
 bool start_avr(void) {
+    // Wait for the AVR to fully power on
+    rtimer_clock_t end = RTIMER_NOW() + AVR_ACTIVATE_DELAY;
+    while (RTIMER_CLOCK_LT(RTIMER_NOW(), end));
+
     // Use the buffer in the sample directly
     data.data = sample.AVR.bytes;
     data.len = &sample.AVR.size;
