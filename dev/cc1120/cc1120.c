@@ -1856,6 +1856,11 @@ cc1120_interrupt_handler(void)
 		if((cc1120_get_state() == CC1120_STATUS_IDLE) && (cc1120_read_rxbytes() > 0)) {
 			marc_status = CC1120_MARC_STATUS_OUT_RX_FINISHED;
 		} else {	
+#if CC1120_OFF_STATE != CC1120_STATE_IDLE
+            if (!(radio_pending & CC1120_RX_ON)) {
+                cc1120_set_state(CC1120_OFF_STATE);
+            }
+#endif
 			return 0;
 		}
 	}
@@ -1873,6 +1878,12 @@ cc1120_interrupt_handler(void)
 		packet_pending++;
 		process_poll(&cc1120_process);
 		LEDS_OFF(LEDS_BLUE);
+
+#if CC1120_OFF_STATE != CC1120_STATE_IDLE
+        if (!(radio_pending & CC1120_RX_ON)) {
+            cc1120_set_state(CC1120_OFF_STATE);
+        }
+#endif
 		return 1;
 	}	
 	
@@ -1952,6 +1963,13 @@ cc1120_interrupt_handler(void)
 			break;
 	}	
 	LEDS_OFF(LEDS_BLUE);	
+
+#if CC1120_OFF_STATE != CC1120_STATE_IDLE
+    if (!(radio_pending & CC1120_RX_ON)) {
+        cc1120_set_state(CC1120_OFF_STATE);
+    }
+#endif
+
 	return 1;
 }
 
@@ -2006,4 +2024,10 @@ void processor(void)
 	if(radio_pending & CC1120_RX_ON) {
 		on();
 	}
+
+#if CC1120_OFF_STATE != CC1120_STATE_IDLE
+    if (!(radio_pending & CC1120_RX_ON)) {
+        cc1120_set_state(CC1120_OFF_STATE);
+    }
+#endif
 }
