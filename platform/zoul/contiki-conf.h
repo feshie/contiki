@@ -369,6 +369,9 @@ typedef uint32_t rtimer_clock_t;
     #define NETSTACK_CONF_RADIO         cc1120_driver
 #elif ZOUL_RADIO == 1200
     #define NETSTACK_CONF_RADIO         cc1200_driver
+#elif ZOUL_RADIO == 0
+    #warning "NULL RADIO"
+    #define NETSTACK_CONF_RADIO         nullradio_driver
 #else
     #define NETSTACK_CONF_RADIO         cc2538_rf_driver
 #endif

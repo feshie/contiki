@@ -35,6 +35,8 @@ else ifeq ($(RADIO),cc1200)
   CONTIKI_TARGET_SOURCEFILES += cc1200-zoul-arch.c
   MODULES += dev/cc1200
   CFLAGS += -DZOUL_RADIO=1200
+else ifeq ($(RADIO),null)
+  CFLAGS += -DZOUL_RADIO=0
 else
   CFLAGS += -DZOUL_RADIO=2538
 endif
