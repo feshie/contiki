@@ -33,7 +33,16 @@ PROCESS_THREAD(serial_dumper_process, ev, data) {
     printf("+++SERIALDUMP+++NODEID+++\n");
     {
         uip_ds6_addr_t *lladdr = uip_ds6_get_link_local(-1);
-        printf("%02x%02x\n", lladdr->ipaddr.u8[14], lladdr->ipaddr.u8[15]);
+        printf("%02x%02x:%02x%02x:%02x%02x:%02x%02x\n",
+               lladdr->ipaddr.u8[8],
+               lladdr->ipaddr.u8[9],
+               lladdr->ipaddr.u8[10],
+               lladdr->ipaddr.u8[11],
+               lladdr->ipaddr.u8[12],
+               lladdr->ipaddr.u8[13],
+               lladdr->ipaddr.u8[14],
+               lladdr->ipaddr.u8[15]
+        );
     }
 
     printf("+++SERIALDUMP+++SAMPLE+++START+++\n");
