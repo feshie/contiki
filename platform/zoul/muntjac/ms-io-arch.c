@@ -28,7 +28,7 @@ static bool lpm_permit_pm1(void) {
 
 void ms_init(void) {
     // Initialize the ADCs
-    adc_zoul.configure(SENSORS_HW_INIT, ZOUL_SENSORS_ADC1 + ZOUL_SENSORS_ADC2);
+    adc_zoul.configure(SENSORS_HW_INIT, ZOUL_SENSORS_ADC1 + ZOUL_SENSORS_ADC2 + ZOUL_SENSORS_ADC3);
 
     // Register our lpm_permit callback so we can stay in LPM0 during sensing
     lpm_register_peripheral(&lpm_permit_pm1);
@@ -86,7 +86,8 @@ bool ms_set_time(uint32_t seconds) {
 
 bool ms_get_batt(float *batt) {
     // Batt sensor is on ADC3
-    *batt = adc_zoul.value(ZOUL_SENSORS_ADC3);
+    // TODO - munge factor for cal
+    *batt = ((float) adc_zoul.value(ZOUL_SENSORS_ADC3));
     return true;
 }
 
