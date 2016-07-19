@@ -48,6 +48,7 @@
 #include "dev/spi.h"
 #include "dev/ssi.h"
 #include "dev/gpio.h"
+#include "lpm.h"
 
 #if PLATFORM_HAS_LEDS
 #include "dev/leds.h"
@@ -121,7 +122,19 @@ cc1120_int_handler(uint8_t port, uint8_t pin)
 }
 
 /*---------------------------------------------------------------------------*/
+/**
+ * Callback to allow Low Power Modes 1 and 2.
+ * LPM Modes 1 and 2 lead to vastly increased packet latency in the network,
+ * possibly due to ISR latency
+ */
+static bool lpm_permit_pm1(void) {
+    radio_value_t res;
+    cc1120_driver.get_value(RADIO_PARAM_POWER_MODE, &res);
+    // Allow PM{1,2} as long as the radio is not on
+    return res != RADIO_POWER_MODE_ON;
+}
 
+/*---------------------------------------------------------------------------*/
 void
 cc1120_arch_init(void)
 {
@@ -164,7 +177,9 @@ cc1120_arch_init(void)
     GPIO_SET_OUTPUT(GPIO_PORT_TO_BASE(ADC_SENSORS_PORT), GPIO_PIN_MASK(ADC_SENSORS_ADC2_PIN));
     GPIO_CLR_PIN(GPIO_PORT_TO_BASE(ADC_SENSORS_PORT), GPIO_PIN_MASK(ADC_SENSORS_ADC2_PIN));
 #endif
-	
+
+    // Register ourselves as an LPM periph so we can prevent going to LPM{1,2} when the radio is on
+    lpm_register_peripheral(&lpm_permit_pm1);
 }
 
 /*---------------------------------------------------------------------------*/
