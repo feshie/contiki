@@ -131,6 +131,7 @@ PROCESS_THREAD(sample_process, ev, data) {
 
     while(true) {
 
+        // New scope to avoid having time always on the stack - maybe?
         {
             uint32_t time;
             ms_get_time(&time);
