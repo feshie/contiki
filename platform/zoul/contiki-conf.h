@@ -621,7 +621,7 @@ typedef uint32_t rtimer_clock_t;
 
 #define RF_CHANNEL				42
 
-#define CC1120_CS_THRESHOLD		0xA6 //0xE7	/*-100dBm */
+#define CC1120_CS_THRESHOLD		0x9C //0xE7	/*-100dBm */
 
 /* Other possible sensible values:
  * 0xC4	-60dBm.
