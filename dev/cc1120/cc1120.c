@@ -358,8 +358,8 @@ cc1120_driver_transmit(unsigned short transmit_len)
 		ack_tx = 0;
 	}
 
-	/* Store TX Fifo Pointers. */
-	txfirst = cc1120_spi_single_read(CC1120_ADDR_TXFIRST);
+	/* Store TX Pointers. */
+	txfirst =  cc1120_spi_single_read(CC1120_ADDR_TXFIRST);
 	txlast = cc1120_spi_single_read(CC1120_ADDR_TXLAST);
 	
 	/* Set correct TXOFF mode. */
@@ -406,10 +406,8 @@ cc1120_driver_transmit(unsigned short transmit_len)
 	
 	/* Block until in TX.  If timeout is reached, strobe IDLE and 
 	 * reset CCA to clear TX & flush FIFO. */
-#if CC1120_GPIO_MODE == 0	
+#if CC1120_GPIO_MODE == 0
 	while(!(radio_pending & CC1120_TX_COMPLETE)) {
-#elif CC1120_GPIO_MODE == 1
-	while(cc1120_get_state() == CC1120_STATUS_TX) {
 #elif CC1120_GPIO_MODE == 2
 	while(cc1120_arch_read_gpio2()) {
 #elif CC1120_GPIO_MODE == 3
@@ -498,9 +496,6 @@ cc1120_driver_transmit(unsigned short transmit_len)
 #if CC1120_GPIO_MODE == 0
 	/* Wait for CC1120 interrupt handler to set CC1120_TX_COMPLETE. */
 	while(!(radio_pending & CC1120_TX_COMPLETE)) {
-#elif CC1120_GPIO_MODE == 1
-	/* Poll the status byte looking for a FIFO error. */	
-	while(cur_state == CC1120_STATUS_TX) {
 #elif CC1120_GPIO_MODE == 2
 	PRINTFTX(" - Wait for GPIO2");
 	while(cc1120_arch_read_gpio2()) {
@@ -508,11 +503,11 @@ cc1120_driver_transmit(unsigned short transmit_len)
 	PRINTFTX(" - Wait for GPIO3");
 	while(cc1120_arch_read_gpio3()) {
 #endif
-		cur_state = cc1120_get_state();
+		
 		watchdog_periodic();	/* Feed the dog to stop reboots. */
 		PRINTFTX(".");
 		
-		if((radio_pending & CC1120_TX_FIFO_ERROR) || cur_state == CC1120_STATUS_TX_FIFO_ERROR) {
+		if(radio_pending & CC1120_TX_FIFO_ERROR) {
 			/* TX FIFO has underflowed during TX.  Need to flush TX FIFO. */
 			cc1120_flush_tx();
 			txfirst = 0;
@@ -718,7 +713,7 @@ cc1120_driver_read_packet(void *buf, unsigned short buf_len)
 {
 	PRINTF("**** Radio Driver: Read ****\n");
 
-	uint8_t length, i, rxbytes, cur_state;
+	uint8_t length, i, rxbytes;
 	linkaddr_t dest;
 	rtimer_clock_t t0;   
 		
@@ -827,24 +822,19 @@ cc1120_driver_read_packet(void *buf, unsigned short buf_len)
 				
 				/* Block till TX is complete. */	
 #if CC1120_GPIO_MODE == 0
-				/* Wait for CC1120 interrupt handler to set CC1120_TX_COMPLETE. */
-				while(!(radio_pending & CC1120_TX_COMPLETE)) {
-#elif CC1120_GPIO_MODE == 1
-				/* Poll the status byte looking for a FIFO error. */
-				cur_state = cc1120_get_state();
-				while(cur_state == CC1120_STATUS_TX) {						
+					/* Wait for CC1120 interrupt handler to set CC1120_TX_COMPLETE. */
+					while(!(radio_pending & CC1120_TX_COMPLETE)) {
 #elif CC1120_GPIO_MODE == 2
-				PRINTFTX(" - Wait for GPIO2");
-				while(cc1120_arch_read_gpio2()) {
+					PRINTFTX(" - Wait for GPIO2");
+					while(cc1120_arch_read_gpio2()) {
 #elif CC1120_GPIO_MODE == 3
-				PRINTFTX(" - Wait for GPIO3");
-				while(cc1120_arch_read_gpio3()) {
+					PRINTFTX(" - Wait for GPIO3");
+					while(cc1120_arch_read_gpio3()) {
 #endif									
-					cur_state = cc1120_get_state();
 					watchdog_periodic();	/* Feed the dog to stop reboots. */
 					PRINTFRX(".");
 					
-					if((radio_pending & CC1120_TX_FIFO_ERROR) || cur_state == CC1120_STATUS_TX_FIFO_ERROR) {
+					if(radio_pending & CC1120_TX_FIFO_ERROR) {
 						/* TX FIFO has underflowed during ACK TX.  Need to flush TX FIFO. */
 						cc1120_flush_tx();
 						break;
@@ -920,14 +910,23 @@ cc1120_driver_channel_clear(void)
 	rtimer_clock_t t0;
 	
 	was_off = 0;
+#if CC1120_DEBUG_PINS
+	cc1120_debug_pin_cca(1);
+#endif
 
 	if(locked) {
-		PRINTF("SPI Locked\n");	
+		PRINTF("SPI Locked\n");
+#if CC1120_DEBUG_PINS
+		cc1120_debug_pin_cca(0);
+#endif		
 		return 0;
 	}
 
 	if(radio_pending & CC1120_TRANSMITTING) {
 		/* cannot be clear in TX. */
+#if CC1120_DEBUG_PINS
+		cc1120_debug_pin_cca(0);
+#endif
 		return 0;
 	}
 	
@@ -942,14 +941,16 @@ cc1120_driver_channel_clear(void)
 	
 	cur_state = cc1120_get_state();
 	
-	if((cur_state != CC1120_STATUS_RX) && (cur_state != CC1200_STATUS_CALIBRATE) && (cur_state != CC1200_STATUS_SETTLING)) {
-		/* Not in RX and not on the way to it.... */
-		on();
-	}
-	
 	while((cur_state == CC1200_STATUS_CALIBRATE) || (cur_state == CC1200_STATUS_SETTLING)) {
-		// Wait until we have finished calibration.
 		cur_state = cc1120_get_state();
+	}
+
+	if(cur_state != CC1120_STATUS_RX ) {
+		/* Not in RX... */
+		//printf("\nnRX%02x", cur_state);
+		on();
+		//CC1120_RELEASE_SPI();
+		//return 0;
 	}
 	
 	if(cc1120_spi_single_read(CC1120_ADDR_MODEM_STATUS1) & CC1120_MODEM_STATUS1_SYNC_FOUND) {
@@ -972,7 +973,7 @@ cc1120_driver_channel_clear(void)
 			if((cur_state == CC1200_STATUS_CALIBRATE) || (cur_state == CC1200_STATUS_SETTLING)) {
 				printf("\tcal\t");
 				CC1120_RELEASE_SPI();
-				return 0;	
+				return 0;
 			}
 			
 			if(RTIMER_CLOCK_LT((t0 + RTIMER_SECOND/10), RTIMER_NOW())) {
@@ -993,6 +994,18 @@ cc1120_driver_channel_clear(void)
 			PRINTF("\t Channel clear.\n");
 		}
 	}
+	
+#if CC1120_DEBUG_PINS
+	cc1120_debug_pin_cca(cca);
+	//uint16_t rssi = cc1120_spi_single_read(CC1120_ADDR_RSSI1) << 4;
+	//rssi |= (rssi0 >> 3);
+	//if(rssi & 0x0800) {
+		//Pad for 2s-complement.
+	//	rssi |= 0xF000;
+	//}
+	
+	//printf("%04x\n\r", rssi);
+#endif
 	
 	CC1120_RELEASE_SPI();
 	
@@ -1114,16 +1127,19 @@ uint8_t
 cc1120_set_channel(uint8_t channel)
 {
 	uint32_t freq_registers;
-  	switch(radio_part) {
-		case CC1120_PART_NUM_CC1120:
-		case CC1120_PART_NUM_CC1121:
-		case CC1120_PART_NUM_CC1125:
-			freq_registers = CC1120_CHANNEL_MULTIPLIER;
-			freq_registers *= channel;
-			freq_registers += CC1120_BASE_FREQ;
-			break;
+	
+  
+  
+  switch(radio_part) {
+	case CC1120_PART_NUM_CC1120:
+	case CC1120_PART_NUM_CC1121:
+	case CC1120_PART_NUM_CC1125:
+		freq_registers = CC1120_CHANNEL_MULTIPLIER;
+		freq_registers *= channel;
+		freq_registers += CC1120_BASE_FREQ;
+		break;
 		
-		case CC1120_PART_NUM_CC1200:
+	case CC1120_PART_NUM_CC1200:
     	case CC1120_PART_NUM_CC1201:
       		if(channel == 0) {
         		freq_registers = CC1200_BASE_FREQ;
@@ -1140,14 +1156,14 @@ cc1120_set_channel(uint8_t channel)
       		}   
 			break;
 		
-		default:	/* Not a supported chip or no chip present... */
-			printf("*** ERROR: No Radio ***\n");
-			while(1)	/* Spin ad infinitum as we cannot continue. */
-			{
-				watchdog_periodic();	/* Feed the dog to stop reboots. */
-			}
-			break;
-  	}
+	default:	/* Not a supported chip or no chip present... */
+		printf("*** ERROR: No Radio ***\n");
+		while(1)	/* Spin ad infinitum as we cannot continue. */
+		{
+			watchdog_periodic();	/* Feed the dog to stop reboots. */
+		}
+		break;
+  }
   
 	cc1120_spi_single_write(CC1120_ADDR_FREQ0, ((unsigned char*)&freq_registers)[0]);
 	cc1120_spi_single_write(CC1120_ADDR_FREQ1, ((unsigned char*)&freq_registers)[1]);
@@ -1232,7 +1248,7 @@ on(void)
 	uint8_t state = cc1120_get_state();
 	
 	if((radio_pending & CC1120_RX_FIFO_UNDER) || (radio_pending & CC1120_RX_FIFO_OVER) 
-	   		|| (state == CC1200_STATUS_RX_FIFO_ERROR)) {
+	   		| (state == CC1200_STATUS_RX_FIFO_ERROR)) {
 		/* RX FIFO has previously overflowed or underflowed, flush. */
 		cc1120_flush_rx();
 		state = cc1120_get_state();
@@ -1267,12 +1283,27 @@ off(void)
   
 	cur_state = cc1120_set_state(CC1120_STATE_IDLE);		/* Set state to IDLE.  This will flush the RX FIFO if there is an error. */
 	
+#if CC1120_DEBUG_PINS
+	cc1120_debug_pin_rx(0);
+#endif
+	
 	radio_pending &= ~(CC1120_RX_ON);
 	ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
 	
 	if(cur_state != CC1120_OFF_STATE) {
 		cc1120_set_state(CC1120_OFF_STATE);			/* Put radio into the off state defined in platform-conf.h. */
 	}
+}
+
+static void
+enter_low_power(void)
+{
+#if CC1120_OFF_STATE != CC1120_STATE_IDLE
+    // If we're not in RX, transimitting, or have any acks pending, enter that state
+    if (!(radio_pending & CC1120_RX_ON || radio_pending & CC1120_TRANSMITTING || radio_pending & CC1120_ACK_PENDING || locked > 0)) {
+        cc1120_set_state(CC1120_OFF_STATE);
+    }
+#endif
 }
 
 void
@@ -1380,6 +1411,9 @@ cc1120_set_state(uint8_t state)
 									|| (cur_state == CC1120_STATUS_FSTXON)
 									|| (cur_state == CC1120_STATUS_TX)) {
 									/* Return RX state. */
+#if CC1120_DEBUG_PINS
+									cc1120_debug_pin_rx(1);
+#endif
 									return cc1120_set_rx();
 								} else {
 									/* We are in a state that will end up in IDLE, FSTXON or TX. Wait till we are there. */
@@ -1465,6 +1499,14 @@ cc1120_get_state(void)
 	uint8_t state;
 	state = cc1120_spi_cmd_strobe(CC1120_STROBE_SNOP);
 	state &= CC1120_STATUS_STATE_MASK;
+	
+#if CC1120_DEBUG_PINS
+	if(state == CC1120_STATUS_RX) {
+		cc1120_debug_pin_rx(1);
+	} else {
+		cc1120_debug_pin_rx(0);
+	}
+#endif
 	
 	return state;
 	//return (cc1120_spi_cmd_strobe(CC1120_STROBE_SNOP) & CC1120_STATUS_STATE_MASK);
@@ -1840,7 +1882,7 @@ cc1120_interrupt_handler(void)
 	
 	/* Check if we have interrupted an SPI function, if so flag that interrupt is pending. */
 	if(cc1120_arch_spi_enabled()) {
-		if(locked) {		
+		if(locked) {
 			radio_pending |= CC1120_INTERRUPT_PENDING;
 			//printf(" D ");
 			return 0;
@@ -1851,16 +1893,12 @@ cc1120_interrupt_handler(void)
 	
 	marc_status = cc1120_spi_single_read(CC1120_ADDR_MARC_STATUS1);
 		
-	if(marc_status == CC1120_MARC_STATUS_OUT_NO_FAILURE) {		
+	if(marc_status == CC1120_MARC_STATUS_OUT_NO_FAILURE) {
 		LEDS_OFF(LEDS_BLUE);
 		if((cc1120_get_state() == CC1120_STATUS_IDLE) && (cc1120_read_rxbytes() > 0)) {
 			marc_status = CC1120_MARC_STATUS_OUT_RX_FINISHED;
-		} else {	
-#if CC1120_OFF_STATE != CC1120_STATE_IDLE
-            if (!(radio_pending & CC1120_RX_ON)) {
-                cc1120_set_state(CC1120_OFF_STATE);
-            }
-#endif
+		} else {
+            enter_low_power();
 			return 0;
 		}
 	}
@@ -1871,19 +1909,15 @@ cc1120_interrupt_handler(void)
 		/* Ignore as it should be an ACK. */
 		if(radio_pending & CC1120_ACK_PENDING) {
 			LEDS_OFF(LEDS_BLUE);
+            enter_low_power();
 			return 0;
 		}	
 		
 		/* We have received a packet.  This is done first to make RX faster. */
 		packet_pending++;
+		
 		process_poll(&cc1120_process);
 		LEDS_OFF(LEDS_BLUE);
-
-#if CC1120_OFF_STATE != CC1120_STATE_IDLE
-        if (!(radio_pending & CC1120_RX_ON)) {
-            cc1120_set_state(CC1120_OFF_STATE);
-        }
-#endif
 		return 1;
 	}	
 	
@@ -1962,14 +1996,8 @@ cc1120_interrupt_handler(void)
 		default:
 			break;
 	}	
-	LEDS_OFF(LEDS_BLUE);	
-
-#if CC1120_OFF_STATE != CC1120_STATE_IDLE
-    if (!(radio_pending & CC1120_RX_ON)) {
-        cc1120_set_state(CC1120_OFF_STATE);
-    }
-#endif
-
+	LEDS_OFF(LEDS_BLUE);
+    enter_low_power();
 	return 1;
 }
 
@@ -2025,9 +2053,5 @@ void processor(void)
 		on();
 	}
 
-#if CC1120_OFF_STATE != CC1120_STATE_IDLE
-    if (!(radio_pending & CC1120_RX_ON)) {
-        cc1120_set_state(CC1120_OFF_STATE);
-    }
-#endif
+    enter_low_power();
 }
