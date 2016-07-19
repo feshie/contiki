@@ -155,11 +155,17 @@ PROCESS_THREAD(sample_process, ev, data) {
 
             sample.has_humid = ms_get_humid(&sample.humid);
 
-            sample.has_ADC1 = ms_get_adc1(&sample.ADC1);
+            if (config.hasADC1) {
+                sample.has_ADC1 = ms_get_adc1(&sample.ADC1);
+            }
 
-            sample.has_ADC2 = ms_get_adc2(&sample.ADC2);
+            if (config.hasADC2) {
+                sample.has_ADC2 = ms_get_adc2(&sample.ADC2);
+            }
 
-            sample.has_rain = ms_get_rain(&sample.rain);
+            if (config.hasRain) {
+                sample.has_rain = ms_get_rain(&sample.rain);
+            }
 
             sample.has_accX = sample.has_accY = sample.has_accZ = ms_get_acc(&sample.accX, &sample.accY, &sample.accZ);
 
