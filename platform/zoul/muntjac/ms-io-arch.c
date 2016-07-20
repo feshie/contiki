@@ -86,8 +86,8 @@ bool ms_set_time(uint32_t seconds) {
 
 bool ms_get_batt(float *batt) {
     // Batt sensor is on ADC3
-    // TODO - munge factor for cal
-    *batt = ((float) adc_zoul.value(ZOUL_SENSORS_ADC3));
+    // Munge factor of 1698 gives about the right voltage on multiple boards, within 0.5V.
+    *batt = ((float) (adc_zoul.value(ZOUL_SENSORS_ADC3)/1698));
     return true;
 }
 
