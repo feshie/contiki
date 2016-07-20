@@ -83,7 +83,7 @@ bool ms_get_batt(float *batt) {
     SENSORS_ACTIVATE(batv_sensor);
     t0 = RTIMER_NOW();
     while(RTIMER_CLOCK_LT(RTIMER_NOW(), (t0 + (uint32_t) ADC_ACTIVATE_DELAY)));
-    *batt = (float)(batv_sensor.value(0)) / 273.067;
+    *batt = (float)(batv_sensor.value(0)) / 184.06 - 0.2532;
     SENSORS_DEACTIVATE(batv_sensor);
     return true;
 }
