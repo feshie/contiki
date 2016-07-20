@@ -26,6 +26,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
+ * specific settings for University of Southampton feshie project 2016
  */
 
 #ifndef __PROJECT_FESHIE_Z1_COAP_H__
@@ -59,7 +60,8 @@
 /* Enable client-side support for COAP observe */
 #define COAP_OBSERVE_CLIENT            0
 
-/* Disable .well-known/core ressource. */
+/* Disable .well-known/core ressource. 
 #define COAP_RES_WITHOUT_WELL_KNOWN
+*/
 
 #endif
