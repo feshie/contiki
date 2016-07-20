@@ -933,7 +933,6 @@ cc1120_driver_channel_clear(void)
 	if(!(radio_pending & CC1120_RX_ON)) {
 		/* Radio is off for some reason. */
 		was_off = 1;
-		printf("\n\rwas off");
 		on();
 	}
 		
@@ -947,10 +946,7 @@ cc1120_driver_channel_clear(void)
 
 	if(cur_state != CC1120_STATUS_RX ) {
 		/* Not in RX... */
-		//printf("\nnRX%02x", cur_state);
 		on();
-		//CC1120_RELEASE_SPI();
-		//return 0;
 	}
 	
 	if(cc1120_spi_single_read(CC1120_ADDR_MODEM_STATUS1) & CC1120_MODEM_STATUS1_SYNC_FOUND) {
@@ -966,12 +962,11 @@ cc1120_driver_channel_clear(void)
 			cur_state = cc1120_get_state();
 			if((radio_pending & CC1120_TRANSMITTING) || (cur_state == CC1120_STATUS_TX)) {
 				/* We have started a TX. cannot be clear in TX. */
-				printf("\ttx\t");
 				CC1120_RELEASE_SPI();
 				return 0;
 			}	
 			if((cur_state == CC1200_STATUS_CALIBRATE) || (cur_state == CC1200_STATUS_SETTLING)) {
-				printf("\tcal\t");
+				/* We are calibrating for some reason. Not clear. */
 				CC1120_RELEASE_SPI();
 				return 0;
 			}
@@ -994,18 +989,6 @@ cc1120_driver_channel_clear(void)
 			PRINTF("\t Channel clear.\n");
 		}
 	}
-	
-#if CC1120_DEBUG_PINS
-	cc1120_debug_pin_cca(cca);
-	//uint16_t rssi = cc1120_spi_single_read(CC1120_ADDR_RSSI1) << 4;
-	//rssi |= (rssi0 >> 3);
-	//if(rssi & 0x0800) {
-		//Pad for 2s-complement.
-	//	rssi |= 0xF000;
-	//}
-	
-	//printf("%04x\n\r", rssi);
-#endif
 	
 	CC1120_RELEASE_SPI();
 	
@@ -1068,7 +1051,6 @@ cc1120_driver_on(void)
 	if(locked) {
 		lock_on = 1;
 		lock_off = 0;
-		printf(" LO ");
 		return 1;
 	}
 	
@@ -1252,14 +1234,6 @@ on(void)
 		/* RX FIFO has previously overflowed or underflowed, flush. */
 		cc1120_flush_rx();
 		state = cc1120_get_state();
-	}
-	
-	if((packet_pending == 0) && (cc1120_read_rxbytes() > 0) && 
-	   		!(cc1120_spi_single_read(CC1120_ADDR_MODEM_STATUS1) & CC1120_MODEM_STATUS1_SYNC_FOUND)) {
-		/* Stray data in FIFO, flush. */
-		//cc1120_flush_rx();
-		//state = cc1120_get_state();
-		printf(" S_F %d ", cc1120_read_rxbytes());
 	}
 	
 	radio_pending |= CC1120_RX_ON;
@@ -1550,12 +1524,6 @@ cc1120_set_rx(void)
 	/* Spin until we are in RX. */
 	BUSYWAIT_UNTIL((cc1120_get_state() == CC1120_STATUS_RX), RTIMER_SECOND/10);
 	
-	uint8_t state = cc1120_get_state();
-	if(state != CC1120_STATUS_RX) {
-		printf("  !RX 0x%2x  ", state);
-	}
-	
-	/* Return RX state. */
 	return cc1120_get_state();
 }
 
@@ -1884,7 +1852,6 @@ cc1120_interrupt_handler(void)
 	if(cc1120_arch_spi_enabled()) {
 		if(locked) {
 			radio_pending |= CC1120_INTERRUPT_PENDING;
-			//printf(" D ");
 			return 0;
 		} else {
 			cc1120_spi_disable();	
