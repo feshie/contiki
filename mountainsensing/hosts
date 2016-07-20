@@ -1,0 +1,10 @@
+# hosts and IPv6 addresses for 2016
+fd00::212:4b00:60d:9e48 router1 m2
+fd00::212:4b00:60d:9e55 router2 m3
+fd00::212:4b00:60d:9e42 router3 m4
+fd00::212:4b00:60d:9e7d hum m5
+fd00::212:4b00:60d:9e2c turf m6
+fd00::212:4b00:60d:9e6d lochan m8
+fd00::212:4b00:60d:9e9d spare m9
+fd00::212:4b00:60d:9e9b stream m10
+fd00::212:4b00:60d:9e82 peat m11
