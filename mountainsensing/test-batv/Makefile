@@ -1,5 +1,5 @@
 DEFINES+=PROJECT_CONF_H=\"project-conf.h\"
-CONTIKI_PROJECT = batv-test
+CONTIKI_PROJECT = test-batv
 TARGET = zoul
 BOARD = muntjac
 RADIO = cc1120
