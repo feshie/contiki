@@ -34,7 +34,8 @@ PROCESS_THREAD(feshie_sense_process, ev, data) {
     store_init();
 
     process_start(&sample_process, NULL);
-    process_start(&er_server_process, NULL);
+
+    er_server_init();
 
     PROCESS_END();
 }

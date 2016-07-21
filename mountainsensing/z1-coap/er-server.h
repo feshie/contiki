@@ -3,6 +3,6 @@
 
 #include "contiki.h"
 
-PROCESS_NAME(er_server_process);
+void er_server_init(void);
 
-#endif
+#endif // #ifndef ER_SERVER_H
