@@ -27,9 +27,9 @@ dir_test(void)
   }
 
   /* List all files and their file sizes. */
-  printf("Available files\n");
+  printf("Available files:\n");
   while(cfs_readdir(&dir, &dirent) == 0) {
-    printf("%s (%lu bytes)\n", dirent.name, (unsigned long)dirent.size);
+    printf("  %s (%lu bytes)\n", dirent.name, (unsigned long)dirent.size);
   }
 
   cfs_closedir(&dir);
@@ -41,8 +41,12 @@ PROCESS_THREAD(example_coffee_process, ev, data)
 {
   PROCESS_BEGIN();
 
+  printf("\n\nNode Setup\n");
+
 #if NEED_FORMATTING
+  printf("Formatting flash... ");
   cfs_coffee_format();
+  printf("Done\n");
 #endif
   
   PROCESS_PAUSE();
@@ -51,12 +55,12 @@ PROCESS_THREAD(example_coffee_process, ev, data)
     printf("dir test failed\n");
   }
 
+  // Reset the reboot counter
+  printf("Reseting reboot counter... ");
   ms_reset_reboot();
-  uint16_t reboots = 0;
-  ms_get_reboot(&reboots);
-  printf ("COUNT = %d\n", reboots);
+  printf("Done\n");
 
-  printf("Node reset complete");
+  printf("\nNode setup complete\n");
 
   PROCESS_END();
 }
