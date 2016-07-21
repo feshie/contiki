@@ -35,6 +35,11 @@ PROCESS(sample_process, "Sample Process");
 #define SAMPLER_EVENT_RELOAD_CONFIG 2
 
 /**
+ * Minimum sampling interval allowed in a config, in seconds.
+ */
+#define CONFIG_MIN_INTERVAL 2
+
+/**
  * Delay required for the AVR to reply over RS485 after booting
  */
 #define AVR_ACTIVATE_DELAY (RTIMER_SECOND / 10)
@@ -256,6 +261,10 @@ void print_config(SensorConfig *conf) {
 void sampler_refresh_config(void) {
     DEBUG("Config marked for refresh!\n");
     process_post(&sample_process, SAMPLER_EVENT_RELOAD_CONFIG, NULL);
+}
+
+bool sampler_check_config(SensorConfig *config) {
+    return config->interval >= CONFIG_MIN_INTERVAL;
 }
 
 void save_sample(void) {

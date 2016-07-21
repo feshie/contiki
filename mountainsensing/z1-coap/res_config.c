@@ -125,6 +125,13 @@ void res_post_handler(void* request, void* response, uint8_t *payload_buffer, ui
                     return;
                 }
 
+                // Check the config is sane
+                if (!sampler_check_config(&config)) {
+                    DEBUG("Unsane config!\n");
+                    REST.set_response_status(response, REST.status.BAD_REQUEST);
+                    return;
+                }
+
                 // Save it
                 if (!store_save_config(&config)) {
                     DEBUG("Failed to save config!\n");

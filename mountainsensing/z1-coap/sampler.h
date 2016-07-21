@@ -16,7 +16,9 @@
 #ifndef SAMPLER_H
 #define SAMPLER_H
 
+#include <stdbool.h>
 #include "contiki.h"
+#include "settings.pb.h"
 
 /**
  * Process the sampler runs as.
@@ -28,5 +30,11 @@ PROCESS_NAME(sample_process);
  * This is a non blocking asynchronous call.
  */
 void sampler_refresh_config(void);
+
+/**
+ * Check a config for sanity.
+ * @return True if the config is sane, false otherwise.
+ */
+bool sampler_check_config(SensorConfig *config);
 
 #endif // ifndef SAMPLER_H
