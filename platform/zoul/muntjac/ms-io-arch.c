@@ -6,6 +6,9 @@
 #include "mountainsensing/common/ms-io.h"
 #include "ds3231-sensor.h"
 #include "lpm.h"
+#include "dev/uart.h"
+#include "dev/avr-handler.h"
+#include "dev/gpio.h"
 #include "dev/adc-zoul.h"
 #include "event-sensor.h"
 #include "reset-sensor.h"
@@ -26,6 +29,24 @@ static bool lpm_permit_pm1(void) {
     return !is_sense_on;
 }
 
+/**
+ * Function used by the avr-handler to write bytes out on the RS484 link
+ */
+static void avr_write_bytes(uint8_t *buf, int length) {
+    // The RS485 adapter are half-duplex - enable TX mode when we're sending
+    GPIO_SET_PIN(GPIO_PORT_TO_BASE(RS485_TXEN_PORT), GPIO_PIN_MASK(RS485_TXEN_PIN));
+
+    int i;
+    for (i = 0; i < length; i++) {
+        uart_write_byte(RS485_UART, buf[i]);
+    }
+
+    // Wait for the UART to finish sending
+    while(REG(UART_1_BASE + UART_FR) & UART_FR_BUSY);
+
+    GPIO_CLR_PIN(GPIO_PORT_TO_BASE(RS485_TXEN_PORT), GPIO_PIN_MASK(RS485_TXEN_PIN));
+}
+
 void ms_init(void) {
     // Initialize the ADCs
     adc_zoul.configure(SENSORS_HW_INIT, ZOUL_SENSORS_ADC1 + ZOUL_SENSORS_ADC2 + ZOUL_SENSORS_ADC3);
@@ -38,6 +59,15 @@ void ms_init(void) {
 
     // Enable the rain sensor
     SENSORS_ACTIVATE(event_sensor);
+
+    // Setup the AVR Handler to use the RS485 UART
+    uart_set_input(RS485_UART, &avr_input_byte);
+    avr_set_output(&avr_write_bytes);
+
+    // Disable the FIFO RX buffer of RS485 UART
+    REG(RS485_UART_BASE + UART_LCRH) &= ~UART_LCRH_FEN;
+
+    process_start(&avr_process, NULL);
 }
 
 void ms_sense_on(void) {

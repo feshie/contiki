@@ -10,25 +10,8 @@
 #include "dev/xmem.h"
 #include "dev/i2c.h"
 #include "reset-sensor.h"
-#include "dev/uart.h"
-#include "dev/avr-handler.h"
 #include "dev/gpio.h"
 #include "dev/ioc.h"
-
-static void avr_write_bytes(uint8_t *buf, int length) {
-    // The RS485 adapter are half-duplex - enable TX mode when we're sending
-    GPIO_SET_PIN(GPIO_PORT_TO_BASE(RS485_TXEN_PORT), GPIO_PIN_MASK(RS485_TXEN_PIN));
-
-    int i;
-    for (i = 0; i < length; i++) {
-        uart_write_byte(RS485_UART, buf[i]);
-    }
-
-    // Wait for the UART to finish sending
-    while(REG(UART_1_BASE + UART_FR) & UART_FR_BUSY);
-
-    GPIO_CLR_PIN(GPIO_PORT_TO_BASE(RS485_TXEN_PORT), GPIO_PIN_MASK(RS485_TXEN_PIN));
-}
 
 void board_init() {
 	/* Disable & turn off CC1120. */
@@ -81,13 +64,4 @@ void board_init() {
 
     /* Setup I2C */
     i2c_init(I2C_SDA_PORT, I2C_SDA_PIN, I2C_SCL_PORT, I2C_SCL_PIN, I2C_SCL_NORMAL_BUS_SPEED);
-
-    /* Setup the AVR Handler to use the RS485 UART */
-    uart_set_input(RS485_UART, &avr_input_byte);
-
-    // Disable the FIFO RX buffer of RS485 UART
-    REG(RS485_UART_BASE + UART_LCRH) &= ~UART_LCRH_FEN;
-
-    avr_set_output(&avr_write_bytes);
-    process_start(&avr_process, NULL);
 }
