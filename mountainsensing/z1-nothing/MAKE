@@ -1,0 +1,5 @@
+#
+# make and install - to avoid messing around in the cold on a mountain!
+set echo
+echo "I hope you remembered to press USR and momentary RESET?"
+make TARGET=zoul BOARD=muntjac MOTES=/dev/ttyUSB0 z1-nothing.upload
