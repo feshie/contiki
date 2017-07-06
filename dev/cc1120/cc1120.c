@@ -12,6 +12,8 @@
 
 #include <watchdog.h>
 
+/* TURN OFF LEDS COMPLETELY TO SAVE POWER */
+#undef CC1120LEDS
 #if CC1120LEDS
 #include "dev/leds.h"
 #endif
@@ -1845,7 +1847,10 @@ int
 cc1120_interrupt_handler(void)
 {
 	uint8_t marc_status;
+/* turn on flickering LED if defined */
+/* #ifndef CC1120LEDSNB */
 	LEDS_ON(LEDS_BLUE);
+/*#endif */
 	cc1120_arch_interrupt_acknowledge();
 	
 	/* Check if we have interrupted an SPI function, if so flag that interrupt is pending. */
